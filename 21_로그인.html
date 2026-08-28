@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인 — 비즈플래닛</title>
+<!-- UW_ON_02 · P-A 계정 플로우 · 스펙: 디자인가이드 07, planning/27 · 계약: planning/24
+     v17 정책: 휴대폰 인증(OTP) 로그인 → 이메일+비밀번호 로그인으로 전환. 소셜 로그인(카카오/네이버)은 유지.
+     비밀번호 재설정은 이메일 링크 방식(모달 → 실제로는 이메일 발송 페이지로 이동).
+-->
+<!-- 이 화면은 로그인 전 진입점이라 LNB·탑바 셸이 없다 (10_온보딩과 동일한 예외 화면) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* v2 반응형: 중앙 카드형 — 고정폭 대신 max-width+width:100% */
+.on-wrap { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 40px 20px; }
+.on-card-outer { width: 100%; max-width: 440px; }
+@media (max-width: 767px) {
+  .on-wrap { padding: 24px 16px; align-items: flex-start; }
+}
+</style>
+</head>
+<body data-screen="UW_ON_02">
+
+<!-- 프로토타입 데모용 레벨 스위처 (골든 템플릿 마크업 재사용, 우상단 고정) -->
+<div style="position:fixed;top:16px;right:16px;z-index:80;display:flex;align-items:center;gap:8px">
+  <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+    <button data-level-btn="L1">L1 위탁</button>
+    <button data-level-btn="L2">L2 셀프</button>
+    <button data-level-btn="L3">L3 대행사</button>
+  </div>
+  <span class="uw-lvl-note">데모: 레벨 전환</span>
+</div>
+
+<div class="on-wrap">
+  <div class="on-card-outer">
+
+    <!-- 로고 -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:800;letter-spacing:-0.02em;margin-bottom:28px">
+      <span class="uw-logo-mark">✦</span> 비즈플래닛
+    </div>
+
+    <div class="uw-card" style="padding:32px 28px">
+
+      <!-- M01 · view: 로그인 폼(이메일+비밀번호·카카오·네이버) -->
+      <section data-module="M01">
+        <h1 class="uw-h1" style="text-align:center">다시 오셨네요, 반가워요</h1>
+
+        <div style="margin-top:26px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--ink-700)">이메일</label>
+            <input id="login-email" type="email" placeholder="example@email.com" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 16px;font-family:inherit;font-size:14px">
+          </div>
+
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--ink-700)">비밀번호</label>
+            <input id="login-pw" type="password" placeholder="비밀번호를 입력해 주세요" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 16px;font-family:inherit;font-size:14px">
+          </div>
+
+          <button id="login-submit-btn" class="btn btn-primary" style="width:100%;margin-top:4px" data-action="login-submit">로그인</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin:22px 0">
+          <span style="flex:1;height:1px;background:var(--card-border)"></span>
+          <span style="font-size:12px;color:var(--ink-400);font-weight:600">또는</span>
+          <span style="flex:1;height:1px;background:var(--card-border)"></span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn" style="width:100%;background:var(--ch-kakao);color:var(--ink-900)" data-action="toast" data-toast-msg="간편 로그인은 실제 서비스에서 열려요">카카오로 시작하기</button>
+          <button class="btn" style="width:100%;background:var(--ch-naver);color:#fff" data-action="toast" data-toast-msg="간편 로그인은 실제 서비스에서 열려요">네이버로 시작하기</button>
+        </div>
+      </section>
+
+      <!-- M02 · view: 비밀번호 찾기 -->
+      <section data-module="M02" style="text-align:center;margin-top:22px">
+        <button class="btn-link-plain" data-action="open-modal" data-modal="modal-pw-reset" style="background:none;border:0;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer;text-decoration:underline">비밀번호를 잊으셨나요?</button>
+      </section>
+
+      <!-- M03 · view: 회원가입 안내. v19(2026-08-21)부터 초대 가입도 여기서 진입 가능 —
+           문자 링크 없이 들어오는 거라 19_초대가입.html은 누군지 모르는 상태(짧은 인사 배너)로 시작한다 -->
+      <section data-module="M03" style="border-top:1px solid var(--divider);margin-top:22px;padding-top:18px;text-align:center">
+        <div style="font-size:13px;color:var(--ink-600)">처음이세요? <a href="21_회원가입.html" style="color:var(--blue);font-weight:700;text-decoration:underline">사장님 회원가입</a></div>
+        <div style="font-size:13px;color:var(--ink-600);margin-top:8px">초대받으셨나요? <a href="19_초대가입.html" style="color:var(--blue);font-weight:700;text-decoration:underline">초대 가입하기</a></div>
+      </section>
+
+    </div>
+
+    <!-- 각주 링크 -->
+    <div style="text-align:center;margin-top:18px">
+      <a href="22_약관정책.html" style="font-size:12px;color:var(--ink-400);text-decoration:underline">이용약관·개인정보 처리방침</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- 비밀번호 재설정 안내 모달 (M02) -->
+<div class="uw-modal-backdrop" id="modal-pw-reset">
+  <div class="uw-modal">
+    <div class="uw-modal-title">비밀번호를 잊으셨나요?</div>
+    <div class="uw-modal-body">
+      가입할 때 쓴 이메일을 입력하면 재설정 링크를 보내드려요.
+      <input id="pw-reset-email" type="email" placeholder="example@email.com" style="width:100%;margin-top:10px;height:44px;border:1px solid var(--input-border);border-radius:12px;padding:0 14px;font-family:inherit;font-size:14px;box-sizing:border-box">
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">닫기</button>
+      <button class="btn btn-primary btn-sm" data-action="toast" data-toast-msg="재설정 링크를 이메일로 보내드렸어요">재설정 링크 받기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 이메일+비밀번호 입력 확인 → 로그인 (계약 §1: 화면 고유 표현 한정) ---- */
+(function () {
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-action='login-submit']");
+    if (!t) return;
+    var email = document.getElementById("login-email");
+    var pw = document.getElementById("login-pw");
+    if (!email.value.trim()) { if (window.UW && window.UW.toast) window.UW.toast("이메일을 입력해 주세요"); return; }
+    if (!pw.value) { if (window.UW && window.UW.toast) window.UW.toast("비밀번호를 입력해 주세요"); return; }
+    location.href = "01_홈.html";
+  });
+})();
+</script>
+</body>
+</html>

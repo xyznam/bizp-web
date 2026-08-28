@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>홈 (미결제) — 비즈플래닛</title>
+<!-- UW_TEST_PAY · 미결제 상태 홈 (별도 목업 — 01_홈은 결제 완료 상태 그대로 유지)
+     레벨별: L2 요금제 시작 히어로+가치 4타일 / L1 대행사 관리 안내 / L3 비대상 가드
+     LNB: 유료 메뉴(홈~AI챗봇·우리 매장 정보) 잠금 → 클릭 시 09_요금제비용 이동. 도움말·내 계정 정상 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* 잠금 메뉴: is-planned 회색 톤 재사용 + 🔒 태그 */
+.uw-menu .pay-locked { color: var(--ink-400); }
+.pay-lock-tag { margin-left: auto; font-size: 11px; }
+
+/* 가치 4타일 */
+.pay-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.pay-tile { background: var(--white); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 20px; }
+.pay-tile-icon { font-size: 26px; }
+.pay-tile-title { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; margin-top: 10px; }
+.pay-tile-desc { font-size: 13px; font-weight: 500; color: var(--ink-500); margin-top: 6px; line-height: 1.6; }
+
+/* 레벨별 분기 패널 */
+.pay-pane { display: none; }
+.pay-pane.is-active { display: block; }
+
+@media (max-width: 640px) { .pay-tiles { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-screen="UW_TEST_PAY">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (유료 메뉴 잠금 상태) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+
+    <nav class="uw-menu">
+      <a href="09_요금제비용.html" class="pay-locked is-active">🏠 홈 <span class="pay-lock-tag">🔒</span></a>
+      <a href="09_요금제비용.html" class="pay-locked">📋 콘텐츠 검토 <span class="pay-lock-tag">🔒</span></a>
+      <a href="09_요금제비용.html" class="pay-locked">✏️ 콘텐츠 만들기 <span class="pay-lock-tag">🔒</span></a>
+      <a href="09_요금제비용.html" class="pay-locked">💬 비즈챗 문자 <span class="pay-lock-tag">🔒</span></a>
+      <a href="09_요금제비용.html" class="pay-locked">🤖 AI 챗봇 <span class="pay-lock-tag">🔒</span></a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="09_요금제비용.html" class="pay-locked">🏪 우리 매장 정보 <span class="pay-lock-tag">🔒</span></a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan" style="color:var(--ink-400)">요금제 시작 전</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">홈</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔</button>
+      </div>
+    </header>
+
+    <main class="uw-body" style="max-width:880px">
+
+      <!-- ========== L2 셀프: 요금제 시작 ========== -->
+      <section class="pay-pane" id="pay-L2">
+        <section class="uw-hero">
+          <span class="uw-hero-chip">요금제 시작</span>
+          <div class="uw-hero-row">
+            <h2 class="uw-hero-title">요금제를 시작하면 AI가 마케팅을 도와드려요</h2>
+            <a href="09_요금제비용.html" class="btn btn-on-blue" style="text-decoration:none">요금제 보기 →</a>
+          </div>
+          <p class="uw-hero-foot">매장 정보 설정도 요금제를 시작한 뒤에 할 수 있어요</p>
+        </section>
+
+        <h3 class="uw-section-title" style="margin-top:24px">시작하면 쓸 수 있어요</h3>
+        <div class="pay-tiles">
+          <div class="pay-tile">
+            <div class="pay-tile-icon">📝</div>
+            <div class="pay-tile-title">블로그 글쓰기</div>
+            <div class="pay-tile-desc">AI가 우리 매장을 배우고 블로그 글을 대신 써 드려요. 사장님은 확인만 하면 돼요.</div>
+          </div>
+          <div class="pay-tile">
+            <div class="pay-tile-icon">💬</div>
+            <div class="pay-tile-title">비즈챗 문자</div>
+            <div class="pay-tile-desc">지역·연령을 골라 보낼 안내·쿠폰 문자를 AI가 만들어 드려요.</div>
+          </div>
+          <div class="pay-tile">
+            <div class="pay-tile-icon">🤖</div>
+            <div class="pay-tile-title">AI 챗봇</div>
+            <div class="pay-tile-desc">영업시간·메뉴·예약 문의에 챗봇이 24시간 대신 답해요.</div>
+          </div>
+          <div class="pay-tile">
+            <div class="pay-tile-icon">📈</div>
+            <div class="pay-tile-title">마케팅 전략</div>
+            <div class="pay-tile-desc">우리 매장에 맞는 월간 마케팅 계획과 실행 결과를 받아 보세요.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== L1 위탁: 대행사 관리 안내 ========== -->
+      <section class="pay-pane" id="pay-L1">
+        <section class="uw-card" style="padding:48px 24px;text-align:center">
+          <div style="font-size:40px">🤝</div>
+          <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-top:14px">요금제는 담당 대행사가 관리하고 있어요</div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:8px;line-height:1.7">이용이 잠시 중단된 상태예요.<br>이용 관련 문의는 담당 대행사에 해주세요.</div>
+          <button class="btn btn-primary" data-action="contact-agency" style="margin-top:20px">대행사 문의</button>
+        </section>
+      </section>
+
+      <!-- ========== L3 대행사: 비대상 가드 ========== -->
+      <section class="pay-pane" id="pay-L3">
+        <section class="uw-card" style="padding:48px 24px;text-align:center">
+          <div style="font-size:40px">🗂</div>
+          <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-top:14px">이 화면은 사장님 계정에만 보여요</div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:8px;line-height:1.7">대행사 이용료는 별도 계약으로 정산돼요.<br>소호 요금제 안내는 사장님(L1·L2) 계정에서만 나타나요.</div>
+          <a href="17_대행사홈.html" class="btn btn-primary" style="margin-top:20px;text-decoration:none;display:inline-flex">대행사 홈으로</a>
+        </section>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+  /* 레벨값에 따라 본문 분기 — userweb.js의 레벨 스위처(set-level)와 병행:
+     스위처 클릭 시 렌더러가 localStorage(uw_level) 갱신 → 여기서 다시 읽어 패널 전환 */
+  function currentLevel() {
+    try {
+      var lv = localStorage.getItem("uw_level");
+      return ["L1", "L2", "L3"].indexOf(lv) >= 0 ? lv : "L2";
+    } catch (e) { return "L2"; }
+  }
+  function applyPane() {
+    var lv = currentLevel();
+    ["L1", "L2", "L3"].forEach(function (l) {
+      var p = document.getElementById("pay-" + l);
+      if (p) p.classList.toggle("is-active", l === lv);
+    });
+    /* 미등재 화면(UW_TEST_PAY)은 렌더러 render()가 조기 리턴하므로
+       레벨 버튼 활성 표시·data-only-level 표시를 여기서 직접 처리 */
+    document.querySelectorAll(".uw-lvl-switch button").forEach(function (b) {
+      b.classList.toggle("is-on", b.getAttribute("data-level-btn") === lv);
+    });
+    document.querySelectorAll("[data-only-level]").forEach(function (el) {
+      el.style.display = el.getAttribute("data-only-level") === lv ? "" : "none";
+    });
+  }
+  /* 레벨 버튼 클릭 후 렌더러가 처리한 뒤 패널 갱신 */
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("[data-level-btn]")) setTimeout(applyPane, 0);
+  });
+  applyPane();
+})();
+</script>
+</body>
+</html>

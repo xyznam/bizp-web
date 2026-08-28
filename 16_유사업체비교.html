@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>유사업체 비교 — 비즈플래닛</title>
+<!-- UW_ST_11 · 유사업체 비교 (16_마케팅전략상세에서 링크)
+     구성: AI 자동 추천 업체 선택(체크) → 비교 결과 표 → 콘텐츠 소재 비교
+     업체 선택은 AI 자동 추천만 (수동 추가 없음)
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* ---- 업체 선택 카드 ---- */
+.cp-store { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-tile); margin-bottom: 8px; cursor: pointer; }
+.cp-store:hover { border-color: var(--blue-border); }
+.cp-store.is-off { opacity: .45; }
+.cp-store-check { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--card-border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; }
+.cp-store.is-on .cp-store-check { background: var(--blue); border-color: var(--blue); }
+.cp-store-body { flex: 1; min-width: 0; }
+.cp-store-name { font-size: 14px; font-weight: 700; }
+.cp-store-meta { font-size: 12px; color: var(--ink-500); margin-top: 2px; }
+
+/* ---- 비교 결과 표 ---- */
+.cp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cp-table th, .cp-table td { padding: 11px 10px; border-bottom: 1px solid var(--divider); text-align: right; white-space: nowrap; }
+.cp-table th:first-child, .cp-table td:first-child { text-align: left; color: var(--ink-600); }
+.cp-table th { font-size: 12px; font-weight: 700; color: var(--ink-500); }
+.cp-table td.is-us { font-weight: 800; color: var(--blue); }
+.cp-table-wrap { overflow-x: auto; }
+
+/* ---- 소재 비교 ---- */
+.cp-kw-group { margin-bottom: 14px; }
+.cp-kw-title { font-size: 12px; font-weight: 700; color: var(--ink-500); margin-bottom: 8px; }
+.cp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cp-chip { padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid var(--card-border); background: var(--white); color: var(--ink-700); }
+.cp-chip.overlap { background: var(--blue-50); color: var(--blue); border-color: var(--blue-border); }
+.cp-chip.ours { background: var(--green-bg); color: var(--green); border-color: transparent; }
+.cp-chip.theirs { background: var(--inset); color: var(--ink-500); }
+</style>
+</head>
+<body data-screen="UW_ST_11">
+
+<div class="uw-frame">
+
+  <!-- LNB -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html" class="is-active">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer">
+      <div class="u-avatar">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="uw-main">
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">
+        <a href="06_우리매장정보.html" style="color:var(--ink-500);text-decoration:none">우리 매장 정보</a>
+        <span style="color:var(--ink-300)"> › </span>
+        <a href="16_마케팅전략상세.html" style="color:var(--ink-500);text-decoration:none">마케팅 전략 상세</a>
+        <span style="color:var(--ink-300)"> › </span>유사업체 비교
+      </span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">테라스의원</span> ▾</button>
+        <button class="uw-bell">🔔</button>
+      </div>
+    </header>
+
+    <main class="uw-body" style="max-width:860px">
+
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+        <h1 style="font-size:20px;font-weight:800;letter-spacing:-0.02em;flex:1">유사업체 비교</h1>
+        <a href="16_마케팅전략상세.html" class="btn btn-ghost btn-sm" style="text-decoration:none">← 마케팅 전략 상세로</a>
+      </div>
+      <div class="uw-h1-caption" style="margin-bottom:16px">근처 비슷한 업체와 발행 활동·소재를 비교해요 · 마지막 비교 2026년 7월 20일</div>
+
+      <!-- 업체 선택 -->
+      <section class="uw-card">
+        <div class="uw-section-title">비교할 업체</div>
+        <div class="uw-section-caption mt-8">AI가 위치·업종이 비슷한 업체를 찾아 추천했어요. 체크를 해제하면 결과에서 빠져요.</div>
+
+        <div class="mt-12" id="cp-store-list"></div>
+      </section>
+
+      <!-- 비교 결과 표 -->
+      <section class="uw-card mt-16">
+        <div class="uw-section-title">발행 활동 비교</div>
+        <div class="uw-section-caption mt-8">공개된 채널 정보를 바탕으로 AI가 정리했어요.</div>
+
+        <div class="cp-table-wrap mt-12">
+          <table class="cp-table">
+            <thead><tr id="cp-table-head"></tr></thead>
+            <tbody id="cp-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 콘텐츠 소재 비교 -->
+      <section class="uw-card mt-16">
+        <div class="uw-section-title">콘텐츠 소재 비교</div>
+        <div class="uw-section-caption mt-8">선택한 업체들이 다루는 소재와 우리 매장 소재를 비교했어요.</div>
+
+        <div class="cp-kw-group mt-12">
+          <div class="cp-kw-title">겹치는 소재</div>
+          <div class="cp-chips" id="cp-kw-overlap"></div>
+        </div>
+        <div class="cp-kw-group">
+          <div class="cp-kw-title">우리만 다루는 소재</div>
+          <div class="cp-chips" id="cp-kw-ours"></div>
+        </div>
+        <div class="cp-kw-group" style="margin-bottom:0">
+          <div class="cp-kw-title">상대만 다루는 소재</div>
+          <div class="cp-chips" id="cp-kw-theirs"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---- 목데이터 ---- */
+  var US_NAME = "테라스의원";
+
+  var STORES = [
+    { id: "a", name: "종로스킨클리닉", dist: "420m", rating: "4.6 (91)", on: true,
+      posts: 31, reviews: 96, menus: 4,
+      kw: ["울쎄라", "리프팅", "인모드", "피부톤"] },
+    { id: "b", name: "광화문미래의원", dist: "650m", rating: "4.4 (58)", on: true,
+      posts: 18, reviews: 64, menus: 3,
+      kw: ["슈링크", "인모드", "여드름 흉터"] },
+    { id: "c", name: "청담라인의원", dist: "1.1km", rating: "4.7 (140)", on: false,
+      posts: 42, reviews: 152, menus: 6,
+      kw: ["울쎄라", "실리프팅", "지방분해", "동안 시술"] }
+  ];
+
+  var US = { posts: 24, reviews: 128, menus: 5,
+    kw: ["울쎄라", "슈링크", "인모드", "리팟레이저", "흑자 제거"] };
+
+  /* ---- 업체 목록 렌더 ---- */
+  var listEl = document.getElementById("cp-store-list");
+  function renderStoreList() {
+    listEl.innerHTML = STORES.map(function (s) {
+      return '<div class="cp-store' + (s.on ? ' is-on' : ' is-off') + '" data-store="' + s.id + '">' +
+        '<div class="cp-store-check">' + (s.on ? '✓' : '') + '</div>' +
+        '<div class="cp-store-body">' +
+          '<div class="cp-store-name">' + s.name + '</div>' +
+          '<div class="cp-store-meta">' + s.dist + ' · 방문자 평점 ' + s.rating + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+  }
+  renderStoreList();
+
+  listEl.addEventListener("click", function (e) {
+    var row = e.target.closest("[data-store]");
+    if (!row) return;
+    var s = STORES.find(function (x) { return x.id === row.getAttribute("data-store"); });
+    s.on = !s.on;
+    renderStoreList();
+    renderTable();
+    renderKeywords();
+  });
+
+  /* ---- 비교 표 렌더 ---- */
+  function activeStores() { return STORES.filter(function (s) { return s.on; }); }
+
+  function renderTable() {
+    var active = activeStores();
+    var head = document.getElementById("cp-table-head");
+    var body = document.getElementById("cp-table-body");
+
+    head.innerHTML = '<th>항목</th><th>' + US_NAME + '</th>' +
+      active.map(function (s) { return '<th>' + s.name + '</th>'; }).join("");
+
+    var rows = [
+      { label: "발행 글 수", us: US.posts, key: "posts" },
+      { label: "리뷰 수", us: US.reviews, key: "reviews" },
+      { label: "대표 시술 수", us: US.menus, key: "menus" }
+    ];
+
+    body.innerHTML = rows.map(function (r) {
+      return '<tr><td>' + r.label + '</td><td class="is-us">' + r.us + '</td>' +
+        active.map(function (s) { return '<td>' + s[r.key] + '</td>'; }).join("") +
+      '</tr>';
+    }).join("");
+  }
+  renderTable();
+
+  /* ---- 소재 키워드 비교 ---- */
+  function renderKeywords() {
+    var active = activeStores();
+    var theirKwSet = {};
+    active.forEach(function (s) { s.kw.forEach(function (k) { theirKwSet[k] = true; }); });
+
+    var overlap = US.kw.filter(function (k) { return theirKwSet[k]; });
+    var ours = US.kw.filter(function (k) { return !theirKwSet[k]; });
+    var theirs = Object.keys(theirKwSet).filter(function (k) { return US.kw.indexOf(k) === -1; });
+
+    function chip(list, cls, empty) {
+      if (!list.length) return '<span style="font-size:12px;color:var(--ink-400)">' + empty + '</span>';
+      return list.map(function (k) { return '<span class="cp-chip ' + cls + '">' + k + '</span>'; }).join("");
+    }
+
+    document.getElementById("cp-kw-overlap").innerHTML = chip(overlap, "overlap", "겹치는 소재가 없어요");
+    document.getElementById("cp-kw-ours").innerHTML = chip(ours, "ours", "-");
+    document.getElementById("cp-kw-theirs").innerHTML = chip(theirs, "theirs", "-");
+  }
+  renderKeywords();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "html-to-figma-uid-kit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "HTML 화면군 → UID 보드 → Figma 네이티브 전환 파이프라인 키트",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "playwright": "^1.62.0"
+  },
+  "scripts": {
+    "setup": "npm install && npx playwright install chromium",
+    "probe": "node engine/scripts/probe_inputs.mjs",
+    "lint-desc": "node engine/scripts/lint_descriptions.mjs",
+    "extract-ir": "node adapters/extract_ir.mjs",
+    "build-board": "node engine/scripts/build_board.mjs",
+    "capture": "node engine/scripts/capture_boards.mjs",
+    "measure-tables": "node engine/scripts/measure_tables.mjs",
+    "merge-placements": "node engine/scripts/merge_placements.mjs",
+    "build-bundle": "node engine/scripts/build_figma_bundle.mjs",
+    "verify-render": "node engine/scripts/verify_render_tree.mjs"
+  }
+}

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>요청 관리 — 비즈플래닛</title>
+<!-- UW_HM_03 · L3 전용 · 27_대행사요청함(사장님 관점)을 대행사 관점으로 뒤집은 화면
+     LNB에는 진입점을 두지 않음 — 18_알림센터의 알림 항목에서만 진입 (요청 사항)
+     좌: 담당 매장 전체 요청 목록(필터+검색) / 우: 스레드(사장님=흰 버블 왼쪽, 나=파란 버블 오른쪽) + 답장 템플릿 칩
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+.rq-tabs { display: flex; gap: 6px; margin-top: 12px; }
+.rq-tab { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid var(--card-border); background: var(--white); color: var(--ink-600); cursor: pointer; font-family: inherit; }
+.rq-tab.is-active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.rq-search { width: 100%; height: 38px; border: 1px solid var(--input-border); border-radius: var(--radius-tile); padding: 0 12px; font-family: inherit; font-size: 13px; outline: none; margin-top: 10px; }
+.rq-search:focus { border-color: var(--blue); }
+.rq-store { font-size: 11px; font-weight: 700; color: var(--blue); margin-bottom: 2px; }
+</style>
+</head>
+<body data-screen="UW_HM_03">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸, 이 화면 진입 링크는 넣지 않음) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">김</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">김마케 매니저</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="17_대행사홈.html" style="color:var(--ink-500);text-decoration:none">대행사 홈</a> › 요청 관리</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'">🔔</button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- ========== 비-L3 가드 ========== -->
+      <div data-only-level="L1">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">📮</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">요청 관리는 담당 대행사 직원이 여러 매장 사장님의 요청에 답하는 화면이에요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="01_홈.html">홈으로 가기</a>
+        </div>
+      </div>
+      <div data-only-level="L2">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">📮</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">요청 관리는 담당 대행사 직원이 여러 매장 사장님의 요청에 답하는 화면이에요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="01_홈.html">홈으로 가기</a>
+        </div>
+      </div>
+
+      <div class="uw-cols" data-only-level="L3">
+
+        <!-- ========== 좌측: 전체 매장 요청 목록 ========== -->
+        <div class="uw-col-side">
+
+          <!-- M01 · view · L3: 담당 매장별 대화 목록.
+               2026-08-26 재설계: 매장당 여러 개의 개별 요청 항목이 있던 구조를 매장당 대화 하나로
+               통합(27 대행사요청함과 동일한 결정). 상태도 수동 [완료 처리] 대신 "마지막 발화자가
+               누구인가"로 자동 계산(답변 필요/답변함) — 읽음 여부와는 별개 신호(파란 점)로 표시.
+               담당 매장이 많아질 걸 대비한 정렬/페이징(2026-08-26 추가):
+               - 답변 필요는 오래 기다린 순으로 전부 노출(페이징 없음 — 급한 걸 뒤에 숨기면 안 됨)
+               - 답변함은 최신순으로 일부만 노출, [더 보기]로 추가 로드 -->
+          <section class="uw-card" data-module="M01" style="padding:16px">
+            <h3 class="uw-section-title" style="font-size:15px">매장별 대화</h3>
+            <input class="rq-search" id="rq-search" placeholder="매장명으로 찾기">
+            <div class="rq-tabs" id="rq-tabs">
+              <button class="rq-tab is-active" data-filter="all">전체</button>
+              <button class="rq-tab" data-filter="needsReply">답변 필요</button>
+            </div>
+            <div class="uw-rows mt-8" id="req-list"></div>
+            <button type="button" id="btn-load-more" class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;display:none"></button>
+          </section>
+
+        </div>
+
+        <!-- ========== 우측: 요청 스레드 ========== -->
+        <div class="uw-col-main" style="display:flex;flex-direction:column">
+
+          <!-- M02 · view · L3: 매장 대화(챗 버블, 대행사 관점).
+               2026-08-26: [완료 처리] 수동 버튼 삭제 — 답변 필요/답변함은 마지막 발화자로 자동 계산되므로
+               버튼으로 조작할 대상이 아님. 대신 현재 상태를 읽기 전용 배지로만 보여줌 -->
+          <section class="uw-card" data-module="M02" style="display:flex;flex-direction:column;padding:0;overflow:hidden">
+            <div style="padding:16px 20px;border-bottom:1px solid var(--divider);display:flex;align-items:center;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div id="thread-store" style="font-size:12px;font-weight:700;color:var(--blue)">테라스의원</div>
+                <div id="thread-title" style="font-size:15px;font-weight:800;letter-spacing:-0.02em">사장님과의 대화</div>
+              </div>
+              <span id="thread-status-badge" class="uw-badge" style="flex-shrink:0">답변 필요</span>
+            </div>
+            <div id="thread-messages" style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;height:420px"></div>
+          </section>
+
+          <!-- M03 · edit · L3: 답장 보내기(템플릿 칩 + 입력 + 사진 첨부) -->
+          <section class="uw-card" data-module="M03" style="margin-top:8px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              <span class="uw-kw-chip" style="cursor:pointer" data-chip="확인했어요, 반영할게요">확인했어요, 반영할게요</span>
+              <span class="uw-kw-chip" style="cursor:pointer" data-chip="초안 보내드렸어요, 확인 부탁드려요">초안 보내드렸어요, 확인 부탁드려요</span>
+              <span class="uw-kw-chip" style="cursor:pointer" data-chip="오늘 중으로 처리해드릴게요">오늘 중으로 처리해드릴게요</span>
+              <span class="uw-kw-chip" style="cursor:pointer" data-chip="자료 조금만 더 보내주시겠어요?">자료 조금만 더 보내주시겠어요?</span>
+            </div>
+            <div id="attach-preview" style="display:none;align-items:center;gap:8px;margin-bottom:8px;background:var(--inset);border-radius:10px;padding:6px 10px">
+              <img id="attach-preview-img" style="width:40px;height:40px;border-radius:6px;object-fit:cover" alt="첨부 미리보기">
+              <span style="font-size:12px;color:var(--ink-600);flex:1">사진 1장 첨부됨</span>
+              <button type="button" id="btn-attach-remove" class="btn btn-ghost btn-sm" style="height:28px;padding:0 10px">빼기</button>
+            </div>
+            <input type="file" id="chat-file-input" accept="image/*" style="display:none">
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <button type="button" class="btn btn-ghost" id="btn-attach" title="사진 첨부" style="height:46px;flex-shrink:0;font-size:18px">📷</button>
+              <textarea id="thread-input" placeholder="사장님께 보낼 답장을 적어주세요" style="flex:1;height:46px;border:1px solid var(--input-border);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:13px;line-height:1.4;resize:none"></textarea>
+              <button class="btn btn-primary" data-action="send-thread-msg" style="height:46px;flex-shrink:0">답장 보내기</button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 매장별 대화 목록 + 필터/검색 + 답장(대행사 관점) ----
+   2026-08-26 재설계: 매장당 여러 개별 요청이 있던 구조 → 매장당 대화 하나로 통합.
+   상태(답변 필요/답변함)는 수동 버튼이 아니라 "마지막 발화자가 누구인가"로 자동 계산.
+   읽음 여부(unread)는 별개 신호 — 스레드를 열면 읽음 처리됨(답변 여부와 무관) ---- */
+(function () {
+  "use strict";
+
+  // 첨부 예시용 로컬 mock 이미지(실사진 없이 자체 SVG로 생성 — 27_대행사요청함과 동일 방식)
+  var MOCK_PHOTO = "data:image/svg+xml;utf8," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">' +
+    '<rect width="400" height="400" fill="#F2F4F6"/>' +
+    '<rect x="0.5" y="0.5" width="399" height="399" fill="none" stroke="#E8EAEE"/>' +
+    '<g transform="translate(200,168)" fill="none" stroke="#B0B8C1" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">' +
+    '<rect x="-60" y="-38" width="120" height="86" rx="10"/><path d="M -22 -38 L -14 -52 L 14 -52 L 22 -38"/><circle cx="0" cy="6" r="26"/></g>' +
+    '<text x="200" y="266" font-family="Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#8B95A1" text-anchor="middle">신메뉴 사진</text>' +
+    '<text x="200" y="292" font-family="Noto Sans KR, sans-serif" font-size="13" font-weight="500" fill="#C5CBD3" text-anchor="middle">mock 첨부 이미지</text></svg>');
+
+  var REQS = [
+    // lastActivity: 실제 타임스탬프 대신 상대적 순서만 표현하는 정렬용 값(작을수록 오래됨)
+    { id: "orthoclinic", store: "우리동네정형외과", unread: false, lastActivity: 1,
+      messages: [
+        { who: "store", text: "이번 달 실행 리포트 언제 나오나요?", time: "6.20 오후 2:00" },
+        { who: "me", text: "이번 주 안에 보내드릴게요!", time: "6.20 오후 2:10" }
+      ] },
+    { id: "smallvillecoffee", store: "스몰빌커피", unread: false, lastActivity: 2,
+      messages: [
+        { who: "store", text: "여름 시즌 메뉴 블로그 글 부탁드려요", time: "6.25 오전 10:00" },
+        { who: "me", text: "네, 초안 작성해서 검토함에 올려둘게요", time: "6.25 오전 10:20" }
+      ] },
+    { id: "chungchunsnack", store: "청춘분식", unread: false, lastActivity: 3,
+      messages: [
+        { who: "store", text: "리뷰 답글 템플릿 좀 더 늘려주실 수 있나요?", time: "6.26 오후 3:00" },
+        { who: "me", text: "네! 몇 개 더 준비해서 반영해드릴게요", time: "6.26 오후 3:30" }
+      ] },
+    { id: "cheongdam", store: "청담라인의원", unread: true, lastActivity: 4,
+      messages: [
+        { who: "store", text: "다음 달에 진행할 룰렛 이벤트 초안 확인 부탁드려요", time: "7.1 오전 9:30" }
+      ] },
+    { id: "cafebombom", store: "카페봄봄 신촌점", unread: true, lastActivity: 5,
+      messages: [
+        { who: "store", text: "블로그에 있는 사진을 이번 여름 신메뉴 사진으로 바꿔주시겠어요?", time: "7.3 오전 11:20" },
+        { who: "me", text: "네, 확인했어요! 신메뉴 사진 몇 장 받을 수 있을까요?", time: "7.3 오후 1:05" },
+        { who: "store", text: "오늘 중으로 사진 보내드릴게요", time: "7.3 오후 1:40", image: MOCK_PHOTO },
+        { who: "me", text: "네, 기다릴게요!", time: "7.3 오후 1:45" }
+      ] },
+    { id: "terrace", store: "테라스의원", unread: false, lastActivity: 6,
+      messages: [
+        { who: "store", text: "6월 리포트에서 재방문율이 왜 떨어졌는지 설명해 주실 수 있나요?", time: "6.28 오전 9:50" },
+        { who: "me", text: "장마철 영향이 커 보여요. 실외 좌석 이용이 줄면서 방문 빈도가 낮아진 것 같아요", time: "6.28 오전 11:10" },
+        { who: "me", text: "7월엔 우천 시 할인 쿠폰으로 대응해볼게요!", time: "6.28 오전 11:11" },
+        { who: "store", text: "좋은 생각이에요, 부탁드려요!", time: "6.28 오후 2:30" },
+        { who: "store", text: "여름 이벤트 문자를 하나 더 보내고 싶어요. 지난번이랑 비슷한 느낌으로 부탁드려요", time: "어제 오전 10:12" },
+        { who: "me", text: "네 사장님! 지난번 문구 참고해서 초안 만들어볼게요", time: "어제 오전 10:40" },
+        { who: "me", text: "초안 보내드렸어요. 비즈챗 문자함에서 확인해 주세요 :)", time: "어제 오후 2:15" },
+        { who: "store", text: "확인했어요! 좋아요, 이대로 보내주세요", time: "어제 오후 3:02" }
+      ] }
+  ];
+  var nextActivitySeq = 7;
+
+  var currentFilter = "all";
+  var currentSearch = "";
+  var currentId = "terrace";
+  var pendingImage = null;
+  var ANSWERED_PAGE_SIZE = 2;
+  var answeredShown = ANSWERED_PAGE_SIZE;
+
+  function needsReply(r) {
+    var last = r.messages[r.messages.length - 1];
+    return !!last && last.who === "store";
+  }
+
+  function matchesFilter(r) {
+    if (currentFilter === "needsReply" && !needsReply(r)) return false;
+    if (currentSearch && r.store.indexOf(currentSearch) === -1) return false;
+    return true;
+  }
+
+  function findReq(id) {
+    for (var i = 0; i < REQS.length; i++) if (REQS[i].id === id) return REQS[i];
+    return null;
+  }
+
+  function rowHtml(r) {
+    var last = r.messages[r.messages.length - 1];
+    var preview = (last.image ? "📷 " : "") + (last.text || "사진");
+    var badge = needsReply(r)
+      ? '<span class="uw-badge b-orange" style="flex-shrink:0">답변 필요</span>'
+      : '<span class="uw-badge b-green" style="flex-shrink:0">답변함</span>';
+    var unreadDot = r.unread ? '<span aria-label="안읽음" style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px"></span>' : "";
+    return '<div class="uw-row req-row' + (r.id === currentId ? ' is-sel' : '') + '" data-req-id="' + r.id + '" style="cursor:pointer;align-items:flex-start;gap:8px">' +
+      unreadDot +
+      '<div class="uw-row-body">' +
+        '<div class="rq-store">' + r.store + '</div>' +
+        '<div class="uw-row-title" style="font-size:13px;line-height:1.4">' + preview + '</div>' +
+        '<div class="uw-row-desc">' + last.time + '</div>' +
+      '</div>' + badge +
+    '</div>';
+  }
+
+  function renderList() {
+    var el = document.getElementById("req-list");
+    var moreBtn = document.getElementById("btn-load-more");
+    var filtered = REQS.filter(matchesFilter);
+
+    // 답변 필요 : 오래 기다린 순(오름차순), 페이징 없이 전부 노출
+    var needsList = filtered.filter(needsReply).sort(function (a, b) { return a.lastActivity - b.lastActivity; });
+    // 답변함 : 최신순(내림차순), 일부만 노출 + 더 보기. "답변 필요" 탭에서는 아예 안 보임
+    var answeredList = currentFilter === "needsReply" ? [] :
+      filtered.filter(function (r) { return !needsReply(r); }).sort(function (a, b) { return b.lastActivity - a.lastActivity; });
+
+    if (!needsList.length && !answeredList.length) {
+      el.innerHTML = '<div style="padding:20px 4px;font-size:13px;color:var(--ink-400);text-align:center">조건에 맞는 대화가 없어요</div>';
+      moreBtn.style.display = "none";
+      return;
+    }
+
+    var shownAnswered = answeredList.slice(0, answeredShown);
+    el.innerHTML = needsList.map(rowHtml).join("") + shownAnswered.map(rowHtml).join("");
+
+    var remaining = answeredList.length - shownAnswered.length;
+    if (remaining > 0) {
+      moreBtn.style.display = "block";
+      moreBtn.textContent = "답변함 대화 더 보기 (" + remaining + ")";
+    } else {
+      moreBtn.style.display = "none";
+    }
+  }
+
+  document.getElementById("btn-load-more").addEventListener("click", function () {
+    answeredShown += ANSWERED_PAGE_SIZE;
+    renderList();
+  });
+
+  function bubbleHtml(m) {
+    /* 대행사 관점: 나(대행사)=파란 버블 오른쪽, 사장님=흰 버블 왼쪽 (27과 좌우 반전) */
+    var img = m.image ? '<img src="' + m.image + '" style="width:180px;height:180px;object-fit:cover;border-radius:10px;display:block' + (m.text ? ';margin-bottom:8px' : '') + '" alt="첨부 이미지">' : "";
+    if (m.who === "me") {
+      return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">' +
+        '<div style="max-width:78%;background:var(--blue);color:#fff;font-size:13px;line-height:1.6;padding:10px 14px;border-radius:14px 14px 6px 14px">' + img + (m.text || "") + '</div>' +
+        '<span style="font-size:11px;color:var(--ink-400)">' + m.time + '</span></div>';
+    }
+    return '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:3px">' +
+      '<div style="max-width:78%;background:#fff;border:1px solid var(--card-border);color:var(--ink-900);font-size:13px;line-height:1.6;padding:10px 14px;border-radius:14px 14px 14px 6px">' + img + (m.text || "") + '</div>' +
+      '<span style="font-size:11px;color:var(--ink-400)">' + m.time + '</span></div>';
+  }
+
+  function renderThread(id) {
+    var r = findReq(id);
+    if (!r) return;
+    currentId = id;
+    r.unread = false;
+    document.getElementById("thread-store").textContent = r.store;
+    var wrap = document.getElementById("thread-messages");
+    wrap.innerHTML = r.messages.map(bubbleHtml).join("");
+    wrap.scrollTop = wrap.scrollHeight;
+    var badge = document.getElementById("thread-status-badge");
+    if (needsReply(r)) { badge.className = "uw-badge b-orange"; badge.textContent = "답변 필요"; }
+    else { badge.className = "uw-badge b-green"; badge.textContent = "답변함"; }
+    renderList();
+  }
+
+  function clearAttachment() {
+    pendingImage = null;
+    document.getElementById("chat-file-input").value = "";
+    document.getElementById("attach-preview").style.display = "none";
+  }
+
+  document.getElementById("req-list").addEventListener("click", function (e) {
+    var row = e.target.closest(".req-row");
+    if (!row) return;
+    renderThread(row.getAttribute("data-req-id"));
+  });
+
+  document.getElementById("rq-tabs").addEventListener("click", function (e) {
+    var tab = e.target.closest("[data-filter]");
+    if (!tab) return;
+    document.querySelectorAll(".rq-tab").forEach(function (t) { t.classList.remove("is-active"); });
+    tab.classList.add("is-active");
+    currentFilter = tab.getAttribute("data-filter");
+    answeredShown = ANSWERED_PAGE_SIZE;
+    renderList();
+  });
+
+  document.getElementById("rq-search").addEventListener("input", function (e) {
+    currentSearch = e.target.value.trim();
+    answeredShown = ANSWERED_PAGE_SIZE;
+    renderList();
+  });
+
+  document.getElementById("btn-attach").addEventListener("click", function () {
+    document.getElementById("chat-file-input").click();
+  });
+  document.getElementById("chat-file-input").addEventListener("change", function (e) {
+    var f = e.target.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      pendingImage = ev.target.result;
+      document.getElementById("attach-preview-img").src = pendingImage;
+      document.getElementById("attach-preview").style.display = "flex";
+    };
+    reader.readAsDataURL(f);
+  });
+  document.getElementById("btn-attach-remove").addEventListener("click", clearAttachment);
+
+  document.addEventListener("click", function (e) {
+    var chip = e.target.closest("[data-chip]");
+    if (chip) {
+      var ta = document.getElementById("thread-input");
+      ta.value = ta.value ? ta.value + " " + chip.getAttribute("data-chip") : chip.getAttribute("data-chip");
+      ta.focus();
+      return;
+    }
+
+    var t = e.target.closest("[data-action]");
+    if (!t) return;
+    var act = t.getAttribute("data-action");
+
+    if (act === "send-thread-msg") {
+      var input = document.getElementById("thread-input");
+      var text = input.value.trim();
+      if (!text && !pendingImage) return;
+      var r = findReq(currentId);
+      var msg = { who: "me", time: "방금" };
+      if (text) msg.text = text;
+      if (pendingImage) msg.image = pendingImage;
+      r.messages.push(msg);
+      r.lastActivity = nextActivitySeq++;
+      renderThread(currentId);
+      input.value = "";
+      clearAttachment();
+      if (window.UW && window.UW.toast) window.UW.toast("답장을 보냈어요");
+    }
+  });
+
+  // URL 파라미터로 특정 매장 대화 바로 열기: 17_요청관리.html?req=cafebombom
+  var qid = new URLSearchParams(location.search).get("req");
+  document.addEventListener("DOMContentLoaded", function () {
+    renderList();
+    renderThread(findReq(qid) ? qid : "terrace");
+  });
+})();
+</script>
+</body>
+</html>

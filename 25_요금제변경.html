@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>요금제 변경 — 비즈플래닛</title>
+<!-- UW_BL_02 · P-B/P-C · 스펙: planning/27 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_BL_02">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="09_요금제비용.html" style="color:var(--ink-500);text-decoration:none">요금제·비용</a> › 요금제 변경</span>
+      <span class="uw-topbar-sub">필요에 맞게 요금제를 바꿀 수 있어요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-col-main">
+
+        <!-- M01 · view: 요금제 비교(3종, 정본가) -->
+        <section data-module="M01">
+          <h3 class="uw-section-title">요금제를 비교해 보세요</h3>
+          <div class="uw-section-caption mt-8">내려가는 변경도 포함해 언제든 바꿀 수 있어요</div>
+
+          <div class="uw-tiles mt-16">
+
+            <!-- Basic -->
+            <div class="uw-tile" data-plan="Basic" style="display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center">
+                <div style="font-size:15px;font-weight:800">Basic</div>
+                <span class="uw-badge b-blue tile-current-badge" style="display:none;margin-left:auto">지금 요금제</span>
+              </div>
+              <div style="font-size:22px;font-weight:800;margin-top:10px">₩39,000<span style="font-size:13px;font-weight:600;color:var(--ink-500)"> / 월</span></div>
+              <div style="font-size:13px;color:var(--ink-600);margin-top:12px;line-height:1.9;flex:1">
+                ✓ 블로그 월 4건<br>✓ 문자 월 500건<br>✓ AI 챗봇 기본
+              </div>
+              <!-- M02 · edit · L2+: 변경 확정(다음 결제일 적용) -->
+              <button class="btn btn-ghost btn-sm plan-select-btn" style="width:100%;margin-top:14px" data-module="M02" data-select-plan="Basic" data-plan-price="39,000">선택</button>
+            </div>
+
+            <!-- Pro -->
+            <div class="uw-tile" data-plan="Pro" style="display:flex;flex-direction:column;border-color:var(--blue-border)">
+              <div style="display:flex;align-items:center">
+                <div style="font-size:15px;font-weight:800">Pro</div>
+                <span class="uw-badge b-blue tile-current-badge" style="display:none;margin-left:auto">지금 요금제</span>
+              </div>
+              <div style="font-size:22px;font-weight:800;margin-top:10px">₩89,000<span style="font-size:13px;font-weight:600;color:var(--ink-500)"> / 월</span></div>
+              <div style="font-size:13px;color:var(--ink-600);margin-top:12px;line-height:1.9;flex:1">
+                ✓ 블로그 월 8건<br>✓ 문자 월 1,000건<br>✓ AI 챗봇 고급
+              </div>
+              <button class="btn btn-ghost btn-sm plan-select-btn" style="width:100%;margin-top:14px" data-module="M02" data-select-plan="Pro" data-plan-price="89,000">선택</button>
+            </div>
+
+            <!-- Premium -->
+            <div class="uw-tile" data-plan="Premium" style="display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center">
+                <div style="font-size:15px;font-weight:800">Premium</div>
+                <span class="uw-badge b-blue tile-current-badge" style="display:none;margin-left:auto">지금 요금제</span>
+              </div>
+              <div style="font-size:22px;font-weight:800;margin-top:10px">₩189,000<span style="font-size:13px;font-weight:600;color:var(--ink-500)"> / 월</span></div>
+              <div style="font-size:13px;color:var(--ink-600);margin-top:12px;line-height:1.9;flex:1">
+                ✓ 블로그 무제한<br>✓ 문자 무제한<br>✓ 전담 컨설팅
+              </div>
+              <button class="btn btn-ghost btn-sm plan-select-btn" style="width:100%;margin-top:14px" data-module="M02" data-select-plan="Premium" data-plan-price="189,000">선택</button>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="uw-section-caption mt-16" style="text-align:center">내려가는 변경도 언제든 할 수 있어요 · 남은 기간 요금은 정산돼요</div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 요금제 변경 확인 모달 ==================== -->
+<div class="uw-modal-backdrop" id="modal-change-plan">
+  <div class="uw-modal">
+    <div class="uw-modal-title">요금제를 바꿀까요?</div>
+    <div class="uw-modal-body">
+      다음 결제일 <b id="modal-plan-renewal">2026-07-10</b>부터 <b id="modal-plan-name">Basic 요금제</b> <b id="modal-plan-price">₩39,000/월</b>로 바뀌어요.<br>그 전까지는 지금 그대로예요.
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-change-plan">바꿀게요</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 레벨별 "지금 요금제" 동기화 + 변경 확정 모달 ---- */
+(function () {
+  function syncTiles() {
+    var lv = document.body.getAttribute("data-level") || "L2";
+    var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+    document.querySelectorAll(".uw-tile[data-plan]").forEach(function (tile) {
+      var plan = tile.getAttribute("data-plan");
+      var isCurrent = plan === mock.plan;
+      var badge = tile.querySelector(".tile-current-badge");
+      if (badge) badge.style.display = isCurrent ? "" : "none";
+      var btn = tile.querySelector(".plan-select-btn");
+      if (btn) { btn.disabled = isCurrent; btn.textContent = isCurrent ? "이용 중" : "선택"; }
+      var fb = tile.querySelector('[data-fallback-for="M02"]');
+      if (fb) fb.style.display = isCurrent ? "none" : "";
+    });
+  }
+  document.addEventListener("uw:levelchange", syncTiles);
+  document.addEventListener("DOMContentLoaded", syncTiles);
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".plan-select-btn");
+    if (btn && !btn.disabled) {
+      var plan = btn.getAttribute("data-select-plan");
+      var price = btn.getAttribute("data-plan-price");
+      var lv = document.body.getAttribute("data-level") || "L2";
+      var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+      document.getElementById("modal-plan-renewal").textContent = mock.renewal || "";
+      document.getElementById("modal-plan-name").textContent = plan + " 요금제";
+      document.getElementById("modal-plan-price").textContent = "₩" + price + "/월";
+      document.getElementById("modal-change-plan").classList.add("is-open");
+      return;
+    }
+    var confirmBtn = e.target.closest('[data-action="confirm-change-plan"]');
+    if (confirmBtn) {
+      confirmBtn.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("요금제 변경을 예약했어요.");
+    }
+  });
+})();
+</script>
+</body>
+</html>

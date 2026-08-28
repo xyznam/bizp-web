@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매장 정보 설정 — 비즈플래닛</title>
+<!-- UW_ST_08 · 매장 정보 설정 (온보딩 전용)
+     구조: Step1 플레이스 불러오기 → Step2 정보 확인·입력 → Step3 채널 연결 → Step4 자료 올리기(선택)
+     사용 주체: L2 셀프 사장님 (가입 후 설정전 자동 진입) · L3 대행사 (12_매장목록 신규 등록 후 진입) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* ---- 스텝퍼 ---- */
+.reg-steps { display: flex; align-items: center; gap: 0; margin-top: 20px; }
+.reg-step { display: flex; align-items: center; gap: 8px; }
+.reg-step-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  background: var(--inset); color: var(--ink-400); border: 1px solid var(--card-border);
+}
+.reg-step-label { font-size: 13px; font-weight: 600; color: var(--ink-400); letter-spacing: -0.01em; }
+.reg-step.is-current .reg-step-num { background: var(--blue); color: #fff; border-color: var(--blue); }
+.reg-step.is-current .reg-step-label { color: var(--ink-900); font-weight: 700; }
+.reg-step.is-done .reg-step-num { background: var(--blue-50); color: var(--blue); border-color: var(--blue-border); }
+.reg-step.is-done .reg-step-label { color: var(--ink-600); }
+.reg-step-line { flex: 1; height: 1px; background: var(--card-border); margin: 0 12px; min-width: 24px; }
+.reg-step-line.is-done { background: var(--blue-border); }
+
+/* ---- 스텝 패널 ---- */
+.reg-pane { display: none; }
+.reg-pane.is-active { display: block; }
+
+/* ---- 폼 ---- */
+.reg-field { margin-top: 18px; }
+.reg-label { font-size: 13px; font-weight: 700; color: var(--ink-700); letter-spacing: -0.01em; display: flex; align-items: center; gap: 6px; }
+.reg-label .req { color: var(--red); }
+.reg-label .uw-badge { font-weight: 700; }
+.reg-input, .reg-select, .reg-textarea {
+  width: 100%; margin-top: 8px; height: 52px;
+  border: 1px solid var(--input-border); border-radius: var(--radius-btn);
+  padding: 0 14px; font-family: inherit; font-size: 15px; font-weight: 500;
+  color: var(--ink-900); background: var(--white); outline: none;
+}
+.reg-input::placeholder { color: var(--ink-400); }
+.reg-input:focus, .reg-select:focus, .reg-textarea:focus { border-color: var(--blue); }
+.reg-input.is-error { border-color: var(--red); }
+.reg-textarea { height: auto; min-height: 110px; padding: 12px 14px; line-height: 1.6; resize: vertical; }
+.reg-help { font-size: 12px; font-weight: 500; color: var(--ink-500); margin-top: 6px; line-height: 1.6; }
+.reg-help.is-error { color: var(--red); font-weight: 600; }
+.reg-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.reg-inline { display: flex; gap: 8px; margin-top: 8px; }
+.reg-inline .reg-input { margin-top: 0; }
+.reg-inline .btn { flex-shrink: 0; height: 52px; border-radius: var(--radius-btn); }
+
+/* 요일 칩 토글 */
+.reg-days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.reg-day {
+  min-width: 44px; height: 40px; padding: 0 12px;
+  border: 1px solid var(--input-border); border-radius: 10px; background: var(--white);
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink-600); cursor: pointer;
+}
+.reg-day.is-on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+
+/* 라디오 카드 (주차) */
+.reg-radios { display: flex; gap: 8px; margin-top: 8px; }
+.reg-radio {
+  flex: 1; height: 48px; border: 1px solid var(--input-border); border-radius: var(--radius-btn);
+  background: var(--white); font-family: inherit; font-size: 14px; font-weight: 600;
+  color: var(--ink-600); cursor: pointer;
+}
+.reg-radio.is-on { border: 2px solid var(--blue); color: var(--blue); font-weight: 700; background: var(--blue-50); }
+
+/* 업로드 드롭존 */
+.reg-drop {
+  margin-top: 8px; border: 1.5px dashed var(--input-border); border-radius: var(--radius-card);
+  padding: 26px 16px; text-align: center; cursor: pointer; background: var(--white);
+}
+.reg-drop:hover { border-color: var(--blue-border); background: var(--blue-50); }
+.reg-drop-title { font-size: 14px; font-weight: 700; color: var(--ink-700); }
+.reg-drop-desc { font-size: 12px; font-weight: 500; color: var(--ink-500); margin-top: 4px; }
+
+/* 플레이스 수집 요약 */
+.reg-collect { border: 1px solid var(--blue-border); background: var(--blue-50); border-radius: var(--radius-card); padding: 16px 18px; margin-top: 16px; }
+.reg-collect-title { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+.reg-collect-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ink-700); line-height: 1.6; }
+.reg-collect-list b { font-weight: 700; color: var(--ink-900); }
+
+/* 하단 액션 */
+.reg-actions { display: flex; gap: 8px; align-items: center; margin-top: 24px; }
+.reg-actions .spacer { flex: 1; }
+
+/* 플레이스 수집 사진 그리드 */
+.reg-photos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.reg-photo { position: relative; aspect-ratio: 1; border-radius: var(--radius-tile); overflow: hidden; background: var(--inset); border: 1px solid var(--card-border); cursor: pointer; }
+.reg-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.reg-photo .off-mark { position: absolute; inset: 0; background: rgba(25,31,40,.55); color: #fff; display: none; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; text-align: center; line-height: 1.5; }
+.reg-photo.is-off .off-mark { display: flex; }
+.reg-photo.is-off img { filter: grayscale(1); }
+
+/* 요일별 운영시간 행 */
+.dh-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--divider); }
+.dh-row:last-child { border-bottom: 0; }
+.dh-day { width: 30px; font-size: 13px; font-weight: 700; color: var(--ink-700); flex-shrink: 0; }
+.dh-time { flex: 1; min-width: 0; height: 40px; border: 1px solid var(--input-border); border-radius: 10px; padding: 0 8px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink-900); }
+.dh-time:disabled { background: var(--inset); color: var(--ink-400); }
+.dh-off { flex-shrink: 0; height: 40px; padding: 0 12px; border: 1px solid var(--input-border); border-radius: 10px; background: var(--white); font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink-600); cursor: pointer; }
+.dh-off.is-on { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+
+@media (max-width: 640px) {
+  .reg-grid2 { grid-template-columns: 1fr; }
+  .reg-step-label { display: none; }
+  .reg-step.is-current .reg-step-label { display: block; }
+}
+</style>
+</head>
+<body data-screen="UW_TEST_REG">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html" class="is-active">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">홍</div>
+      <div>
+        <div class="u-name">홍길동</div>
+        <div class="u-plan">Basic 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="06_우리매장정보.html" style="color:var(--ink-500);text-decoration:none">우리 매장 정보</a> › 매장 정보 설정</span>
+      <div class="uw-topbar-right">
+        <button class="uw-bell" aria-label="알림">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body" style="max-width:720px">
+
+      <!-- ========== 헤더 ========== -->
+      <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.03em">매장 정보 설정</h1>
+      <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">매장 정보를 채우면 AI가 우리 매장을 배우고 글쓰기·문자·챗봇을 시작할 수 있어요.</div>
+
+      <!-- ========== 스텝퍼 ========== -->
+      <div class="reg-steps" aria-label="등록 단계">
+        <div class="reg-step is-current" data-step-ind="1">
+          <span class="reg-step-num">1</span><span class="reg-step-label">플레이스 불러오기</span>
+        </div>
+        <div class="reg-step-line" data-line="1"></div>
+        <div class="reg-step" data-step-ind="2">
+          <span class="reg-step-num">2</span><span class="reg-step-label">정보 확인·입력</span>
+        </div>
+        <div class="reg-step-line" data-line="2"></div>
+        <div class="reg-step" data-step-ind="3">
+          <span class="reg-step-num">3</span><span class="reg-step-label">채널 연결</span>
+        </div>
+        <div class="reg-step-line" data-line="3"></div>
+        <div class="reg-step" data-step-ind="4">
+          <span class="reg-step-num">4</span><span class="reg-step-label">자료 올리기</span>
+        </div>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- Step 1 · 플레이스 불러오기 -->
+      <!-- ================================================== -->
+      <section class="reg-pane is-active" id="step-1">
+        <div class="uw-card" style="margin-top:16px;padding:28px 28px 24px">
+          <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em">네이버 플레이스 주소를 넣어 주세요</div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">매장 이름·주소·연락처·운영시간을 자동으로 채워 드려요. 가져온 내용은 다음 단계에서 고칠 수 있어요.</div>
+
+          <div class="reg-inline" style="margin-top:18px">
+            <input class="reg-input" id="place-url" type="url" placeholder="https://naver.me/... 또는 플레이스 주소 붙여넣기">
+            <button class="btn btn-primary" id="btn-load" style="padding:0 24px">불러오기</button>
+          </div>
+          <div class="reg-help">플레이스 주소는 네이버 지도에서 우리 매장을 찾아 '공유' 버튼을 누르면 복사할 수 있어요.</div>
+        </div>
+
+        <div style="text-align:center;margin-top:16px">
+          <span style="font-size:14px;font-weight:600;color:var(--blue);cursor:pointer" id="btn-manual">네이버 플레이스가 없어요 — 직접 입력할게요</span>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- Step 2 · 정보 확인·입력 (플레이스/직접 두 경로 합류) -->
+      <!-- ================================================== -->
+      <section class="reg-pane" id="step-2">
+
+        <!-- 플레이스 경로 전용: 수집 완료 배너 + 함께 가져온 정보 요약 -->
+        <div data-only-loaded style="display:none">
+          <div class="reg-collect">
+            <div class="reg-collect-title">✦ 플레이스에서 매장 정보를 가져왔어요</div>
+            <div class="reg-collect-list">
+              <div>기본 정보와 운영시간을 아래에 채워 뒀어요. <b>사업자번호와 주차 정보</b>는 플레이스에 없어서 직접 입력이 필요해요.</div>
+              <div>AI 학습에 쓸 정보도 함께 가져왔어요 — <b>리뷰 1,907개 · 키워드 5개 · 연결 채널 4곳 · 편의시설 6가지</b>. 등록이 끝나면 AI 학습현황에서 볼 수 있어요.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="uw-card" style="margin-top:16px;padding:8px 28px 28px">
+          <h3 class="uw-section-title" style="font-size:15px;padding-top:20px">기본 정보</h3>
+
+          <div class="reg-grid2">
+            <div class="reg-field">
+              <div class="reg-label">업종 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
+              <select class="reg-select" data-f="category" required>
+                <option value="">골라 주세요</option>
+                <option>음식점·카페</option>
+                <option>의료/건강 › 병원/클리닉 › 피부과</option>
+                <option>미용·뷰티</option>
+                <option>학원·교육</option>
+                <option>소매·판매</option>
+                <option>기타</option>
+              </select>
+            </div>
+            <div class="reg-field">
+              <div class="reg-label">매장 이름 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
+              <input class="reg-input" data-f="name" placeholder="예: 홍익분식" required>
+            </div>
+          </div>
+
+          <div class="reg-grid2">
+            <div class="reg-field">
+              <div class="reg-label">사업자번호 <span class="req">*</span></div>
+              <input class="reg-input" data-f="bizno" inputmode="numeric" placeholder="숫자 10자리 (예: 1234567890)" required>
+              <div class="reg-help">가입할 때 입력한 번호예요. 다르면 고쳐 주세요.</div>
+            </div>
+            <div class="reg-field">
+              <div class="reg-label">매장 대표 연락처 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
+              <input class="reg-input" data-f="phone" inputmode="tel" placeholder="예: 0212345678" required>
+            </div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">주소 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
+            <div class="reg-inline">
+              <input class="reg-input" data-f="addr" placeholder="주소 검색 버튼을 눌러 주세요" required>
+              <button class="btn btn-secondary" data-action="toast" data-toast-msg="주소 검색은 프로토타입에서 준비 중이에요">주소 검색</button>
+            </div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">이메일 <span style="font-weight:500;color:var(--ink-400)">(선택)</span></div>
+            <input class="reg-input" data-f="email" type="email" placeholder="세금계산서나 안내를 받을 이메일">
+          </div>
+
+          <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">운영시간</h3>
+
+          <div class="reg-grid2">
+            <div class="reg-field">
+              <div class="reg-label">영업 시간 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
+              <input class="reg-input" data-f="hours" placeholder="예: 10:00 – 19:00" required>
+              <div class="reg-help">요일마다 다르면 <span style="color:var(--blue);font-weight:700;cursor:pointer" data-action="open-modal" data-modal="modal-dayhours">요일별로 설정</span>할 수 있어요.</div>
+            </div>
+            <div class="reg-field">
+              <div class="reg-label">쉬는 시간 <span style="font-weight:500;color:var(--ink-400)">(선택)</span></div>
+              <input class="reg-input" data-f="break" placeholder="예: 13:00 – 14:00">
+            </div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">쉬는 날 <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
+            <div class="reg-days" id="days">
+              <button type="button" class="reg-day" data-day="월">월</button>
+              <button type="button" class="reg-day" data-day="화">화</button>
+              <button type="button" class="reg-day" data-day="수">수</button>
+              <button type="button" class="reg-day" data-day="목">목</button>
+              <button type="button" class="reg-day" data-day="금">금</button>
+              <button type="button" class="reg-day" data-day="토">토</button>
+              <button type="button" class="reg-day" data-day="일">일</button>
+              <button type="button" class="reg-day" data-day="공휴일">공휴일</button>
+            </div>
+            <div class="reg-help">문 닫는 요일을 눌러 주세요. 없으면 그대로 두면 돼요.</div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">주차</div>
+            <div class="reg-radios" id="parking">
+              <button type="button" class="reg-radio" data-park="가능">가능해요</button>
+              <button type="button" class="reg-radio" data-park="불가">어려워요</button>
+              <button type="button" class="reg-radio" data-park="인근">근처 유료 주차장</button>
+            </div>
+            <div class="reg-help" data-only-loaded style="display:none">플레이스에는 없는 정보예요. 손님 안내 글에 활용돼요.</div>
+          </div>
+
+          <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">매장 소개 <span style="font-weight:500;color:var(--ink-400);font-size:13px">(선택)</span></h3>
+          <div class="reg-field" style="margin-top:10px">
+            <textarea class="reg-textarea" data-f="intro" placeholder="우리 매장의 특징이나 강점을 편하게 적어 주세요. AI가 글을 쓸 때 참고해요."></textarea>
+          </div>
+        </div>
+
+        <div class="reg-actions">
+          <button class="btn btn-ghost" id="btn-back-1">이전</button>
+          <div class="spacer"></div>
+          <button class="btn btn-primary" id="btn-to-3" style="padding:0 32px">다음 — 채널 연결</button>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- Step 3 · 채널 연결 -->
+      <!-- ================================================== -->
+      <section class="reg-pane" id="step-3">
+        <div class="uw-card" style="margin-top:16px;padding:24px 28px 28px">
+          <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em">채널을 연결하면 AI가 더 잘 배워요</div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:4px;line-height:1.6">기존 블로그·플레이스 리뷰에서 우리 매장을 배워요. 지금 연결하지 않아도 나중에 할 수 있어요.</div>
+
+          <div class="reg-field">
+            <div class="reg-label">네이버 플레이스</div>
+            <div style="margin-top:8px;padding:14px 16px;border:1px solid var(--card-border);border-radius:var(--radius-tile);display:flex;align-items:center;gap:12px">
+              <span style="font-size:22px">🗺</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700" id="ch-place-status">플레이스 URL로 불러왔어요</div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:2px">리뷰와 기본 정보를 자동으로 수집해요</div>
+              </div>
+              <span class="uw-badge b-green" id="ch-place-badge">연결됨</span>
+            </div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">네이버 블로그 <span style="font-weight:500;color:var(--ink-400)">(선택)</span></div>
+            <div class="reg-inline">
+              <input class="reg-input" id="ch-blog-url" type="url" placeholder="https://blog.naver.com/아이디">
+              <button class="btn btn-secondary" id="btn-ch-blog">연결하기</button>
+            </div>
+            <div class="reg-help">기존에 쓴 블로그 글에서 우리 매장의 특징을 배워요</div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">인스타그램 <span style="font-weight:500;color:var(--ink-400)">(선택)</span></div>
+            <div class="reg-inline">
+              <input class="reg-input" id="ch-insta-url" type="url" placeholder="https://instagram.com/아이디">
+              <button class="btn btn-secondary" id="btn-ch-insta">연결하기</button>
+            </div>
+            <div class="reg-help">사진과 캡션에서 매장 분위기와 메뉴를 배워요</div>
+          </div>
+        </div>
+
+        <div class="reg-actions">
+          <button class="btn btn-ghost" id="btn-back-2">이전</button>
+          <div class="spacer"></div>
+          <button class="btn btn-primary" id="btn-to-4" style="padding:0 32px">다음 — 자료 올리기</button>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- Step 4 · 자료 올리기 (전부 선택) -->
+      <!-- ================================================== -->
+      <section class="reg-pane" id="step-4">
+
+        <div class="uw-card" style="margin-top:16px;padding:24px 28px 28px">
+          <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em">자료를 올리면 AI가 더 잘 배워요</div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:4px;line-height:1.6">지금 올리지 않아도 괜찮아요. 등록이 끝난 뒤 <b style="color:var(--ink-700)">우리 매장 정보 › 매장 자료 관리</b>에서 언제든 추가할 수 있어요.</div>
+
+          <div class="reg-field" style="margin-top:22px">
+            <div class="reg-label">매장 사진 <span data-only-loaded style="display:none" class="uw-badge b-green">플레이스에서 4장 가져옴</span></div>
+            <div data-only-loaded style="display:none">
+              <div class="reg-photos" id="place-photos">
+                <div class="reg-photo" data-photo title="누르면 뺄 수 있어요"><img src="https://ldb-phinf.pstatic.net/20230727_121/169045881818019jJh_JPEG/P1224594.jpg" alt="플레이스 사진 1" onerror="this.remove()"><div class="off-mark">뺐어요<br>눌러서 되돌리기</div></div>
+                <div class="reg-photo" data-photo title="누르면 뺄 수 있어요"><img src="https://ldb-phinf.pstatic.net/20260530_238/1780113729032thJON_JPEG/1780113721563.jpg" alt="플레이스 사진 2" onerror="this.remove()"><div class="off-mark">뺐어요<br>눌러서 되돌리기</div></div>
+                <div class="reg-photo" data-photo title="누르면 뺄 수 있어요"><img src="https://ldb-phinf.pstatic.net/20260519_13/1779197326656DaNJa_JPEG/1778638045759.jpg" alt="플레이스 사진 3" onerror="this.remove()"><div class="off-mark">뺐어요<br>눌러서 되돌리기</div></div>
+                <div class="reg-photo" data-photo title="누르면 뺄 수 있어요"><img src="https://ldb-phinf.pstatic.net/20260519_84/17791973264680EK2K_JPEG/1779194635927.jpg" alt="플레이스 사진 4" onerror="this.remove()"><div class="off-mark">뺐어요<br>눌러서 되돌리기</div></div>
+              </div>
+              <div class="reg-help">플레이스에서 가져온 사진이에요. 쓰지 않을 사진은 눌러서 빼 주세요 — 뺀 사진은 AI가 쓰지 않아요.</div>
+            </div>
+            <div class="reg-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
+              <div class="reg-drop-title">사진을 끌어다 놓거나 눌러서 올리기</div>
+              <div class="reg-drop-desc">JPG · PNG · WEBP, 한 장에 10MB까지, 여러 장 가능</div>
+            </div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">메뉴판</div>
+            <div class="reg-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
+              <div class="reg-drop-title">메뉴판 사진이나 파일 올리기</div>
+              <div class="reg-drop-desc">JPG · PNG · PDF, 10MB까지</div>
+            </div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">매장 소개 문서</div>
+            <div class="reg-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
+              <div class="reg-drop-title">소개서·브로슈어 올리기</div>
+              <div class="reg-drop-desc">PDF · DOCX · PPTX, 20MB까지 — AI 챗봇이 손님 질문에 답할 때 참고해요</div>
+            </div>
+          </div>
+
+          <div class="reg-field">
+            <div class="reg-label">기타 자료</div>
+            <div class="reg-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
+              <div class="reg-drop-title">참고할 자료 올리기</div>
+              <div class="reg-drop-desc">JPG · PNG · PDF · DOCX, 20MB까지</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reg-actions">
+          <button class="btn btn-ghost" id="btn-back-3">이전</button>
+          <div class="spacer"></div>
+          <button class="btn btn-primary" data-action="open-modal" data-modal="modal-done" style="padding:0 32px">설정 완료</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ========== 모달: 설정 완료 ========== -->
+<div class="uw-modal-backdrop" id="modal-done">
+  <div class="uw-modal">
+    <div class="uw-modal-title">매장 정보 설정이 끝났어요</div>
+    <div class="uw-modal-body">이제 AI가 우리 매장을 배울게요. 채널 연결 정보를 바탕으로 블로그·리뷰를 읽기 시작해요.</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="location.href='06_우리매장정보.html'">나중에 할게요</button>
+      <button class="btn btn-primary btn-sm" onclick="location.href='15_AI학습현황.html'">학습 시작하기 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 요일별 운영시간 ========== -->
+<div class="uw-modal-backdrop" id="modal-dayhours">
+  <div class="uw-modal">
+    <div class="uw-modal-title">요일별 운영시간</div>
+    <div class="uw-modal-body">
+      <div id="dh-rows"></div>
+      <div class="reg-help" style="margin-top:12px">쉬는 시간은 모든 요일에 똑같이 적용돼요.</div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" id="btn-dh-save">저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---- 플레이스 수집 목데이터 (As-Is soho_store_register_loaded 승계: 테라스의원) ---- */
+  var PLACE = {
+    category: "의료/건강 › 병원/클리닉 › 피부과",
+    name: "테라스의원",
+    phone: "02-6105-0010",
+    addr: "서울 종로구 송월길 99 경희궁자이2단지 205동상가 2층",
+    brk: "13:00 – 14:00",
+    closed: ["수", "일"],
+    intro: "대표원장 직접상담으로 차별화된 토탈솔루션을 제공하는 광화문 프라이빗 피부과, 테라스의원입니다. 상담실장 없이 대표원장이 직접 상담하며, 모든 공간이 프라이빗한 1인실로 구성되어 있습니다.",
+    lastorder: "18:30",
+    menus: ["울쎄라 600샷", "슈링크 유니버스", "FX 인모드", "흑자 제거"],
+    dayHours: {
+      "월": { s: "10:00", e: "19:00", off: false },
+      "화": { s: "10:00", e: "19:00", off: false },
+      "수": { s: "", e: "", off: true },
+      "목": { s: "10:00", e: "19:00", off: false },
+      "금": { s: "10:00", e: "20:00", off: false },
+      "토": { s: "10:00", e: "15:00", off: false },
+      "일": { s: "", e: "", off: true }
+    }
+  };
+
+  var loaded = false;
+  var DAYS = ["월", "화", "수", "목", "금", "토", "일"];
+  var dayHours = null; /* {요일: {s, e, off}} — 요일별 설정 저장값 */
+
+  function emptyDayHours() {
+    var o = {};
+    DAYS.forEach(function (d) { o[d] = { s: "", e: "", off: false }; });
+    return o;
+  }
+
+  /* 요일별 값 → 영업 시간 요약문 ("월·화·목 10:00–19:00 / 금 10:00–20:00 …") */
+  function summarize() {
+    var groups = {}, order = [];
+    DAYS.forEach(function (d) {
+      var v = dayHours[d];
+      if (!v || v.off || !v.s || !v.e) return;
+      var k = v.s + "–" + v.e;
+      if (!groups[k]) { groups[k] = []; order.push(k); }
+      groups[k].push(d);
+    });
+    return order.map(function (k) { return groups[k].join("·") + " " + k; }).join(" / ");
+  }
+
+  function buildDhRows() {
+    var wrap = document.getElementById("dh-rows");
+    wrap.innerHTML = "";
+    DAYS.forEach(function (d) {
+      var v = (dayHours && dayHours[d]) || { s: "", e: "", off: false };
+      var row = document.createElement("div");
+      row.className = "dh-row";
+      row.innerHTML =
+        '<span class="dh-day">' + d + '</span>' +
+        '<input class="dh-time" type="time" data-dh-s="' + d + '" value="' + v.s + '"' + (v.off ? " disabled" : "") + '>' +
+        '<span style="color:var(--ink-400);flex-shrink:0">–</span>' +
+        '<input class="dh-time" type="time" data-dh-e="' + d + '" value="' + v.e + '"' + (v.off ? " disabled" : "") + '>' +
+        '<button type="button" class="dh-off' + (v.off ? " is-on" : "") + '" data-dh-off="' + d + '">휴무</button>';
+      wrap.appendChild(row);
+    });
+  }
+
+  function setStep(n) {
+    ["1", "2", "3", "4"].forEach(function (s) {
+      var pane = document.getElementById("step-" + s);
+      var ind  = document.querySelector('[data-step-ind="' + s + '"]');
+      if (pane) pane.classList.toggle("is-active", s === String(n));
+      if (ind) {
+        ind.classList.toggle("is-current", s === String(n));
+        ind.classList.toggle("is-done", Number(s) < n);
+        ind.querySelector(".reg-step-num").textContent = Number(s) < n ? "✓" : s;
+      }
+    });
+    document.querySelectorAll("[data-line]").forEach(function (l) {
+      l.classList.toggle("is-done", Number(l.getAttribute("data-line")) < n);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function applyLoadedState(on) {
+    loaded = on;
+    document.querySelectorAll("[data-only-loaded]").forEach(function (el) {
+      el.style.display = on ? "" : "none";
+    });
+    /* 가입 시 프리필은 경로 무관 공통 적용 */
+    var fb = document.querySelector('[data-f="bizno"]');
+    var fn = document.querySelector('[data-f="name"]');
+    if (fb && !fb.value) fb.value = "8708700393";
+    if (fn && !fn.value) fn.value = "테라스의원";
+    if (!on) { dayHours = null; return; }
+    /* 폼 채우기 */
+    var f = function (k) { return document.querySelector('[data-f="' + k + '"]'); };
+    dayHours = JSON.parse(JSON.stringify(PLACE.dayHours));
+    /* 가입 시 입력값 프리필 시뮬레이션 (실서비스: 세션에서 주입) */
+    f("bizno").value = "8708700393";   /* 가입 시 입력 */
+    f("name").value = PLACE.name;      /* 가입 시 입력 — Place 수집으로도 덮어쓰지 않음 */
+    f("category").value = PLACE.category;
+    f("phone").value = PLACE.phone;
+    f("addr").value = PLACE.addr;
+    f("hours").value = summarize();
+    f("break").value = PLACE.brk;
+    f("intro").value = PLACE.intro;
+    document.querySelectorAll(".reg-day").forEach(function (d) {
+      d.classList.toggle("is-on", PLACE.closed.indexOf(d.getAttribute("data-day")) >= 0);
+    });
+  }
+
+  /* ---- Step 1 → 2 ---- */
+  document.getElementById("btn-load").addEventListener("click", function () {
+    var url = document.getElementById("place-url");
+    if (!url.value.trim()) {
+      url.classList.add("is-error");
+      window.UW.toast("플레이스 주소를 먼저 붙여넣어 주세요");
+      return;
+    }
+    url.classList.remove("is-error");
+    applyLoadedState(true);
+    setStep(2);
+    window.UW.toast("플레이스에서 매장 정보를 가져왔어요");
+  });
+  document.getElementById("btn-manual").addEventListener("click", function () {
+    applyLoadedState(false);
+    setStep(2);
+  });
+
+  /* ---- Step 2 → 3 (필수값 검사) ---- */
+  document.getElementById("btn-to-3").addEventListener("click", function () {
+    var ok = true;
+    document.querySelectorAll("#step-2 [required]").forEach(function (el) {
+      var empty = !el.value || !el.value.trim();
+      el.classList.toggle("is-error", empty);
+      if (empty) ok = false;
+    });
+    if (!ok) { window.UW.toast("빨간 칸을 채워 주세요. 꼭 필요한 정보예요"); return; }
+    if (loaded) {
+      document.getElementById("ch-place-badge").textContent = "연결됨";
+      document.getElementById("ch-place-badge").className = "uw-badge b-green";
+      document.getElementById("ch-place-status").textContent = "플레이스 URL로 불러왔어요";
+    } else {
+      document.getElementById("ch-place-badge").textContent = "미연결";
+      document.getElementById("ch-place-badge").className = "uw-badge b-gray";
+      document.getElementById("ch-place-status").textContent = "아직 연결하지 않았어요";
+    }
+    setStep(3);
+  });
+  document.getElementById("btn-to-4").addEventListener("click", function () { setStep(4); });
+
+  /* ---- 뒤로 ---- */
+  document.getElementById("btn-back-1").addEventListener("click", function () { setStep(1); });
+  document.getElementById("btn-back-2").addEventListener("click", function () { setStep(2); });
+  document.getElementById("btn-back-3").addEventListener("click", function () { setStep(3); });
+
+  /* ---- 채널 연결 버튼 ---- */
+  document.getElementById("btn-ch-blog").addEventListener("click", function () {
+    var url = document.getElementById("ch-blog-url").value.trim();
+    if (!url) { if (window.UW) window.UW.toast("블로그 주소를 입력해 주세요"); return; }
+    if (window.UW) window.UW.toast("블로그를 연결했어요. AI가 기존 글을 읽기 시작해요");
+  });
+  document.getElementById("btn-ch-insta").addEventListener("click", function () {
+    var url = document.getElementById("ch-insta-url").value.trim();
+    if (!url) { if (window.UW) window.UW.toast("인스타그램 주소를 입력해 주세요"); return; }
+    if (window.UW) window.UW.toast("인스타그램을 연결했어요");
+  });
+
+  /* ---- 쉬는 날 토글 · 주차 라디오 ---- */
+  document.getElementById("days").addEventListener("click", function (e) {
+    var d = e.target.closest(".reg-day");
+    if (d) d.classList.toggle("is-on");
+  });
+  document.getElementById("parking").addEventListener("click", function (e) {
+    var r = e.target.closest(".reg-radio");
+    if (!r) return;
+    document.querySelectorAll(".reg-radio").forEach(function (x) { x.classList.remove("is-on"); });
+    r.classList.add("is-on");
+  });
+
+  /* ---- 요일별 운영시간 모달 ---- */
+  document.addEventListener("click", function (e) {
+    /* 모달 열기 직전 행 구성 (userweb.js의 open-modal 처리와 병행) */
+    if (e.target.closest('[data-modal="modal-dayhours"]')) {
+      if (!dayHours) dayHours = emptyDayHours();
+      buildDhRows();
+      return;
+    }
+    /* 요일 휴무 토글 */
+    var off = e.target.closest("[data-dh-off]");
+    if (off) {
+      var d = off.getAttribute("data-dh-off");
+      var on = off.classList.toggle("is-on");
+      document.querySelector('[data-dh-s="' + d + '"]').disabled = on;
+      document.querySelector('[data-dh-e="' + d + '"]').disabled = on;
+      return;
+    }
+    /* 플레이스 사진 빼기/되돌리기 */
+    var ph = e.target.closest("[data-photo]");
+    if (ph) ph.classList.toggle("is-off");
+  });
+
+  document.getElementById("btn-dh-save").addEventListener("click", function () {
+    dayHours = {};
+    DAYS.forEach(function (d) {
+      dayHours[d] = {
+        s: document.querySelector('[data-dh-s="' + d + '"]').value,
+        e: document.querySelector('[data-dh-e="' + d + '"]').value,
+        off: document.querySelector('[data-dh-off="' + d + '"]').classList.contains("is-on")
+      };
+    });
+    var sum = summarize();
+    var h = document.querySelector('[data-f="hours"]');
+    if (sum) { h.value = sum; h.classList.remove("is-error"); }
+    /* 쉬는 날 칩 동기화 (공휴일 칩은 유지) */
+    DAYS.forEach(function (d) {
+      var chip = document.querySelector('.reg-day[data-day="' + d + '"]');
+      if (chip) chip.classList.toggle("is-on", dayHours[d].off);
+    });
+    document.getElementById("modal-dayhours").classList.remove("is-open");
+    window.UW.toast("요일별 운영시간을 저장했어요");
+  });
+
+  /* ---- 입력 시 에러 해제 ---- */
+  document.addEventListener("input", function (e) {
+    if (e.target.classList && e.target.classList.contains("is-error") && e.target.value.trim()) {
+      e.target.classList.remove("is-error");
+    }
+  });
+})();
+</script>
+</body>
+</html>

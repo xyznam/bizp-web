@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>직원 관리 — 비즈플래닛</title>
+<!-- UW_HM_04 · L3 전용 · 대행사 소속 직원과 담당 매장 배정을 관리하는 화면
+     결정사항:
+       - 매장당 담당자는 1명. 담당자가 아닌 직원은 그 매장을 조회만 할 수 있고 편집·승인은 못 함(다른 화면에서 적용)
+       - role: 매니저(직원관리 접근권한+직원초대권한) / 운영자(담당 매장 실무만)
+       - 승인권한은 role과 무관한 별도 토글. 승인권한 가진 직원이 0명이어도 강제로 부여하지 않음(비용 이슈라 매니저가 신중히 판단)
+       - 배정 변경 이력 기록
+       - 직원 초대는 이름+휴대폰만 입력(이메일·비밀번호는 19_초대가입에서 본인이 직접 설정)
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+.em-search { width: 100%; height: 38px; border: 1px solid var(--input-border); border-radius: var(--radius-tile); padding: 0 12px; font-family: inherit; font-size: 13px; outline: none; margin-top: 10px; box-sizing: border-box; }
+.em-search:focus { border-color: var(--blue); }
+.em-staff-row { display: flex; align-items: center; gap: 10px; padding: 11px 8px; border-radius: var(--radius-tile); cursor: pointer; }
+.em-staff-row:hover { background: var(--inset); }
+.em-staff-row.is-sel { background: var(--blue-50); }
+.em-staff-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--inset); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ink-700); flex-shrink: 0; }
+.em-store-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--divider); }
+.em-store-row:last-child { border-bottom: 0; }
+.em-approve-switch { position: relative; width: 38px; height: 22px; border-radius: 11px; background: var(--card-border); border: 0; flex-shrink: 0; cursor: pointer; }
+.em-approve-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.em-approve-switch.is-on { background: var(--blue); }
+.em-approve-switch.is-on::after { left: 18px; }
+.em-history-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--divider); font-size: 12px; }
+.em-history-item:last-child { border-bottom: 0; }
+.em-assign-item { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-radius: 8px; }
+.em-assign-item:hover { background: var(--inset); }
+</style>
+</head>
+<body data-screen="UW_HM_04">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html" class="is-active">👥 직원 관리</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">김</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">김마케 매니저</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="17_대행사홈.html" style="color:var(--ink-500);text-decoration:none">대행사 홈</a> › 직원 관리</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- ========== 비-L3 가드 ========== -->
+      <div data-only-level="L1">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">👥</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">직원 관리는 담당 대행사 직원이 소속 직원과 담당 매장 배정을 관리하는 화면이에요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="01_홈.html">홈으로 가기</a>
+        </div>
+      </div>
+      <div data-only-level="L2">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">👥</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">직원 관리는 담당 대행사 직원이 소속 직원과 담당 매장 배정을 관리하는 화면이에요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="01_홈.html">홈으로 가기</a>
+        </div>
+      </div>
+
+      <div class="uw-cols">
+
+        <!-- ========== 좌측: 직원 목록 ========== -->
+        <div class="uw-col-side">
+
+          <!-- M01 · view · L3: 대행사 소속 직원 목록 -->
+          <section class="uw-card" data-module="M01" style="padding:16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <h3 class="uw-section-title" style="font-size:15px">직원 목록</h3>
+              <button class="btn btn-primary btn-sm" style="margin-left:auto" data-action="open-modal" data-modal="modal-invite-staff">+ 직원 초대</button>
+            </div>
+            <input class="em-search" id="staff-search" placeholder="이름으로 찾기">
+            <div class="mt-8" id="staff-list"></div>
+          </section>
+
+        </div>
+
+        <!-- ========== 우측: 선택 직원 상세 ========== -->
+        <div class="uw-col-main">
+
+          <!-- M02 · view · L3: 선택 직원 정보 + 담당 매장 -->
+          <section class="uw-card" data-module="M02">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="em-staff-avatar" id="detail-avatar" style="width:44px;height:44px;font-size:16px">김</div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span id="detail-name" style="font-size:16px;font-weight:800">김마케 매니저</span>
+                  <span class="uw-badge b-blue" id="detail-role">매니저</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:2px" id="detail-meta">010-1234-5678 · 2025.11.02 합류</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" id="btn-remove-staff" data-action="open-modal" data-modal="modal-remove-staff">직원 해지</button>
+            </div>
+
+            <div id="pending-banner" style="display:none;margin-top:14px;background:var(--orange-bg);border-radius:var(--radius-tile);padding:12px 14px;align-items:center;gap:10px">
+              <span style="font-size:13px;font-weight:700;color:var(--orange);flex:1">초대 문자를 보냈지만 아직 가입을 완료하지 않았어요. 가입을 마치면 매장을 배정할 수 있어요.</span>
+              <button class="btn btn-secondary btn-sm" data-action="resend-invite">재초대</button>
+              <button class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-cancel-invite">초대 취소</button>
+            </div>
+
+            <div id="approve-row" class="em-store-row" style="margin-top:14px;border-top:1px solid var(--divider);padding-top:14px">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:var(--ink-900)">승인 권한</div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:2px">담당 매장 전체에 대해 콘텐츠·문자 승인을 할 수 있어요</div>
+              </div>
+              <button type="button" class="em-approve-switch" id="approve-switch" data-action="toggle-approve"></button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;margin-top:16px">
+              <h3 class="uw-section-title" style="font-size:15px">담당 매장 <span class="uw-section-caption" id="assigned-count">3곳</span></h3>
+              <button class="btn btn-secondary btn-sm" style="margin-left:auto" data-action="open-modal" data-modal="modal-assign-store">+ 매장 배정</button>
+            </div>
+            <div class="mt-8" id="assigned-store-list"></div>
+          </section>
+
+          <!-- M03 · view · L3: 배정 변경 이력 -->
+          <section class="uw-card" data-module="M03" style="margin-top:12px">
+            <h3 class="uw-section-title" style="font-size:15px">배정 변경 이력</h3>
+            <div class="mt-8" id="history-list"></div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 직원 초대 모달 (이름+휴대폰만 · 이메일/비밀번호는 19_초대가입에서 본인이 설정) -->
+<div class="uw-modal-backdrop" id="modal-invite-staff">
+  <div class="uw-modal">
+    <div class="uw-modal-title">직원 초대</div>
+    <div class="uw-modal-body">
+      휴대폰으로 초대 문자를 보내드려요. 이메일과 비밀번호는 본인이 초대 링크에서 직접 설정해요.
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-700)">이름</label>
+          <input id="invite-staff-name" placeholder="이름을 입력해 주세요" style="width:100%;margin-top:5px;height:42px;border:1px solid var(--input-border);border-radius:12px;padding:0 12px;font-family:inherit;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-700)">휴대폰 번호</label>
+          <input id="invite-staff-phone" type="tel" placeholder="010-0000-0000" style="width:100%;margin-top:5px;height:42px;border:1px solid var(--input-border);border-radius:12px;padding:0 12px;font-family:inherit;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-700)">역할</label>
+          <select id="invite-staff-role" style="width:100%;margin-top:5px;height:42px;border:1px solid var(--input-border);border-radius:12px;padding:0 12px;font-family:inherit;font-size:13px;box-sizing:border-box">
+            <option value="운영자">운영자</option>
+            <option value="매니저">매니저 (직원 관리·초대 권한 포함)</option>
+          </select>
+        </div>
+        <div class="em-store-row" style="padding:4px 0 0">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--ink-900)">승인 권한</div>
+            <div style="font-size:12px;color:var(--ink-500);margin-top:2px">가입을 완료하면 담당 매장에 대해 승인할 수 있어요</div>
+          </div>
+          <button type="button" class="em-approve-switch" id="invite-approve-switch"></button>
+        </div>
+      </div>
+
+      <!-- 이름 불일치 재확인 (이 번호로 가입된 계정이 있는데 이름이 다를 때만 노출) -->
+      <div id="invite-name-mismatch" style="display:none;margin-top:14px;background:var(--red-bg,#fff0f0);border:1px solid var(--red);border-radius:var(--radius-tile);padding:12px 14px">
+        <div style="font-size:13px;font-weight:700;color:var(--red)">이미 다른 이름으로 가입된 번호예요.</div>
+        <div style="font-size:12px;color:var(--ink-600);margin-top:4px">이름과 번호가 맞는지 다시 확인해 주세요. 계속 문제가 있으면 고객센터에 문의해 주세요.</div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="send-invite">초대 문자 보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 매장 배정 모달 (검색+다중선택+일괄 배정) -->
+<div class="uw-modal-backdrop" id="modal-assign-store">
+  <div class="uw-modal">
+    <div class="uw-modal-title">매장 배정</div>
+    <div class="uw-modal-body">
+      <div style="font-size:12px;color:var(--ink-500);margin-bottom:8px">매장 하나에 담당자는 1명이에요. 이미 담당자가 있는 매장을 고르면 담당자가 교체돼요.</div>
+      <input class="em-search" id="assign-search" placeholder="매장명으로 찾기" style="margin-top:0">
+      <div class="mt-8" id="assign-store-list" style="max-height:280px;overflow-y:auto"></div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-assign">선택한 매장 배정</button>
+    </div>
+  </div>
+</div>
+
+<!-- 직원 해지 확인 모달 -->
+<div class="uw-modal-backdrop" id="modal-remove-staff">
+  <div class="uw-modal">
+    <div class="uw-modal-title">직원을 해지할까요?</div>
+    <div class="uw-modal-body" id="remove-staff-body">담당 매장 배정이 모두 해제되고, 마케팅파트너스에 접근할 수 없어요.</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-remove-staff" style="background:#c62828;border-color:#c62828">해지</button>
+    </div>
+  </div>
+</div>
+
+<!-- 초대 취소 확인 모달 -->
+<div class="uw-modal-backdrop" id="modal-cancel-invite">
+  <div class="uw-modal">
+    <div class="uw-modal-title">초대를 취소할까요?</div>
+    <div class="uw-modal-body" id="cancel-invite-body">보낸 초대 문자는 더 이상 유효하지 않게 돼요.</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">닫기</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-remove-staff" style="background:#c62828;border-color:#c62828">초대 취소</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var ALL_STORES = ["카페봄봄 신촌점", "스시오마카세 강남점", "스시오마카세 판교점", "청담라인의원", "테라스의원", "종로스킨클리닉", "광화문미래의원"];
+
+  var STAFF = [
+    { id: "s1", name: "김마케 매니저", phone: "010-1234-5678", joined: "2025.11.02", role: "매니저", status: "active", canApprove: true,
+      stores: ["카페봄봄 신촌점", "스시오마카세 강남점", "테라스의원"] },
+    { id: "s2", name: "이운영 프로", phone: "010-2222-3333", joined: "2026.01.15", role: "운영자", status: "active", canApprove: false,
+      stores: ["스시오마카세 판교점", "청담라인의원"] },
+    { id: "s3", name: "박콘텐츠 매니저", phone: "010-4444-5555", joined: "2026.03.20", role: "운영자", status: "active", canApprove: false,
+      stores: [] }
+  ];
+
+  var HISTORY = [
+    { time: "7.6 오전 10:12", text: "김마케 매니저 → 카페봄봄 신촌점 담당자로 배정" },
+    { time: "7.4 오후 3:40", text: "이운영 프로 → 승인권한 켬" },
+    { time: "7.1 오전 9:05", text: "박콘텐츠 매니저 초대" },
+    { time: "6.28 오후 2:15", text: "김마케 매니저 → 스시오마카세 강남점 담당자로 배정" }
+  ];
+
+  var currentId = "s1";
+  var searchKw = "";
+
+  function findStaff(id) { for (var i = 0; i < STAFF.length; i++) if (STAFF[i].id === id) return STAFF[i]; return null; }
+  function whoIsAssigned(storeName) {
+    for (var i = 0; i < STAFF.length; i++) if (STAFF[i].stores.indexOf(storeName) > -1) return STAFF[i];
+    return null;
+  }
+
+  function renderStaffList() {
+    var el = document.getElementById("staff-list");
+    var list = STAFF.filter(function (s) { return !searchKw || s.name.indexOf(searchKw) > -1; });
+    if (!list.length) { el.innerHTML = '<div style="padding:16px 4px;font-size:13px;color:var(--ink-400)">일치하는 직원이 없어요</div>'; return; }
+    el.innerHTML = list.map(function (s) {
+      var isPending = s.status === "pending";
+      var sub = isPending ? "담당 매장은 가입 후에 배정돼요" : "담당 매장 " + s.stores.length + "곳";
+      var badges = isPending
+        ? '<span class="uw-badge b-orange">초대 대기</span>'
+        : '<span class="uw-badge ' + (s.role === "매니저" ? "b-blue" : "b-gray") + '">' + s.role + '</span>';
+      return '<div class="em-staff-row' + (s.id === currentId ? ' is-sel' : '') + '" data-staff-id="' + s.id + '" style="' + (isPending ? 'background:var(--orange-bg);' : '') + 'border-radius:var(--radius-tile)">' +
+        '<div class="em-staff-avatar">' + s.name.charAt(0) + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--ink-900)">' + s.name + '</div>' +
+          '<div style="font-size:12px;color:var(--ink-500)">' + sub + '</div>' +
+        '</div>' +
+        badges +
+      '</div>';
+    }).join("");
+  }
+
+  function renderDetail() {
+    var s = findStaff(currentId);
+    if (!s) return;
+    document.getElementById("detail-avatar").textContent = s.name.charAt(0);
+    document.getElementById("detail-name").textContent = s.name;
+    document.getElementById("detail-role").textContent = s.role;
+    document.getElementById("detail-role").className = "uw-badge " + (s.role === "매니저" ? "b-blue" : "b-gray");
+    document.getElementById("detail-meta").textContent = s.phone + " · " + s.joined + (s.status === "pending" ? "" : " 합류");
+
+    var pendingBanner = document.getElementById("pending-banner");
+    var approveRow = document.getElementById("approve-row");
+    var assignBtn = document.querySelector('button[data-modal="modal-assign-store"]');
+
+    if (s.status === "pending") {
+      pendingBanner.style.display = "flex";
+      pendingBanner.querySelector("span").textContent = s.viaExisting
+        ? "소속수락 문자를 보냈지만 아직 로그인해서 수락하지 않았어요. 수락하면 매장을 배정할 수 있어요."
+        : "초대 문자를 보냈지만 아직 가입을 완료하지 않았어요. 가입을 마치면 매장을 배정할 수 있어요.";
+      approveRow.style.display = "none";
+      assignBtn.disabled = true;
+      assignBtn.title = "초대 수락 전에는 매장을 배정할 수 없어요";
+      document.getElementById("assigned-count").textContent = "";
+      document.getElementById("assigned-store-list").innerHTML = '<div style="padding:14px 4px;font-size:13px;color:var(--ink-400)">아직 초대를 수락하지 않았어요. 수락 후에 매장을 배정할 수 있어요.</div>';
+      renderStaffList();
+      return;
+    }
+
+    pendingBanner.style.display = "none";
+    approveRow.style.display = "";
+    assignBtn.disabled = false;
+    assignBtn.title = "";
+    document.getElementById("approve-switch").classList.toggle("is-on", s.canApprove);
+
+    document.getElementById("assigned-count").textContent = s.stores.length + "곳";
+    var listEl = document.getElementById("assigned-store-list");
+    if (!s.stores.length) {
+      listEl.innerHTML = '<div style="padding:14px 4px;font-size:13px;color:var(--ink-400)">아직 배정된 매장이 없어요</div>';
+    } else {
+      listEl.innerHTML = s.stores.map(function (name) {
+        return '<div class="em-store-row">' +
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink-900)">' + name + '</div>' +
+          '<div style="font-size:12px;color:var(--ink-500)">담당자</div></div>' +
+          '<button class="btn btn-ghost btn-sm" data-unassign-store="' + name + '">해제</button>' +
+        '</div>';
+      }).join("");
+    }
+    renderStaffList();
+  }
+
+  function renderHistory() {
+    document.getElementById("history-list").innerHTML = HISTORY.map(function (h) {
+      return '<div class="em-history-item"><span style="color:var(--ink-400);flex-shrink:0;width:110px">' + h.time + '</span><span style="color:var(--ink-700)">' + h.text + '</span></div>';
+    }).join("");
+  }
+
+  document.getElementById("staff-list").addEventListener("click", function (e) {
+    var row = e.target.closest("[data-staff-id]");
+    if (!row) return;
+    currentId = row.getAttribute("data-staff-id");
+    renderDetail();
+  });
+  /* 목데이터: 전화번호 기준 기존 계정 조회 (프로토타입) — 실서비스는 서버에서 USER 테이블 조회 */
+  var EXISTING_ACCOUNTS = [
+    { phone: "01099998888", name: "최기존" },  // 이름 일치 시나리오용
+    { phone: "01077776666", name: "박선희" }   // 이름 불일치 시나리오용 (초대 시 다른 이름을 입력해 보세요)
+  ];
+  function normalizeInvitePhone(p) { return p.replace(/\D/g, ""); }
+  function findExistingAccount(phone) {
+    var norm = normalizeInvitePhone(phone);
+    for (var i = 0; i < EXISTING_ACCOUNTS.length; i++) if (EXISTING_ACCOUNTS[i].phone === norm) return EXISTING_ACCOUNTS[i];
+    return null;
+  }
+
+  function resetInviteModal() {
+    document.getElementById("invite-staff-name").value = "";
+    document.getElementById("invite-staff-phone").value = "";
+    document.getElementById("invite-staff-role").value = "운영자";
+    document.getElementById("invite-approve-switch").classList.remove("is-on");
+    document.getElementById("invite-name-mismatch").style.display = "none";
+  }
+  document.querySelector('button[data-modal="modal-invite-staff"]').addEventListener("click", resetInviteModal);
+  document.getElementById("invite-approve-switch").addEventListener("click", function () {
+    this.classList.toggle("is-on");
+  });
+  ["invite-staff-name", "invite-staff-phone"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", function () {
+      document.getElementById("invite-name-mismatch").style.display = "none";
+    });
+  });
+
+  document.getElementById("staff-search").addEventListener("input", function (e) {
+    searchKw = e.target.value.trim();
+    renderStaffList();
+  });
+
+  document.getElementById("assigned-store-list").addEventListener("click", function (e) {
+    var un = e.target.closest("[data-unassign-store]");
+    if (un) {
+      var uname = un.getAttribute("data-unassign-store");
+      var s = findStaff(currentId);
+      s.stores = s.stores.filter(function (x) { return x !== uname; });
+      HISTORY.unshift({ time: "방금", text: s.name + " → " + uname + " 담당자 배정 해제" });
+      renderDetail(); renderHistory();
+      if (window.UW) window.UW.toast("배정을 해제했어요");
+    }
+  });
+
+  /* ---- 매장 배정 모달 ---- */
+  var pendingAssign = {};
+  function renderAssignModal(kw) {
+    var el = document.getElementById("assign-store-list");
+    var mine = findStaff(currentId).stores;
+    var list = ALL_STORES.filter(function (n) { return !kw || n.indexOf(kw) > -1; });
+    el.innerHTML = list.map(function (n) {
+      var owner = whoIsAssigned(n);
+      var already = mine.indexOf(n) > -1;
+      var checked = already || pendingAssign[n];
+      var ownerNote = owner && owner.id !== currentId ? '<span style="font-size:11px;color:var(--orange)">현재 담당: ' + owner.name + '</span>' : (already ? '<span style="font-size:11px;color:var(--blue)">이미 담당 중</span>' : '');
+      return '<label class="em-assign-item"><input type="checkbox" data-assign-chk="' + n + '"' + (checked ? " checked" : "") + (already ? " disabled" : "") + '>' +
+        '<span style="flex:1;font-size:13px;font-weight:600;color:var(--ink-800)">' + n + '</span>' + ownerNote + '</label>';
+    }).join("");
+  }
+  document.querySelector('button[data-modal="modal-assign-store"]').addEventListener("click", function () {
+    pendingAssign = {};
+    document.getElementById("assign-search").value = "";
+    renderAssignModal("");
+  });
+  document.getElementById("assign-search").addEventListener("input", function (e) { renderAssignModal(e.target.value.trim()); });
+  document.getElementById("assign-store-list").addEventListener("change", function (e) {
+    var chk = e.target.closest("[data-assign-chk]");
+    if (!chk) return;
+    var name = chk.getAttribute("data-assign-chk");
+    pendingAssign[name] = chk.checked;
+  });
+
+  /* ---- 초대 발송 공용 처리: 계정 유무에 따라 문구·연결 목적지가 다름 ---- */
+  function sendInvite(name, phone, hasExisting) {
+    var role = document.getElementById("invite-staff-role").value;
+    var canApprove = document.getElementById("invite-approve-switch").classList.contains("is-on");
+    var id = "s" + (STAFF.length + 1);
+    STAFF.push({ id: id, name: name, phone: phone, joined: "방금", role: role, status: "pending", canApprove: canApprove, stores: [], viaExisting: !!hasExisting });
+
+    if (hasExisting) {
+      HISTORY.unshift({ time: "방금", text: name + " 초대(" + role + ") · 기존 계정 소속수락 대기" });
+    } else {
+      HISTORY.unshift({ time: "방금", text: name + " 초대(" + role + ")" });
+    }
+
+    document.getElementById("modal-invite-staff").classList.remove("is-open");
+    currentId = id;
+    renderDetail(); renderHistory();
+
+    if (hasExisting) {
+      if (window.UW) window.UW.toast(phone + "로 소속수락 문자를 보냈어요 (로그인 후 확인)");
+    } else {
+      if (window.UW) window.UW.toast(phone + "로 초대 문자를 보냈어요");
+    }
+  }
+
+  /* ---- 공용 액션 ---- */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-action]");
+    if (!t) return;
+    var act = t.getAttribute("data-action");
+
+    if (act === "send-invite") {
+      var name = document.getElementById("invite-staff-name").value.trim();
+      var phone = document.getElementById("invite-staff-phone").value.trim();
+      if (!name || !phone) { if (window.UW) window.UW.toast("이름과 휴대폰 번호를 입력해 주세요"); return; }
+
+      var existing = findExistingAccount(phone);
+      if (existing && existing.name !== name) {
+        // 계정은 있는데 이름이 다름 → 초대 자체를 막음 (상대방 실명은 노출하지 않음)
+        document.getElementById("invite-name-mismatch").style.display = "";
+        return;
+      }
+      sendInvite(name, phone, !!existing);
+    }
+
+    if (act === "resend-invite") {
+      var s0 = findStaff(currentId);
+      if (window.UW) window.UW.toast(s0.phone + "로 초대 문자를 다시 보냈어요");
+    }
+
+    if (act === "toggle-approve") {
+      var s1 = findStaff(currentId);
+      if (s1.status === "pending") return;
+      s1.canApprove = !s1.canApprove;
+      HISTORY.unshift({ time: "방금", text: s1.name + " 승인권한 " + (s1.canApprove ? "켬" : "끔") });
+      renderDetail(); renderHistory();
+      if (window.UW) window.UW.toast("승인권한을 " + (s1.canApprove ? "켰어요" : "껐어요"));
+    }
+
+    if (act === "confirm-assign") {
+      var s = findStaff(currentId);
+      if (s.status === "pending") { t.closest(".uw-modal-backdrop").classList.remove("is-open"); return; }
+      var added = 0;
+      Object.keys(pendingAssign).forEach(function (name) {
+        if (!pendingAssign[name]) return;
+        // 다른 직원에게 배정돼 있으면 교체
+        STAFF.forEach(function (st) { st.stores = st.stores.filter(function (x) { return x !== name; }); });
+        s.stores.push(name);
+        HISTORY.unshift({ time: "방금", text: s.name + " → " + name + " 담당자로 배정" });
+        added++;
+      });
+      t.closest(".uw-modal-backdrop").classList.remove("is-open");
+      if (added) { renderDetail(); renderHistory(); if (window.UW) window.UW.toast(added + "곳을 배정했어요"); }
+    }
+
+    if (act === "confirm-remove-staff") {
+      var idx = STAFF.findIndex(function (x) { return x.id === currentId; });
+      if (idx > -1) {
+        HISTORY.unshift({ time: "방금", text: STAFF[idx].name + " 해지" });
+        STAFF.splice(idx, 1);
+        currentId = STAFF.length ? STAFF[0].id : null;
+      }
+      t.closest(".uw-modal-backdrop").classList.remove("is-open");
+      renderStaffList(); currentId && renderDetail(); renderHistory();
+      if (window.UW) window.UW.toast("직원을 해지했어요");
+    }
+  });
+
+  document.getElementById("btn-remove-staff").addEventListener("click", function () {
+    document.getElementById("remove-staff-body").textContent = findStaff(currentId).name + "님의 담당 매장 배정이 모두 해제되고, 마케팅파트너스에 접근할 수 없어요.";
+  });
+
+  renderStaffList();
+  renderDetail();
+  renderHistory();
+})();
+</script>
+</body>
+</html>

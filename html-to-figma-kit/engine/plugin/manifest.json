@@ -1,0 +1,13 @@
+{
+  "name": "BizPlanet UID 보드 생성기",
+  "id": "bizplanet-uid-board-builder",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "번들 JSON과 PNG를 사용자가 직접 선택해 전달한다. 외부 통신이 필요하지 않다."
+  },
+  "documentAccess": "dynamic-page"
+}

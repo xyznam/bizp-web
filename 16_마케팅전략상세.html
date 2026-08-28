@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마케팅 전략 상세 — 비즈플래닛</title>
+<!-- UW_TEST_RS · As-Is bizblog-demo2/07_마케팅전략룰셋 → 디자인가이드 v1.1 리디자인 테스트판
+     v18: 프랜차이즈 브랜드 룰셋 상속 + 이미지 스타일 탭 추가
+     - 상단 "매장 유형" 데모 스위치(일반/프랜차이즈/브랜드 대표매장)로 아래 상태 전환 시연
+     - 일반 매장: 배지·토글 전부 없음(지금까지의 동작 그대로)
+     - 프랜차이즈 매장: 탭마다 "브랜드 룰셋 상속" 토글 노출. ON이면 그 탭 전체 입력 잠금 + "브랜드 룰셋에서 가져옴" 배지
+     - 브랜드 대표 매장: 헤더에 "브랜드 대표 매장" 배지만 노출(상속 토글 없음 — 원본이라 상속받는 대상이 아님)
+     - 토글 클릭은 잠금 상태만 즉시 반영하고 토스트로 안내. 실제 값 동기화(상속 OFF 시점 값 고정)는 목업 범위 밖.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* 가이드 v1.1(Pretendard 비교판) 기준 — 이 페이지만 Pretendard 우선 적용 */
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* ---- 세그먼트 탭 (가이드 §5 · uw-lvl-switch 패턴 확장) ---- */
+.rs-tabs { display: flex; background: var(--inset); border-radius: var(--radius-btn); padding: 4px; gap: 4px; margin-top: 16px; }
+.rs-tabs button {
+  flex: 1; border: 0; background: transparent; font-family: inherit;
+  font-size: 14px; font-weight: 700; color: var(--ink-400);
+  height: 40px; border-radius: 11px; cursor: pointer; letter-spacing: -0.01em;
+}
+.rs-tabs button.is-active { background: var(--white); color: var(--ink-900); box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.rs-pane { display: none; }
+.rs-pane.is-active { display: block; }
+
+/* ---- 매장유형 스위치 (uw-lvl-switch와 같은 모양이지만, 클래스가 같으면 userweb.js가 자동으로
+   data-action="set-level"을 붙여 이용레벨 스위치로 오인식해서 별도 클래스로 분리) ---- */
+.rs-store-type-switch { display: flex; background: var(--inset); border-radius: 10px; padding: 3px; gap: 2px; }
+.rs-store-type-switch button {
+  border: 0; background: transparent; font-family: inherit; font-size: 12px; font-weight: 700;
+  color: var(--ink-500); padding: 6px 10px; border-radius: 8px; cursor: pointer;
+}
+.rs-store-type-switch button.is-on { background: var(--white); color: var(--blue); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* ---- 브랜드 대표 매장 배지 ---- */
+.rs-flagship-badge { display: inline-flex; align-items: center; gap: 4px; background: #fff3e0; color: #e65100; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+
+/* ---- 브랜드 룰셋 상속 토글 배너(탭당 1개) ---- */
+.rs-inherit-bar { display: none; align-items: center; gap: 10px; background: var(--inset); border: 1px solid var(--card-border); border-radius: var(--radius-tile); padding: 10px 14px; margin: 16px 0 4px; }
+.rs-inherit-bar.is-visible { display: flex; }
+.rs-inherit-bar-text { flex: 1; font-size: 13px; font-weight: 700; color: var(--ink-800); }
+.rs-inherit-bar-sub { font-size: 12px; font-weight: 500; color: var(--ink-500); margin-top: 2px; }
+.rs-inherit-switch { position: relative; width: 40px; height: 24px; border-radius: 12px; background: var(--card-border); border: 0; flex-shrink: 0; cursor: pointer; }
+.rs-inherit-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.rs-inherit-switch.is-on { background: var(--blue); }
+.rs-inherit-switch.is-on::after { left: 18px; }
+
+/* ---- 탭 잠금(상속 ON) ---- */
+.rs-pane.is-locked .rs-edit,
+.rs-pane.is-locked textarea,
+.rs-pane.is-locked input:not([type="checkbox"]) { pointer-events: none; opacity: .55; background: var(--inset) !important; }
+.rs-pane.is-locked .rs-chip-add,
+.rs-pane.is-locked .rs-example-add,
+.rs-pane.is-locked .rs-structure-opts,
+.rs-pane.is-locked [data-kw-chip],
+.rs-pane.is-locked [data-edit-item]:not([data-edit-tier-of="locked"]) { pointer-events: none; opacity: .55; }
+
+/* ---- 사장님용 간단 카드 · 이미지톤 스와치 (org 07 패턴) ---- */
+.rs-swatch { cursor: pointer; border: 1px solid var(--card-border); border-radius: var(--radius-tile); padding: 12px 10px; text-align: center; }
+.rs-swatch.is-selected { border: 2px solid var(--blue); }
+.rs-swatch-dots { display: flex; justify-content: center; gap: 4px; }
+.rs-swatch-dots span { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+.rs-swatch-label { font-size: 12px; font-weight: 700; margin-top: 8px; }
+
+/* ---- L1(위탁) 읽기전용 카드: 칩 클릭·추가입력·스와치 전부 비활성 ---- */
+.owner-simple-card.is-readonly [data-chip-add-input],
+.owner-simple-card.is-readonly [data-chip-add-btn],
+.owner-simple-card.is-readonly .rs-help { display: none; }
+.owner-simple-card.is-readonly [data-kw-chip],
+.owner-simple-card.is-readonly .uw-badge[data-kw-chip] { pointer-events: none; cursor: default; }
+
+/* ---- 룰셋 행 ---- */
+.rs-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--divider); }
+.rs-row:last-child { border-bottom: 0; }
+.rs-label { width: 118px; flex-shrink: 0; font-size: 13px; font-weight: 600; color: var(--ink-500); padding-top: 2px; line-height: 1.5; }
+.rs-value { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; color: var(--ink-900); line-height: 1.55; letter-spacing: -0.01em; }
+.rs-help { font-size: 12px; font-weight: 500; color: var(--ink-500); margin-top: 4px; line-height: 1.6; }
+
+/* ---- 인라인 편집 입력 (값이 입력창 안에 바로 보임) ---- */
+.rs-edit { width: 100%; min-height: 24px; box-sizing: border-box; border: 1px solid transparent; border-radius: 8px; padding: 5px 7px; margin: -5px -7px 0; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--ink-900); line-height: 1.55; letter-spacing: -0.01em; background: transparent; resize: none; overflow: hidden; outline: none; }
+.rs-edit:hover { background: var(--inset); }
+.rs-edit:focus { border-color: var(--blue); background: var(--white); box-shadow: 0 0 0 3px var(--blue-50); }
+.rs-edit::placeholder { color: var(--ink-400); font-weight: 500; }
+
+/* ---- 예시 목록 (제목/도입부/소제목 패턴) ---- */
+.rs-example-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.rs-example-item { display: flex; align-items: flex-start; gap: 8px; background: var(--inset); border-radius: var(--radius-tile); padding: 8px 10px; }
+.rs-example-num { font-size: 11px; font-weight: 700; color: var(--ink-400); flex-shrink: 0; padding-top: 3px; width: 38px; }
+.rs-example-text { flex: 1; min-height: 20px; box-sizing: border-box; font-size: 13px; font-weight: 500; color: var(--ink-700); line-height: 1.55; border: none; background: transparent; font-family: inherit; resize: none; outline: none; overflow: hidden; }
+.rs-example-text:focus { color: var(--blue); }
+.rs-example-del { flex-shrink: 0; font-size: 12px; color: var(--ink-400); cursor: pointer; padding: 2px 4px; }
+.rs-example-del:hover { color: #c62828; }
+.rs-example-add { font-size: 12px; font-weight: 700; color: var(--blue); cursor: pointer; margin-top: 6px; display: inline-block; }
+
+/* ---- 본문 전개 구조 (2안) ---- */
+.rs-structure-opt { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; }
+.rs-structure-opt:first-child { margin-top: 4px; }
+.rs-structure-opt-label { font-size: 11px; font-weight: 700; color: var(--ink-500); flex-shrink: 0; width: 44px; padding-top: 6px; }
+.rs-side { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+/* AI 제안 인셋 */
+.rs-suggest { background: var(--inset); border-radius: var(--radius-tile); padding: 10px 12px; margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--ink-700); line-height: 1.6; display: flex; gap: 8px; align-items: flex-start; }
+.rs-suggest .uw-badge { flex-shrink: 0; margin-top: 1px; }
+
+/* 긴 본문 접기 */
+.rs-clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-weight: 500; color: var(--ink-700); }
+.rs-clamp.is-open { -webkit-line-clamp: unset; }
+.rs-more { font-size: 12px; font-weight: 700; color: var(--blue); cursor: pointer; margin-top: 6px; display: inline-block; }
+
+/* 인용 문구 박스 */
+.rs-quote { background: var(--inset); border-left: 3px solid var(--ink-300); border-radius: 0 var(--radius-badge) var(--radius-badge) 0; padding: 10px 12px; font-size: 13px; font-weight: 500; color: var(--ink-600); line-height: 1.7; margin-top: 6px; }
+
+@media (max-width: 640px) {
+  .rs-row { flex-wrap: wrap; }
+  .rs-label { width: 100%; padding-top: 0; }
+  .rs-side { flex-direction: row; width: 100%; justify-content: flex-start; }
+}
+</style>
+</head>
+<body data-screen="UW_ST_06">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html" class="is-active">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">테</div>
+      <div>
+        <div class="u-name">테라스의원</div>
+        <div class="u-plan">Basic 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="06_우리매장정보.html" style="color:var(--ink-500);text-decoration:none">우리 매장 정보</a> › 마케팅 전략 상세</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <div class="rs-store-type-switch" id="store-type-switch" data-only-level="L3" title="프로토타입 전용 — 매장 유형 전환 데모">
+          <button type="button" data-store-type="normal" class="is-on">일반 매장</button>
+          <button type="button" data-store-type="franchise">프랜차이즈 매장</button>
+          <button type="button" data-store-type="flagship">브랜드 대표매장</button>
+        </div>
+        <button class="uw-store-switch">🏪 테라스의원 ▾</button>
+        <button class="uw-bell" aria-label="알림">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body" style="max-width:880px">
+
+      <!-- ================================================== -->
+      <!-- L1/L2 · 사장님용 간단 버전 (탭·근거·제안 없이 사장님이 직접 정한 값만) -->
+      <!-- ================================================== -->
+      <div data-only-level="L1">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="flex:1;min-width:0">
+            <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.03em">마케팅 전략 상세</h1>
+            <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">위탁 매장은 조회만 가능해요. 수정은 담당 대행사가 진행해요.</div>
+          </div>
+        </div>
+        <div class="uw-card owner-simple-card is-readonly" style="padding:4px 24px"></div>
+      </div>
+      <div data-only-level="L2">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="flex:1;min-width:0">
+            <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.03em">마케팅 전략 상세</h1>
+            <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">기본은 AI가 분석한 값이에요. 직접 추가하거나 고치면 "사장님 수정"으로 표시돼요.</div>
+          </div>
+        </div>
+        <div class="uw-card owner-simple-card" style="padding:4px 24px"></div>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- L3 · 대행사용 풀버전 -->
+      <!-- ================================================== -->
+      <div data-only-level="L3">
+
+      <!-- ========== 헤더 ========== -->
+      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.03em">마케팅 전략 상세</h1>
+            <span class="rs-flagship-badge" id="flagship-badge" style="display:none">🏷 브랜드 대표 매장</span>
+          </div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">AI가 우리 매장을 분석해 정리한 글쓰기 규칙이에요. 콘텐츠를 만들 때마다 이 규칙을 따라요.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-reset">초기화</button>
+          <button class="btn btn-primary btn-sm" data-action="toast" data-toast-msg="저장했어요. 다음 콘텐츠부터 바로 반영돼요">저장</button>
+        </div>
+      </div>
+
+      <!-- ========== 세그먼트 탭 (매장 정보 탭 제거 — 06_우리매장정보에서 관리) ========== -->
+      <div class="rs-tabs" role="tablist">
+        <button class="is-active" data-rs-tab="pane-analysis" role="tab">우리 매장 분석</button>
+        <button data-rs-tab="pane-style" role="tab">글쓰기 스타일</button>
+        <button data-rs-tab="pane-image" role="tab">이미지 스타일</button>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- 탭 1 · 우리 매장 분석 -->
+      <!-- ================================================== -->
+      <section class="rs-pane is-active" id="pane-analysis">
+        <div class="rs-inherit-bar" data-inherit-bar>
+          <div style="flex:1">
+            <div class="rs-inherit-bar-text">브랜드 룰셋 상속</div>
+            <div class="rs-inherit-bar-sub">켜면 브랜드 룰셋을 따르고, 이 탭은 수정할 수 없어요</div>
+          </div>
+          <button type="button" class="rs-inherit-switch is-on" data-inherit-toggle></button>
+        </div>
+
+        <div class="uw-card" style="margin-top:16px;padding:8px 24px">
+
+          <div class="rs-row">
+            <div class="rs-label">자리매김</div>
+            <div class="rs-value"><input class="rs-edit" value="&quot;대표원장이 직접 상담하고 직접 시술하는 1:1 맞춤 피부과&quot;"></div>
+            <div class="rs-side">
+              <span class="uw-badge b-purple">AI 분석</span>
+              <span class="uw-score-why" data-action="open-modal" data-modal="modal-evidence">근거</span>
+            </div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">우리가 내세우는 강점</div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="strengths"></div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="strengths" placeholder="강점 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="strengths" style="height:36px">추가</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">클릭해서 비활성화하거나, 아래 입력창으로 추가해요. 콘텐츠 문구로도 그대로 활용돼요.</div>
+            </div>
+            <div class="rs-side">
+              <span class="uw-badge" data-field-badge="strengths"></span>
+            </div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">대표 시술</div>
+            <div class="rs-value"><input class="rs-edit" value="울쎄라 · 슈링크 · FX 인모드 · 리팟레이저 · 흑자 제거"></div>
+            <div class="rs-side">
+              <span class="uw-badge b-purple">AI 분석</span>
+              <span class="uw-score-why" data-action="open-modal" data-modal="modal-evidence">근거</span>
+            </div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">주 손님</div>
+            <div class="rs-value"><textarea class="rs-edit" rows="1">리프팅·탄력에 관심 있는 분 · 장비 선택을 고민하는 분 · 흑자 등 색소 치료를 알아보는 분</textarea></div>
+            <div class="rs-side">
+              <span class="uw-badge b-purple">AI 분석</span>
+              <span class="uw-score-why" data-action="open-modal" data-modal="modal-evidence">근거</span>
+            </div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">콘텐츠 소재 키워드</div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="keywords"></div>
+              <div class="rs-help">클릭해서 비활성화하거나, 아래 입력창으로 추가해요. 콘텐츠를 자동으로 만들 때 글감으로 써요.</div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="keywords" placeholder="키워드 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="keywords" style="height:36px">추가</button>
+              </div>
+            </div>
+            <div class="rs-side"><span class="uw-badge" data-field-badge="keywords"></span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">리뷰에서 본 강점</div>
+            <div class="rs-value"><textarea class="rs-edit" rows="1">원장님 설명이 자세함 · 사후관리가 꼼꼼함 · 친절함 · 흑자 제거 결과 만족 · 깔끔한 시설</textarea></div>
+            <div class="rs-side">
+              <span class="uw-badge b-purple">AI 분석</span>
+              <span class="uw-score-why" data-action="open-modal" data-modal="modal-evidence">근거</span>
+            </div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">리뷰에서 본 약점</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1" style="font-weight:500;color:var(--ink-600)">지금까지의 리뷰로는 뚜렷한 약점을 찾지 못했어요.</textarea>
+              <div class="rs-help">약점은 글에 직접 쓰지 않아요. 보완 전략을 세울 때만 참고해요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+        </div>
+
+        <!-- 유사 업체 비교 (As-Is '유사업체비교' 탭 축약) -->
+        <div class="uw-card" style="margin-top:8px;padding:20px 24px;display:flex;align-items:center;gap:16px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:800;letter-spacing:-0.02em">근처 비슷한 피부과와 비교해 볼까요?</div>
+            <div style="font-size:13px;font-weight:500;color:var(--ink-500);margin-top:4px;line-height:1.6">시술 구성·리뷰 수·발행 글 수를 나란히 보여드려요.</div>
+          </div>
+          <a href="16_유사업체비교.html" class="btn btn-secondary btn-sm" style="flex-shrink:0;text-decoration:none">비교해 보기</a>
+        </div>
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 탭 2 · 글쓰기 스타일 (블로그) -->
+      <!-- ================================================== -->
+      <section class="rs-pane" id="pane-style">
+
+        <div class="rs-inherit-bar" data-inherit-bar>
+          <div style="flex:1">
+            <div class="rs-inherit-bar-text">브랜드 룰셋 상속</div>
+            <div class="rs-inherit-bar-sub">켜면 브랜드 룰셋을 따르고, 이 탭은 수정할 수 없어요</div>
+          </div>
+          <button type="button" class="rs-inherit-switch is-on" data-inherit-toggle></button>
+        </div>
+
+        <div style="background:var(--blue-50);border:1px solid var(--blue-border);border-radius:var(--radius-tile);padding:12px 14px;font-size:13px;font-weight:600;color:var(--blue-text);margin-top:16px;display:flex;gap:8px;align-items:center">
+          💡 AI가 기존 블로그 글을 읽고 우리 매장의 글쓰기 습관을 정리했어요. 파란 제안은 눌러서 바꿀 수 있어요.
+        </div>
+
+        <div class="uw-card" style="margin-top:8px;padding:8px 24px">
+          <h3 class="uw-section-title" style="font-size:15px;padding:14px 0 4px">글의 뼈대</h3>
+
+          <div class="rs-row">
+            <div class="rs-label">글의 목적</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">시술 원리와 선택 기준을 설명해 상담 전 이해를 돕고, 병원의 신뢰 요소를 전달해요</textarea>
+              <div class="rs-help">글을 만들 때마다 여러 목적 중 하나를 골라 반영해요.</div>
+              <div class="rs-suggest"><span class="uw-badge b-blue">AI 제안</span>검색 유입·예약 상담·방문 전환을 나눠서, 주제마다 마무리 문장을 다르게 써 보세요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">소재–키워드 맵</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">울쎄라·슈링크·인모드·리팟레이저 중심의 시술 설명 글을 기본으로, 가격·효과·원리·의료진 경력을 함께 배치해요</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-blue">AI 제안</span>소재마다 제목 키워드·본문 보조 키워드·해시태그를 나눠서 관리하면 같은 말 반복을 줄일 수 있어요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">제목 패턴</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">질문형 제목 + 원인/해결 · 가격/효과 키워드 + 먼저 확인할 것 · 공식 인증 표기 + 시술명</textarea>
+              <div class="rs-example-list">
+                <div class="rs-example-item"><span class="rs-example-num">원인·해결</span><textarea class="rs-example-text" rows="1">{시술명} 효과 없음? 원인은 {원인} 때문입니다</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">가격·조건</span><textarea class="rs-example-text" rows="1">{시술명}{샷수} 가격, 그보다 먼저 확인해야 하는 1가지?</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">부작용</span><textarea class="rs-example-text" rows="1">{시술명} 부작용 없이 받기 위해 꼭 확인해야 할 조건은?</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">지역·장비</span><textarea class="rs-example-text" rows="1">{지역}{장비명}병원, 이것만 알면 {문제}를 피할 수 있습니다</textarea><span class="rs-example-del" data-del>✕</span></div>
+              </div>
+              <span class="rs-example-add" data-add-ex>+ 예시 추가</span>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-gray">현행 유지</span>지역·업종 키워드와 손님 질문을 붙이는 지금 방식이 좋아요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">도입부 패턴</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">인사말 → 원장·의원 소개 → 오늘 다룰 시술 질문 → 목차 안내</textarea>
+              <div class="rs-example-list">
+                <div class="rs-example-item"><span class="rs-example-num">예시 1</span><textarea class="rs-example-text" rows="1">안녕하세요, 테라스의원 대표원장입니다. 오늘은 ○○에 대해 안내드리겠습니다.</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">예시 2</span><textarea class="rs-example-text" rows="1">반갑습니다, 테라스의원입니다. 인모드FX 부작용이 걱정되시나요? 확인해야 할 조건들을 짚어드릴게요.</textarea><span class="rs-example-del" data-del>✕</span></div>
+              </div>
+              <span class="rs-example-add" data-add-ex>+ 예시 추가</span>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-blue">AI 제안</span>첫 문단은 손님의 상황이나 질문으로 시작하고, 다음 문장에서 답할 내용을 예고해 보세요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">본문 전개 구조</div>
+            <div class="rs-value">
+              <div class="rs-structure-opt"><span class="rs-structure-opt-label">구조 1</span><textarea class="rs-edit" rows="1" style="flex:1">고민 제시 → 선택 기준 → 우리 병원의 대응 → 방문 전 안내 → 마무리 권유</textarea></div>
+              <div class="rs-structure-opt"><span class="rs-structure-opt-label">구조 2</span><textarea class="rs-edit" rows="1" style="flex:1">시술 정의·원리 → 다른 시술과 비교 → 주의사항 → 마무리 권유</textarea></div>
+              <div class="rs-help" style="margin-top:6px">글 주제에 따라 두 구조 중 더 맞는 쪽을 골라 써요.</div>
+              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>본문 순서를 고정해 두면 글마다 흐름이 흔들리지 않아요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">소제목 패턴</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">질문형과 원인/해결형 소제목을 3–5개 섞어 써요</textarea>
+              <div class="rs-example-list">
+                <div class="rs-example-item"><span class="rs-example-num">예시 1</span><textarea class="rs-example-text" rows="1">울쎄라 효과, 진짜 있을까?</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">예시 2</span><textarea class="rs-example-text" rows="1">슈링크와 인모드, 뭐가 다를까?</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">예시 3</span><textarea class="rs-example-text" rows="1">부작용 없이 받으려면?</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">예시 4</span><textarea class="rs-example-text" rows="1">우리 병원이 다른 이유</textarea><span class="rs-example-del" data-del>✕</span></div>
+              </div>
+              <span class="rs-example-add" data-add-ex>+ 예시 추가</span>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-gray">현행 유지</span>휴대폰에서 빠르게 훑어볼 수 있는 지금 개수가 알맞아요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">마무리 문구</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">예약 가능 여부와 상담 시간을 확인하도록 부드럽게 안내해요</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-blue">AI 제안</span>운영시간과 전화번호가 있는 글은 마지막 문단에 예약 가능 시간을 함께 넣어 보세요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+        </div>
+
+        <div class="uw-card" style="margin-top:8px;padding:8px 24px">
+          <h3 class="uw-section-title" style="font-size:15px;padding:14px 0 4px">문장과 표현</h3>
+
+          <div class="rs-row">
+            <div class="rs-label">문장 스타일</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">질문을 던진 뒤 원리와 사례를 차근차근 풀어가는 설명형 문체</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>쉬운 설명과 단정한 안내 문체를 그대로 이어가요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">글 길이</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">본문 700–1,000자 · 소제목 3–5개 · 마무리 권유 포함</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>예약 전 확인 정보를 담기에 알맞은 길이예요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">말투</div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="tone"></div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="tone" placeholder="말투 표현 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="tone" style="height:36px">추가</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">클릭해서 비활성화하거나, 아래 입력창으로 추가해요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge" data-field-badge="tone"></span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">해시태그</div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="hashtags"></div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="hashtags" placeholder="해시태그 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="hashtags" style="height:36px">추가</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">클릭해서 비활성화하거나, 아래 입력창으로 추가해요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge" data-field-badge="hashtags"></span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">기호·이모지</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">본문에서 쓰지 않아요. 정보 구분용 기호도 최소로만 써요</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>신뢰가 중요한 업종이라 장식 표현은 아끼는 편이 좋아요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">트렌드 반영</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">중간 — 시즌·기념일 소재만 골라 반영해요</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>매장과 관계없는 유행어는 쓰지 않아요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+        </div>
+
+        <div class="uw-card" style="margin-top:8px;padding:8px 24px">
+          <h3 class="uw-section-title" style="font-size:15px;padding:14px 0 4px">검색 노출</h3>
+          <div style="display:flex;gap:8px;align-items:flex-start;background:var(--blue-50);border:1px solid var(--blue-border);border-radius:var(--radius-tile);padding:10px 12px;font-size:13px;font-weight:600;color:var(--blue-text);margin:8px 0 4px">
+            💡 이 설정을 잘 관리하면 검색 결과에 더 잘 노출될 수 있어요.
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">SEO 키워드</div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" id="seo-chip-list">
+                <span class="uw-kw-chip" data-kw-chip>광화문피부과</span>
+                <span class="uw-kw-chip" data-kw-chip>종로피부과</span>
+                <span class="uw-kw-chip" data-kw-chip>울쎄라</span>
+                <span class="uw-kw-chip" data-kw-chip>슈링크</span>
+                <span class="uw-kw-chip" data-kw-chip>인모드</span>
+                <span class="uw-kw-chip" data-kw-chip>흑자제거</span>
+                <span class="uw-kw-chip" data-kw-chip>리프팅</span>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input id="seo-chip-input" placeholder="키워드 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" id="seo-chip-add" style="height:36px">추가</button>
+              </div>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-blue">AI 제안</span>지역 키워드 2개와 주제 키워드 2–3개를 나눠 쓰면 문장이 더 자연스러워져요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">키워드 배치</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">핵심 키워드는 제목·첫 문단·소제목 중 필요한 곳에만 넣고, 의미 없는 반복은 하지 않아요</textarea>
+              <div class="rs-help">검색 순위를 보장하는 규칙이 아니라, 글을 자연스럽게 지키는 규칙이에요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+        </div>
+
+        <div class="uw-card" style="margin-top:8px;padding:8px 24px">
+          <h3 class="uw-section-title" style="font-size:15px;padding:14px 0 4px">꼭 지킬 문구 <span class="uw-badge b-red" style="margin-left:6px">의료 업종 필수</span></h3>
+
+          <div class="rs-row">
+            <div class="rs-label">시작 문구</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">모든 글 첫 문단에 원장 소개와 진료 철학을 짧게 넣어요</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-blue">AI 제안</span>본문 주제와 겹치지 않게 2문장 이내로 제한해요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">필수 푸터 문구</div>
+            <div class="rs-value">
+              <textarea class="rs-edit rs-quote" rows="3" style="font-size:13px;font-weight:500;color:var(--ink-600);line-height:1.7">*본 포스팅은 해당 병원에서 의료정보 제공 및 병원 광고 목적으로 직접 작성한 글이며, &lt;의료법 제56조 제1항&gt;을 준수합니다.
+*모든 시술은 개인의 피부에 따라 크고 작은 부작용이 발생할 수 있습니다. 반드시 사전에 의료진과 충분한 상담을 진행한 후 시술을 결정하시는 것을 권장드립니다.</textarea>
+              <div class="rs-help">병원·의원 글 맨 아래에 항상 들어가요. 내용은 수정할 수 있어요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-red">필수</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">쓰면 안 되는 말</div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="avoidWords"></div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="avoidWords" placeholder="문구 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="avoidWords" style="height:36px">추가</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">의료광고 규정에 어긋나는 표현이 기본으로 들어있어요. 우리 매장 정보에서 추가·수정할 수 있어요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge" data-field-badge="avoidWords"></span></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================================================== -->
+      <!-- 탭 3 · 이미지 스타일 (신규) -->
+      <!-- ================================================== -->
+      <section class="rs-pane" id="pane-image">
+
+        <div class="rs-inherit-bar" data-inherit-bar>
+          <div style="flex:1">
+            <div class="rs-inherit-bar-text">브랜드 룰셋 상속</div>
+            <div class="rs-inherit-bar-sub">켜면 브랜드 룰셋을 따르고, 이 탭은 수정할 수 없어요</div>
+          </div>
+          <button type="button" class="rs-inherit-switch is-on" data-inherit-toggle></button>
+        </div>
+
+        <div style="background:var(--blue-50);border:1px solid var(--blue-border);border-radius:var(--radius-tile);padding:12px 14px;font-size:13px;font-weight:600;color:var(--blue-text);margin-top:16px;display:flex;gap:8px;align-items:center">
+          💡 어떤 이미지를 쓸지는 AI가 상황에 맞게 골라요. 아래 규칙은 AI가 이미지를 고르고 만들 때 지키는 기준이에요.
+        </div>
+
+        <div class="uw-card" style="margin-top:8px;padding:8px 24px">
+
+          <div class="rs-row">
+            <div class="rs-label">베이스 이미지 소스 매칭 규칙</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">글 주제와 매장 자료관리 사진 카테고리를 자동 매칭해요 (예: 메뉴 소개 글 → 메뉴 사진)</textarea>
+              <div class="rs-help">적합한 실사진이 있으면 우선 사용하고, 없으면 아래 편집 항목 범위 안에서 보완해요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">허용 편집 항목</div>
+            <div class="rs-value">
+              <div class="rs-help" style="margin-top:0;margin-bottom:8px">업종 프리셋으로 기본값이 정해져요. 필요하면 항목별로 켜고 끌 수 있어요.</div>
+
+              <div style="font-size:11px;font-weight:700;color:var(--ink-400);margin-top:10px">항상 허용</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" data-edit-tier="always"></div>
+
+              <div style="font-size:11px;font-weight:700;color:var(--ink-400);margin-top:14px">업종 프리셋에 따라 다름</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" data-edit-tier="preset"></div>
+
+              <div style="font-size:11px;font-weight:700;color:var(--ink-400);margin-top:14px">기본 OFF · 특정 업종 잠금</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" data-edit-tier="locked"></div>
+              <div class="rs-help" style="margin-top:8px">🔒 표시된 항목은 이 업종(의료·시술)에서 꺼져 있고 매장이 임의로 켤 수 없어요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-orange">업종 프리셋</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">인물·얼굴 노출</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">환자 얼굴이 보이면 반드시 모자이크 처리하고, 비포애프터 사진은 동의서를 받은 경우에만 사용해요</textarea>
+              <div class="rs-help">의료광고법 규정이라 임의로 끄거나 완화할 수 없어요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-red">필수</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">텍스트 오버레이</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">제목 텍스트는 넣지 않고, 이미지는 심플하게 그대로 사용해요</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>정보 전달형 글이라 이미지에 문구를 얹지 않는 편이 깔끔해요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">로고·워터마크</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">이미지 우측 하단에 매장 로고를 작게 삽입해요</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-blue">AI 제안</span>다른 채널에 무단으로 퍼가는 걸 줄이는 데 도움이 돼요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">브랜드 아이덴티티 고정 규칙</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">로고 파일에서 자동 추출한 컬러(주황·아이보리)와 기본 폰트를 생성 이미지에 항상 유지해요</textarea>
+              <div class="rs-help">실사진 레퍼런스가 없는 완전 생성 이미지(이벤트 배너 등)에서 브랜드 톤이 흔들리지 않게 잡아주는 값이에요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">검수 강도</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">생성 이미지는 발행 전 사장님 승인이 필요해요</textarea>
+              <div class="rs-help">업종 프리셋으로 강제되는 값이에요. 승인 단계를 추가하는 방향(강화)은 자유롭지만, 완화(승인 생략)는 막혀 있어요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-orange">업종 프리셋</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">alt텍스트·파일명</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">메뉴명 → 매장명 → 지역명 순서로 키워드를 자동으로 넣어요</textarea>
+              <div class="rs-help">검색 노출에 쓰이는 이미지 메타데이터예요. 우선순위를 바꾸고 싶으면 수정해 주세요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">레퍼런스 갱신</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">새로 발행한 글의 이미지를 스타일 레퍼런스에 계속 편입해요</textarea>
+              <div class="rs-help">스타일이 최근 트렌드를 계속 따라가요. 지금 스타일을 고정하고 싶으면 "초기 레퍼런스 고정"으로 바꿔 주세요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">본문 이미지 배치</div>
+            <div class="rs-value">
+              <textarea class="rs-edit" rows="1">도입부 1장, 본문 중간 1~2장 — 글 하나당 3장 내외</textarea>
+              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>글 길이(700~1,000자)에 비해 적당한 이미지 수예요. 검색노출 최소 기준(글자 300자당 1장 이상)도 충족해요. 문단 간 간격도 한쪽으로 몰리지 않게 배치해요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
+          <div class="rs-row">
+            <div class="rs-label">피할 이미지 유형</div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="avoidImages"></div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="avoidImages" placeholder="항목 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="avoidImages" style="height:36px">추가</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">우리 매장 정보에서 추가·수정할 수 있어요. AI가 이미지를 고르거나 만들 때 자동으로 걸러요.</div>
+            </div>
+            <div class="rs-side"><span class="uw-badge" data-field-badge="avoidImages"></span></div>
+          </div>
+
+        </div>
+
+        <!-- ====================================================================
+             백엔드 전용 — 화면 미노출 (관리자만 관리, 대행사·사장님에게 알리지 않음)
+             ① 레퍼런스 이미지 세트: 스타일 학습에 쓰는 실제 이미지 묶음 자체는 비노출, ③(추출 결과)만 참고용 노출 검토 가능
+             ③ 스타일 추출 방식: 색감·조명·구도·질감을 어떻게 수치화하는지는 순수 기술 구현
+             ⑤ 생성 트리거 조건: 합성/생성 분기 로직 — 노출하면 "왜 내 글만 생성이냐" 같은 불필요 문의 유발
+             ⑥ 생성 이미지 콘텐츠 유형: 자동 추론값으로 둘지 노출 토글로 둘지 미결정 — 우선 비노출로 시작
+             ⑧ 텍스트 정확성 검증: 발행 전 자동 QA 게이트, 설정/확인 대상 아님
+             ⑨ 사실 왜곡 방지 규칙("혼잡도 조정 금지", 가짜 인포그래픽 수치 금지 등): 비타협 정책이라 노출하면
+                오히려 매장이 "이 정도는 괜찮지 않냐"고 협상 시도할 여지가 생김 — 의도적으로 비노출
+             ⑩ 상표권·초상권 오염 필터: 필터 기준 노출 시 회피(우회 프롬프트) 악용 위험
+             ⑬ 실패 감지·폴백 규칙: 실패 시 원본으로 자동 복귀하는 안전장치, 사용자가 몰라도 되는 내부 동작
+             ==================================================================== -->
+
+      </section>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ========== 모달: 초기화 확인 ========== -->
+<div class="uw-modal-backdrop" id="modal-reset">
+  <div class="uw-modal">
+    <div class="uw-modal-title">룰셋을 처음으로 되돌릴까요?</div>
+    <div class="uw-modal-body">직접 고친 내용이 모두 사라지고, AI가 처음 분석한 값으로 돌아가요. 되돌린 뒤에는 취소할 수 없어요.</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">그대로 두기</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-reset">되돌리기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 근거 보기 ========== -->
+<div class="uw-modal-backdrop" id="modal-evidence">
+  <div class="uw-modal">
+    <div class="uw-modal-title">왜 이렇게 분석했나요?</div>
+    <div class="uw-modal-body" id="modal-evidence-body">
+      네이버 Place 소개글과 손님 리뷰에서 '대표원장', '직접 상담', '꼼꼼함'이라는 말이 가장 자주 나왔어요. 기존 블로그 글의 제목과 본문 구조도 함께 참고했어요.
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-primary btn-sm" data-action="close-modal">확인</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---- L1/L2 간단카드에 7개 필드 행 주입 (L3와 동일한 data-* 속성 재사용) ---- */
+  function ownerFieldRow(label, innerHtml, key) {
+    return '<div class="rs-row"><div class="rs-label">' + label + '</div><div class="rs-value">' + innerHtml + '</div>' +
+      '<div class="rs-side"><span class="uw-badge" data-field-badge="' + key + '"></span></div></div>';
+  }
+  function ownerAddInput(key, placeholder) {
+    return '<div style="display:flex;gap:6px;margin-top:8px">' +
+      '<input data-chip-add-input="' + key + '" placeholder="' + placeholder + '" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">' +
+      '<button class="btn btn-secondary btn-sm" data-chip-add-btn="' + key + '" style="height:36px">추가</button></div>' +
+      '<div class="rs-help" style="margin-top:8px">클릭해서 비활성화하거나, 위 입력창으로 추가해요.</div>';
+  }
+  var OWNER_ROW_HTML =
+    ownerFieldRow("말투", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="tone"></div>' + ownerAddInput("tone", "말투 표현 추가"), "tone") +
+    ownerFieldRow("우리가 내세우는 강점", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="strengths"></div>' + ownerAddInput("strengths", "강점 추가"), "strengths") +
+    ownerFieldRow("콘텐츠 소재 키워드", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="keywords"></div>' + ownerAddInput("keywords", "키워드 추가"), "keywords") +
+    ownerFieldRow("해시태그", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="hashtags"></div>' + ownerAddInput("hashtags", "해시태그 추가"), "hashtags") +
+    ownerFieldRow("쓰면 안 되는 말", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="avoidWords"></div>' + ownerAddInput("avoidWords", "문구 추가"), "avoidWords") +
+    ownerFieldRow("피할 이미지 유형", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="avoidImages"></div>' + ownerAddInput("avoidImages", "항목 추가"), "avoidImages") +
+    '<div class="rs-row"><div class="rs-label">허용 편집 항목</div><div class="rs-value">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--ink-400)">업종 프리셋에 따라 다름</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" data-edit-tier="preset"></div>' +
+      '<div style="font-size:11px;font-weight:700;color:var(--ink-400);margin-top:10px">기본 OFF · 잠금</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" data-edit-tier="locked"></div>' +
+      '<div class="rs-help" style="margin-top:8px">🔒 표시된 항목은 이 업종에서 꺼져 있고 임의로 켤 수 없어요. 자세한 설정은 담당 대행사에게 문의해 주세요.</div>' +
+    '</div><div class="rs-side"><span class="uw-badge b-orange">업종 프리셋</span></div></div>' +
+    '<div class="rs-row"><div class="rs-label">검수 강도</div><div class="rs-value">생성 이미지는 발행 전 사장님 승인이 필요해요' +
+      '<div class="rs-help">업종 프리셋으로 정해진 값이에요. 승인 단계는 대행사와 상의해 강화할 수 있어요.</div>' +
+    '</div><div class="rs-side"><span class="uw-badge b-orange">업종 프리셋</span></div></div>';
+  document.querySelectorAll(".owner-simple-card").forEach(function (el) { el.innerHTML = OWNER_ROW_HTML; });
+
+  /* ---- 공용 필드 시스템: L3 탭과 L1/L2 간단카드가 같은 값을 공유 ----
+     기본은 AI 분석(source:'ai'). 칩 추가·스와치 변경 등 사장님이 손대면 그 필드 전체가
+     '사장님 수정'(source:'owner')으로 바뀌고, 화면 어디에 있는 배지든 다 같이 갱신됨. */
+  var FIELD_DATA = {
+    tone: ["차분하고 설명이 자세한", "의료진 관점", "과도한 감탄 없음"],
+    strengths: ["대표원장 직접 상담·직접 시술", "1:1 개인 맞춤 디자인", "상담실장 없는 프라이빗 진료", "정확한 검사와 상담", "피부 상태에 맞는 선택"],
+    keywords: ["슈링크 효과", "울쎄라 600샷 가격", "울쎄라 정품 인증", "일광흑자", "리팟레이저", "흑자 제거", "FX 인모드"],
+    hashtags: ["#광화문피부과", "#종로피부과", "#울쎄라", "#리팟레이저"],
+    avoidWords: ["부작용 없음", "효과 보장", "100% 효과", "완전 제거", "무조건 개선"],
+    avoidImages: ["과장된 비포애프터 합성", "출처 불명 스톡컷", "타 병원 명패·간판 노출"]
+  };
+  var FIELD_SRC = { tone: "ai", strengths: "ai", keywords: "ai", hashtags: "ai", avoidWords: "ai", avoidImages: "ai" };
+  var DANGER_FIELDS = { avoidWords: true, avoidImages: true };
+
+  function updateFieldBadge(key) {
+    var src = FIELD_SRC[key];
+    var cls = src === "owner" ? "b-blue" : src === "agency" ? "b-orange" : "b-purple";
+    var text = src === "owner" ? "사장님 수정" : src === "agency" ? "대행사 수정" : "AI 분석";
+    document.querySelectorAll('[data-field-badge="' + key + '"]').forEach(function (b) {
+      b.className = "uw-badge " + cls;
+      b.textContent = text;
+    });
+  }
+  // el: 실제로 값을 바꾼 요소. .owner-simple-card 안(L1/L2 간단카드)이면 사장님 수정, 그 밖(L3 풀버전)이면 대행사 수정
+  function markEdited(key, el) {
+    var src = el && el.closest(".owner-simple-card") ? "owner" : "agency";
+    if (FIELD_SRC[key] === src) return;
+    FIELD_SRC[key] = src;
+    updateFieldBadge(key);
+  }
+
+  function isReadonly(el) { return !!(el && el.closest(".owner-simple-card.is-readonly")); }
+
+  function renderChipField(key) {
+    var danger = !!DANGER_FIELDS[key];
+    var html = FIELD_DATA[key].map(function (v) {
+      return '<span class="' + (danger ? "uw-badge b-red" : "uw-kw-chip") + '" data-kw-chip>' + v + '</span>';
+    }).join("");
+    document.querySelectorAll('[data-chip-list="' + key + '"]').forEach(function (el) {
+      el.innerHTML = html;
+      el.querySelectorAll("[data-kw-chip]").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          if (isReadonly(chip)) return;
+          chip.style.opacity = chip.style.opacity === "0.35" ? "" : "0.35";
+        });
+      });
+    });
+  }
+
+  /* ---- 허용 편집 항목: 티어별 토글 칩 (병원=locked 티어 잠금) ---- */
+  var EDIT_ITEMS = {
+    always: [
+      { id: "colorLight", label: "색감·조명 보정", on: true },
+      { id: "cleanup",    label: "결함·잡티 제거", on: true },
+      { id: "dewm",       label: "워터마크·이물 제거", on: true },
+      { id: "outpaint",   label: "비율 확장(아웃페인팅)", on: true }
+    ],
+    preset: [
+      { id: "bgSwap",   label: "배경 교체", on: false },
+      { id: "bgObject", label: "배경유지+오브젝트 삽입", on: false },
+      { id: "propSwap", label: "소품 교체", on: false },
+      { id: "season",   label: "계절·시즌 오버레이", on: false },
+      { id: "timeShift",label: "시간대 변경", on: false },
+      { id: "textIcon", label: "텍스트·아이콘 합성", on: true },
+      { id: "arrow",    label: "화살표·안내선 합성", on: false },
+      { id: "fullGen",  label: "전면 재구성", on: false },
+      { id: "retouchFood", label: "음식·제품 리터칭(색감만)", on: false }
+    ],
+    locked: [
+      { id: "personRemove", label: "인물 제거", on: false },
+      { id: "personSwap",   label: "인물 교체", on: false }
+    ]
+  };
+  function renderEditItems() {
+    Object.keys(EDIT_ITEMS).forEach(function (tier) {
+      document.querySelectorAll('[data-edit-tier="' + tier + '"]').forEach(function (wrap) {
+        var inOwnerCard = !!wrap.closest(".owner-simple-card");
+        wrap.innerHTML = EDIT_ITEMS[tier].map(function (it) {
+          var locked = tier === "locked";
+          var interactive = !locked && !inOwnerCard;
+          var cls = locked ? "uw-badge b-gray" : (it.on ? "uw-badge b-blue" : "uw-badge b-gray");
+          var lockIcon = locked ? "🔒 " : "";
+          return '<span class="' + cls + '" style="cursor:' + (interactive ? "pointer" : "default") + '" data-edit-item="' + it.id + '" data-edit-tier-of="' + tier + '">' + lockIcon + it.label + '</span>';
+        }).join("");
+        if (tier === "locked" || inOwnerCard) return;
+        wrap.querySelectorAll("[data-edit-item]").forEach(function (chip) {
+          chip.addEventListener("click", function () {
+            if (isReadonly(chip)) return;
+            var id = chip.getAttribute("data-edit-item");
+            var item = EDIT_ITEMS[tier].filter(function (it) { return it.id === id; })[0];
+            item.on = !item.on;
+            if (window.UW && window.UW.toast) window.UW.toast(item.on ? "켰어요" : "껐어요");
+            renderEditItems();
+          });
+        });
+      });
+    });
+  }
+  renderEditItems();
+
+  Object.keys(FIELD_DATA).forEach(function (key) {
+    updateFieldBadge(key);
+    renderChipField(key);
+  });
+
+  /* 칩 추가 입력(공용) */
+  document.addEventListener("click", function (e) {
+    var addBtn = e.target.closest("[data-chip-add-btn]");
+    if (!addBtn || isReadonly(addBtn)) return;
+    var key = addBtn.getAttribute("data-chip-add-btn");
+    var input = addBtn.parentElement.querySelector('[data-chip-add-input="' + key + '"]');
+    if (!input) return;
+    var val = input.value.trim();
+    if (!val) return;
+    FIELD_DATA[key].push(val);
+    input.value = "";
+    markEdited(key, addBtn);
+    renderChipField(key);
+  });
+  document.addEventListener("keydown", function (e) {
+    var input = e.target.closest("[data-chip-add-input]");
+    if (!input || e.key !== "Enter" || isReadonly(input)) return;
+    e.preventDefault();
+    var key = input.getAttribute("data-chip-add-input");
+    var val = input.value.trim();
+    if (!val) return;
+    FIELD_DATA[key].push(val);
+    input.value = "";
+    markEdited(key, input);
+    renderChipField(key);
+  });
+
+  /* 세그먼트 탭 전환 */
+  document.querySelectorAll("[data-rs-tab]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("[data-rs-tab]").forEach(function (b) { b.classList.remove("is-active"); });
+      document.querySelectorAll(".rs-pane").forEach(function (p) { p.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      var pane = document.getElementById(btn.getAttribute("data-rs-tab"));
+      if (pane) pane.classList.add("is-active");
+      // 숨겨져 있던 탭(display:none)은 scrollHeight가 0으로 잡혀서 입력창이 찌부돼 보이던 문제 → 탭이 보일 때 다시 계산
+      if (typeof autoResizeAll === "function") autoResizeAll();
+    });
+  });
+
+  /* ---- 매장 유형 데모 스위치 (일반 매장 / 프랜차이즈 매장 / 브랜드 대표매장) ---- */
+  document.getElementById("store-type-switch").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-store-type]");
+    if (!b) return;
+    var type = b.getAttribute("data-store-type");
+    document.querySelectorAll("#store-type-switch button").forEach(function (btn) { btn.classList.toggle("is-on", btn === b); });
+
+    document.getElementById("flagship-badge").style.display = type === "flagship" ? "" : "none";
+
+    var showInherit = type === "franchise";
+    document.querySelectorAll("[data-inherit-bar]").forEach(function (bar) {
+      bar.classList.toggle("is-visible", showInherit);
+    });
+    // 매장 유형을 바꾸면 각 탭은 상속 ON 기본값(잠금)으로 리셋
+    document.querySelectorAll(".rs-pane").forEach(function (pane) {
+      pane.classList.toggle("is-locked", showInherit);
+    });
+    document.querySelectorAll("[data-inherit-toggle]").forEach(function (sw) { sw.classList.add("is-on"); });
+  });
+
+  /* ---- 탭별 브랜드 룰셋 상속 토글 (잠금/해제 + 토스트만, 값 동기화 로직 없음) ---- */
+  document.querySelectorAll("[data-inherit-toggle]").forEach(function (sw) {
+    sw.addEventListener("click", function () {
+      var pane = sw.closest(".rs-pane");
+      var on = !sw.classList.contains("is-on");
+      sw.classList.toggle("is-on", on);
+      if (pane) pane.classList.toggle("is-locked", on);
+      if (window.UW && window.UW.toast) {
+        window.UW.toast(on ? "브랜드 룰셋을 따라요. 다음 콘텐츠부터 반영돼요" : "이 매장만의 설정으로 바뀌었어요. 지금 값으로 유지해요");
+      }
+    });
+  });
+
+  /* 긴 본문 접기/펼치기 + 초기화 확인 */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-clamp-toggle]");
+    if (t) {
+      var box = document.getElementById(t.getAttribute("data-clamp-toggle"));
+      if (box) {
+        var open = box.classList.toggle("is-open");
+        t.textContent = open ? "접기" : "전체 보기";
+      }
+      return;
+    }
+    var a = e.target.closest("[data-action]");
+    if (a && a.getAttribute("data-action") === "confirm-reset") {
+      var b = a.closest(".uw-modal-backdrop");
+      if (b) b.classList.remove("is-open");
+      if (window.UW && window.UW.toast) window.UW.toast("AI가 처음 분석한 값으로 되돌렸어요");
+    }
+  });
+
+  /* ---- 인라인 편집 textarea 자동 높이 조절 ---- */
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }
+  function autoResizeAll() {
+    document.querySelectorAll("textarea.rs-edit, textarea.rs-example-text").forEach(autoResize);
+  }
+  autoResizeAll();
+  document.querySelectorAll("textarea.rs-edit, textarea.rs-example-text").forEach(function (t) {
+    t.addEventListener("input", function () { autoResize(t); });
+  });
+  // 웹폰트(Pretendard)가 늦게 로드되면서 줄바꿈이 바뀌어 높이가 안 맞는 문제 보정
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(autoResizeAll);
+  }
+  window.addEventListener("load", autoResizeAll);
+  setTimeout(autoResizeAll, 300);
+  setTimeout(autoResizeAll, 1000);
+
+  /* ---- 칩 토글(클릭 시 비활성화) + 추가 입력 — SEO 키워드는 기존 방식 유지, 나머지는 위 공용 필드 시스템이 자체 처리함 ---- */
+  document.querySelectorAll("#seo-chip-list [data-kw-chip]").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      chip.style.opacity = chip.style.opacity === "0.35" ? "" : "0.35";
+    });
+  });
+  function bindChipAdd(listId, inputId, btnId, isDanger) {
+    var list = document.getElementById(listId), input = document.getElementById(inputId), btn = document.getElementById(btnId);
+    if (!list || !input || !btn) return;
+    function add() {
+      var val = input.value.trim();
+      if (!val) return;
+      var chip = document.createElement("span");
+      chip.className = isDanger ? "uw-badge b-red" : "uw-kw-chip";
+      chip.setAttribute("data-kw-chip", "");
+      chip.textContent = val;
+      chip.addEventListener("click", function () {
+        chip.style.opacity = chip.style.opacity === "0.35" ? "" : "0.35";
+      });
+      list.appendChild(chip);
+      input.value = "";
+    }
+    btn.addEventListener("click", add);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); add(); } });
+  }
+  bindChipAdd("seo-chip-list", "seo-chip-input", "seo-chip-add");
+
+  /* ---- 예시 목록 추가/삭제 ---- */
+  document.addEventListener("click", function (e) {
+    var del = e.target.closest("[data-del]");
+    if (del) { del.closest(".rs-example-item").remove(); return; }
+    var addBtn = e.target.closest("[data-add-ex]");
+    if (addBtn) {
+      var list = addBtn.previousElementSibling;
+      var item = document.createElement("div");
+      item.className = "rs-example-item";
+      item.innerHTML = '<span class="rs-example-num">예시</span><textarea class="rs-example-text" rows="1" placeholder="새 예시를 입력하세요"></textarea><span class="rs-example-del" data-del>✕</span>';
+      list.appendChild(item);
+      var newTa = item.querySelector("textarea");
+      autoResize(newTa);
+      newTa.addEventListener("input", function () { autoResize(newTa); });
+      newTa.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>

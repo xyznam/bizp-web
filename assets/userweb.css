@@ -1,0 +1,393 @@
+/* ============================================================
+   userweb.css — 사장님 Web v2-responsive (v1 사본+반응형) 토큰·컴포넌트
+   정본: planning/23 §2 (디자인가이드_모바일.html 디코딩 토큰)
+   수정 권한: P2 파일럿 확립 후 통합 세션만 (22 문서 §5 병렬 규칙)
+   ============================================================ */
+
+:root {
+  /* 브랜드 */
+  --blue: #3182F6;
+  --blue-50: #EAF2FE;
+  --blue-text: #5B82C4;
+  --blue-border: #C9DDFB;
+  /* 잉크 */
+  --ink-900: #191F28;
+  --ink-700: #4E5968;
+  --ink-600: #6B7684;
+  --ink-500: #8B95A1;
+  --ink-400: #B0B8C1;
+  --ink-300: #C5CBD3;
+  /* 서피스 */
+  --white: #FFFFFF;
+  --bg: #F7F8FA;          /* PC 본문 배경 (시안) */
+  --inset: #F2F4F6;       /* 인셋·타일 (가이드 App BG) */
+  --divider: #F4F5F7;
+  --card-border: #E8EAEE;
+  --input-border: #E1E4E8;
+  /* 의미색 */
+  --green: #15B981;  --green-bg: #E7F8F0;  --green-bg2: #ECFBF3;
+  --red: #F04452;    --red-bg: #FEF1F2;
+  --orange: #FF8A00; --orange-bg: #FFF6E9;
+  --purple: #6B3FD4; --purple-bg: #F2EEFD;
+  /* 채널색 — 채널 연결 화면 전용 */
+  --ch-naver: #03C75A; --ch-kakao: #FEE500; --ch-insta: #E1306C;
+  --ch-daangn: #FF8A3D; --ch-google: #4285F4;
+  /* 구조 */
+  --lnb-w: 197px;
+  --topbar-h: 56px;
+  --radius-card: 18px;
+  --radius-btn: 14px;
+  --radius-tile: 12px;
+  --radius-chip: 11px;
+  --radius-badge: 6px;
+  --shadow-float: 0 14px 40px rgba(0, 0, 0, .12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--ink-900);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ---------- 레이아웃 프레임 ---------- */
+.uw-frame { display: flex; min-height: 100vh; }
+.uw-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.uw-body { flex: 1; padding: 24px 28px 48px; max-width: 1140px; width: 100%; margin: 0 auto; }
+.uw-cols { display: flex; gap: 20px; align-items: flex-start; }
+.uw-col-main { flex: 1; min-width: 0; }
+.uw-col-side { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* ---------- LNB ---------- */
+.uw-lnb {
+  width: var(--lnb-w); flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--card-border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+.uw-logo { display: flex; align-items: center; gap: 8px; padding: 18px 16px 14px; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.uw-logo-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.uw-menu { padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.uw-menu + .uw-menu { border-top: 1px solid var(--divider); margin-top: 8px; padding-top: 12px; }
+.uw-menu a, .uw-menu .uw-menu-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--ink-600);
+  text-decoration: none; cursor: pointer;
+}
+.uw-menu .is-active { background: var(--blue-50); color: var(--blue); font-weight: 700; }
+.uw-menu a:hover { background: var(--inset); }
+.uw-menu .is-planned { color: var(--ink-400); cursor: pointer; }
+.uw-menu-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+.uw-planned-tag { margin-left: auto; font-size: 10px; font-weight: 700; color: var(--ink-400); background: var(--inset); border-radius: var(--radius-badge); padding: 2px 6px; }
+.uw-lnb-user { margin-top: auto; border-top: 1px solid var(--divider); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+/* 아바타는 사진 등록 기능이 없는 이니셜 텍스트를 하드코딩해 쓰던 자리 — 중립 아이콘으로 대체(색 투명 + ::before 오버레이)해
+   모든 화면의 마크업을 건드리지 않고도 "개인화된 사진"이라는 착각 없이 계정 진입점이라는 신호만 남긴다. */
+.uw-lnb-user .u-avatar { width: 34px; height: 34px; border-radius: var(--radius-chip); background: var(--blue-50); color: transparent; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 13px; position: relative; }
+.uw-lnb-user .u-avatar::before { content: "👤"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.uw-lnb-user .u-name { font-size: 13px; font-weight: 700; }
+/* 요금제는 로그인한 사람이 아니라 매장에 속한 값 — 여기서는 숨기고 상단 매장 전환 버튼(.uw-store-switch)에 배지로 표시한다 */
+.uw-lnb-user .u-plan { display: none; }
+
+/* ---------- 탑바 ---------- */
+.uw-topbar {
+  height: var(--topbar-h); background: var(--white); border-bottom: 1px solid var(--card-border);
+  display: flex; align-items: center; gap: 12px; padding: 0 24px;
+  position: sticky; top: 0; z-index: 30;
+}
+.uw-topbar-title { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.uw-topbar-sub { font-size: 13px; color: var(--ink-500); }
+.uw-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.uw-store-switch {
+  display: flex; align-items: center; gap: 6px; border: 1px solid var(--input-border);
+  border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 700;
+  background: var(--white); cursor: pointer; position: relative;
+}
+.uw-bell { position: relative; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--white); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; }
+.uw-bell .dot { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+
+/* ---------- L1 대행사 상시 필 (셸 공통 — userweb.js 주입) ---------- */
+.uw-agency-pill {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--blue-50); border: 1px solid var(--blue-border);
+  border-radius: 10px; padding: 5px 6px 5px 12px; font-size: 13px; color: var(--ink-700);
+}
+.uw-agency-pill b { font-weight: 700; color: var(--ink-900); }
+.uw-agency-pill .btn { height: 30px; font-size: 12px; padding: 0 12px; border-radius: 8px; }
+
+/* ---------- 마스터-디테일 (검토형 화면) ---------- */
+.uw-split { display: flex; gap: 20px; align-items: flex-start; }
+.uw-split-list { width: 340px; flex-shrink: 0; }
+.uw-split-detail { flex: 1; min-width: 0; }
+.uw-doc-card {
+  background: var(--white); border: 1px solid var(--card-border); border-radius: var(--radius-card);
+  padding: 14px 16px; cursor: pointer; margin-bottom: 8px;
+}
+.uw-doc-card:hover { border-color: var(--blue-border); }
+.uw-doc-card.is-selected { border: 2px solid var(--blue); padding: 13px 15px; }
+.uw-doc-card .d-top { display: flex; align-items: center; gap: 6px; }
+.uw-doc-card .d-ch { font-size: 12px; font-weight: 700; color: var(--ink-600); display: flex; align-items: center; gap: 5px; }
+.uw-doc-card .d-ch::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ch, var(--green)); display: inline-block; }
+.uw-doc-card .d-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; margin-top: 8px; line-height: 1.45; }
+.uw-doc-card .d-meta { font-size: 12px; color: var(--ink-400); margin-top: 6px; }
+.uw-doc-card .d-store { font-size: 11px; font-weight: 700; color: var(--blue-text); margin-top: 6px; }
+.uw-doc-card .uw-badge { margin-left: auto; }
+
+/* 검색 노출 점수 */
+.uw-score { display: flex; align-items: center; gap: 12px; background: var(--inset); border-radius: var(--radius-tile); padding: 12px 14px; }
+.uw-score-label { font-size: 13px; font-weight: 600; color: var(--ink-600); flex-shrink: 0; }
+.uw-score-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--card-border); overflow: hidden; }
+.uw-score-bar > i { display: block; height: 100%; background: var(--green); border-radius: 4px; }
+.uw-score-num { font-size: 15px; font-weight: 800; color: var(--green); flex-shrink: 0; }
+.uw-score-why { font-size: 12px; font-weight: 700; color: var(--blue); cursor: pointer; flex-shrink: 0; }
+.uw-kw-chip { display: inline-flex; font-size: 12px; font-weight: 700; color: var(--blue); background: var(--white); border: 1px solid var(--blue-border); border-radius: var(--radius-badge); padding: 3px 9px; }
+
+/* 하단 고정형 액션바 */
+.uw-actionbar { display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--divider); margin-top: 18px; padding-top: 16px; }
+.uw-actionbar .btn-primary { flex: 1; }
+
+/* ---------- 레벨 스위처 (프로토타입 데모 전용) ---------- */
+.uw-lvl-switch { display: flex; background: var(--inset); border-radius: 10px; padding: 3px; gap: 2px; }
+.uw-lvl-switch button {
+  border: 0; background: transparent; font-family: inherit; font-size: 12px; font-weight: 700;
+  color: var(--ink-500); padding: 5px 10px; border-radius: 8px; cursor: pointer;
+}
+.uw-lvl-switch button.is-on { background: var(--white); color: var(--blue); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.uw-lvl-note { font-size: 11px; color: var(--ink-400); }
+
+/* ---------- 타이포 ---------- */
+.uw-h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+.uw-h1-caption { font-size: 13px; font-weight: 500; color: var(--ink-500); margin-top: 6px; }
+.uw-section-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: baseline; gap: 8px; }
+.uw-section-caption { font-size: 12px; font-weight: 500; color: var(--ink-500); }
+.uw-num-xl { font-size: 25px; font-weight: 800; letter-spacing: -0.03em; }
+
+/* ---------- 카드 ---------- */
+.uw-card { background: var(--white); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 18px; }
+.uw-card + .uw-card { margin-top: 8px; }
+.uw-section { margin-top: 24px; }
+
+/* 히어로 (오늘 할 일) */
+.uw-hero { background: var(--blue); border: 0; border-radius: var(--radius-card); padding: 24px; color: #fff; }
+.uw-hero-chip { display: inline-block; background: rgba(255,255,255,.18); color: #fff; font-size: 12px; font-weight: 700; border-radius: var(--radius-badge); padding: 4px 10px; }
+.uw-hero-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-top: 12px; }
+.uw-hero-foot { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 14px; }
+.uw-hero-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.uw-hero .btn-on-blue { background: var(--white); color: var(--blue); }
+/* 오늘 할 일 유형이 2개 이상일 때: 큰 버튼 하나 대신 유형별 칩 링크 (목적지 모호함 방지) */
+.uw-hero-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.uw-hero-chip-link { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.16); color: #fff; font-size: 14px; font-weight: 700; border-radius: var(--radius-tile); padding: 10px 16px; text-decoration: none; transition: background .15s; }
+.uw-hero-chip-link:hover { background: rgba(255,255,255,.28); }
+
+/* ---------- 버튼 ---------- */
+.btn { font-family: inherit; font-size: 16px; font-weight: 700; border-radius: var(--radius-btn); border: 0; cursor: pointer; padding: 0 22px; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -0.02em; }
+.btn-sm { font-size: 13px; height: 36px; padding: 0 14px; border-radius: 10px; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-secondary { background: var(--blue-50); color: var(--blue); }
+.btn-ghost { background: var(--white); color: var(--ink-700); border: 1px solid var(--input-border); }
+.btn-danger-soft { background: var(--red-bg); color: var(--red); }
+
+/* ---------- 통계 타일 ---------- */
+.uw-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.uw-tile { background: var(--white); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 16px 18px; }
+.uw-tile-label { font-size: 13px; font-weight: 600; color: var(--ink-600); display: flex; align-items: center; gap: 7px; }
+.uw-tile-num { font-size: 25px; font-weight: 800; letter-spacing: -0.03em; margin-top: 8px; }
+.uw-tile-num small { font-size: 14px; font-weight: 600; color: var(--ink-500); }
+.uw-tile-sub { font-size: 12px; font-weight: 600; margin-top: 4px; color: var(--ink-500); }
+.uw-tile-sub.pos { color: var(--green); }
+.uw-tile-inner { background: var(--inset); border-radius: var(--radius-tile); padding: 10px 12px; }
+.uw-tile-inner.neg { background: var(--red-bg); }
+.uw-tile-inner .n { font-size: 18px; font-weight: 800; }
+.uw-tile-inner.neg .n { color: var(--red); }
+.uw-tile-inner .l { font-size: 12px; color: var(--ink-500); }
+
+/* 진행바 */
+.uw-bar { height: 8px; border-radius: 4px; background: var(--inset); overflow: hidden; margin-top: 10px; }
+.uw-bar > i { display: block; height: 100%; border-radius: 4px; background: var(--green); }
+
+/* ---------- 배지 ---------- */
+.uw-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; border-radius: var(--radius-badge); padding: 3px 8px; }
+.uw-badge.b-blue { color: var(--blue); background: var(--blue-50); }
+.uw-badge.b-green { color: var(--green); background: var(--green-bg); }
+.uw-badge.b-orange { color: var(--orange); background: var(--orange-bg); }
+.uw-badge.b-red { color: var(--red); background: var(--red-bg); }
+.uw-badge.b-gray { color: var(--ink-600); background: var(--inset); }
+.uw-badge.b-purple { color: var(--purple); background: var(--purple-bg); }
+
+/* ---------- 리스트 행 ---------- */
+.uw-rows { display: flex; flex-direction: column; }
+.uw-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--divider); }
+.uw-row:last-child { border-bottom: 0; }
+.uw-row-chip { width: 38px; height: 38px; border-radius: var(--radius-chip); background: var(--blue-50); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.uw-row-chip.c-green { background: var(--green-bg); }
+.uw-row-chip.c-purple { background: var(--purple-bg); }
+.uw-row-body { flex: 1; min-width: 0; }
+.uw-row-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.uw-row-desc { font-size: 12px; font-weight: 500; color: var(--ink-500); margin-top: 2px; }
+.uw-row-meta { font-size: 12px; color: var(--ink-400); flex-shrink: 0; }
+.uw-row-arrow { color: var(--ink-300); font-size: 15px; }
+a.uw-row { text-decoration: none; color: inherit; cursor: pointer; }
+a.uw-row:hover .uw-row-title { color: var(--blue); }
+
+/* 알림 행 */
+.uw-alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+.uw-alert-row { display: flex; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--divider); align-items: flex-start; }
+.uw-alert-row:last-child { border-bottom: 0; }
+.uw-alert-text { font-size: 13px; font-weight: 500; line-height: 1.5; }
+.uw-alert-time { font-size: 12px; color: var(--ink-400); margin-top: 2px; }
+
+/* ---------- 대체 카드 (L1 fallback) ---------- */
+.uw-fallback {
+  background: var(--inset); border: 1px dashed var(--ink-300); border-radius: var(--radius-card);
+  padding: 18px; display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box;
+}
+.uw-fallback-chip { width: 42px; height: 42px; border-radius: var(--radius-chip); background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.uw-fallback-title { font-size: 15px; font-weight: 700; }
+.uw-fallback-desc { font-size: 13px; color: var(--ink-500); margin-top: 2px; }
+.uw-fallback .btn { margin-left: auto; flex-shrink: 0; }
+
+/* ---------- L3 다매장 스트립 ---------- */
+.uw-agency-strip { background: var(--white); border: 1px solid var(--blue-border); border-radius: var(--radius-card); padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.uw-agency-strip .s-title { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+.uw-store-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--inset); border-radius: 10px; padding: 6px 11px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.uw-store-chip .cnt { background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; border-radius: 8px; min-width: 17px; height: 17px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+.uw-store-chip.warn .cnt { background: var(--red); }
+
+/* ---------- 모달 · 토스트 ---------- */
+.uw-modal-backdrop { position: fixed; inset: 0; background: rgba(25,31,40,.4); display: none; align-items: center; justify-content: center; z-index: 90; }
+.uw-modal-backdrop.is-open { display: flex; }
+.uw-modal { background: var(--white); border-radius: var(--radius-card); box-shadow: var(--shadow-float); width: 480px; max-width: calc(100vw - 40px); padding: 24px; }
+.uw-modal-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.uw-modal-body { margin-top: 12px; font-size: 14px; line-height: 1.7; color: var(--ink-700); }
+.uw-modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.uw-preview-box { background: var(--inset); border-radius: var(--radius-tile); padding: 14px; font-size: 14px; line-height: 1.7; margin-top: 10px; }
+.uw-toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(8px);
+  background: var(--ink-900); color: #fff; font-size: 13px; font-weight: 600;
+  border-radius: 12px; padding: 12px 18px; opacity: 0; pointer-events: none;
+  transition: all .2s ease; z-index: 99; box-shadow: var(--shadow-float);
+}
+.uw-toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- 유틸 ---------- */
+.mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; }
+.muted { color: var(--ink-500); }
+[data-module][data-hidden="true"] { display: none !important; }
+
+/* ============================================================
+   반응형 (26 문서 R0/R1 — L1·L2 전용, L3는 모바일 가드)
+   Mobile <768 / Tablet 768–1023 / Desktop ≥1024(현행)
+   ============================================================ */
+
+/* 하단 탭바 — 가이드 스펙: 높이 82, 상단 라인 #EFF1F4, 아이콘 22, 라벨 10/700,
+   활성 --blue·비활성 --ink-400. 모바일에서만 표시, userweb.js가 주입 */
+.uw-tabbar {
+  display: none;
+  position: fixed; left: 0; right: 0; bottom: 0; height: 82px;
+  background: var(--white); border-top: 1px solid #EFF1F4; z-index: 80;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.uw-tabbar a {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; text-decoration: none; color: var(--ink-400);
+  font-size: 10px; font-weight: 700; padding-top: 6px;
+}
+.uw-tabbar a .t-icon { font-size: 22px; line-height: 1; }
+.uw-tabbar a.is-on { color: var(--blue); }
+.uw-tabbar a .t-badge {
+  position: absolute; transform: translate(14px, -26px);
+  background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+
+/* 직원 모드 배너·가드 (27 §5.4) */
+.uw-staff-banner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--orange-bg); border-bottom: 1px solid var(--card-border);
+  padding: 8px 24px; font-size: 13px; color: var(--ink-700);
+}
+.uw-staff-banner .btn { margin-left: auto; height: 30px; font-size: 12px; }
+body.uw-owner-guarded .uw-body > * { display: none; }
+body.uw-owner-guarded .uw-body > .uw-owner-guard {
+  display: block; background: var(--white); border: 1px solid var(--card-border);
+  border-radius: var(--radius-card); padding: 28px 20px; text-align: center;
+}
+
+/* L3 모바일 가드 (26 §7 OQ-1 잠정: 전면 가드) */
+.uw-l3-guard { display: none; }
+body.uw-l3-guarded .uw-body > * { display: none; } /* ISS-1: !important 제거 — 가드 카드 표시 규칙(하위 특이도 우위)이 동작하도록 */
+body.uw-l3-guarded .uw-body > .uw-l3-guard {
+  display: block; background: var(--white); border: 1px solid var(--card-border);
+  border-radius: var(--radius-card); padding: 28px 20px; text-align: center;
+}
+.uw-l3-guard .g-icon { font-size: 34px; }
+.uw-l3-guard .g-title { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; margin-top: 10px; }
+.uw-l3-guard .g-desc { font-size: 13px; color: var(--ink-500); margin-top: 6px; line-height: 1.6; }
+.uw-l3-guard .btn { margin-top: 16px; }
+
+/* ---------- Tablet 768–1023 ---------- */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .uw-body { padding: 20px 16px 48px; }
+  .uw-col-side { width: 260px; }
+  .btn-sm { min-height: 40px; } /* 터치 타깃 보정 */
+  .uw-topbar-sub { display: none; } /* 폭 확보 — 타이틀·스위처 우선 */
+}
+
+/* ---------- Mobile <768 (기준 392) ---------- */
+@media (max-width: 767px) {
+  .uw-lnb { display: none; }               /* LNB → 하단 탭바 대체 */
+  .uw-tabbar { display: flex; }
+  .uw-body { padding: 16px 16px 110px; max-width: none; } /* 탭바 여백 확보 */
+
+  /* 탑바: 타이틀+매장+벨만, 랩 허용 */
+  .uw-topbar { height: auto; min-height: var(--topbar-h); flex-wrap: wrap; padding: 8px 16px; row-gap: 6px; }
+  .uw-topbar-sub { flex-basis: 100%; order: 9; }
+  .uw-lvl-note { display: none !important; }
+  .uw-lvl-switch button { padding: 5px 7px; font-size: 11px; }
+  .uw-agency-pill { flex-basis: 100%; order: 10; justify-content: space-between; }
+
+  /* 컬럼 → 스택 */
+  .uw-cols, .uw-split { flex-direction: column; }
+  .uw-col-side, .uw-split-list { width: 100%; }
+
+  /* 타일: 세로 스택 (한 화면 한 정보, 큰 타이포 우선) */
+  .uw-tiles { grid-template-columns: 1fr !important; } /* 화면 인라인 4열 지정보다 우선 — 26 §5 R0 규칙 */
+
+  /* 히어로: CTA 풀폭 54px (가이드 버튼 스펙) */
+  .uw-hero { padding: 20px 18px; }
+  .uw-hero-row { flex-direction: column; align-items: stretch; gap: 14px; }
+  .uw-hero-title { font-size: 20px; }
+  .uw-hero .btn { width: 100%; height: 54px; }
+  .uw-hero-chips { flex-direction: column; }
+  .uw-hero-chip-link { width: 100%; height: 48px; box-sizing: border-box; }
+
+  /* 행·카드·모달 */
+  .uw-row { flex-wrap: wrap; }
+  .uw-row > .btn { flex-basis: 100%; margin-top: 8px; }
+  .uw-actionbar { flex-wrap: wrap; }
+  .uw-actionbar .btn-primary { flex-basis: 100%; height: 54px; }
+  .uw-modal { width: 100%; max-width: calc(100vw - 24px); padding: 20px 16px; }
+  .uw-agency-strip { flex-direction: column; align-items: flex-start; }
+  .uw-fallback { flex-wrap: wrap; }
+  .uw-fallback .btn { margin-left: 0; flex-basis: 100%; }
+  .uw-h1 { font-size: 22px; }
+
+  /* 2단계 내비 (마스터-디테일 → 리스트⇄상세, 26 §4 ISS-3) */
+  .uw-split-detail { display: none; }
+  body.uw-show-detail .uw-split-detail { display: block; }
+  body.uw-show-detail .uw-split-list { display: none; }
+  .uw-back { display: inline-flex !important; }
+
+  /* 모바일 아젠다 리스트 (07 캘린더 보조, 26 §4 ISS-5) */
+  .uw-agenda { display: block; }
+}
+
+/* 데스크톱·태블릿에서는 back 버튼·아젠다 숨김 */
+.uw-back { display: none; align-items: center; gap: 6px; background: none; border: 0;
+  font-family: inherit; font-size: 14px; font-weight: 700; color: var(--blue); cursor: pointer; padding: 0 0 12px; }
+.uw-agenda { display: none; }
+

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>함께 쓰는 사람 — 비즈플래닛</title>
+<!-- UW_ST_07 · P-A(G3) · 권한 정본: 27 §5 권한 매트릭스, UW_PERMS · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_ST_07">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html" class="is-active">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="06_우리매장정보.html" style="color:var(--ink-500);text-decoration:none">우리 매장 정보</a> › 함께 쓰는 사람</span>
+      <span class="uw-topbar-sub">직원을 초대하고, 쓸 수 있는 기능을 정해요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-cols">
+        <div class="uw-col-main">
+
+          <!-- M01 · view: 직원 목록 -->
+          <section class="uw-card" data-module="M01">
+            <h3 class="uw-section-title">함께 쓰는 사람 <span class="uw-section-caption">2명 이용 중</span></h3>
+            <div class="uw-rows mt-8" id="staff-list"></div>
+          </section>
+
+          <!-- M03 · edit: 권한 편집 (직원 선택 시 표시) -->
+          <section class="uw-card mt-16" data-module="M03" id="perm-panel" style="display:none">
+            <h3 class="uw-section-title" style="font-size:15px">권한 정하기 — <span id="perm-name"></span></h3>
+            <div class="uw-section-caption mt-8">묶음으로 고르거나, 하나씩 켜고 끌 수 있어요. 언제든 바꿀 수 있어요.</div>
+            <div class="mt-12" style="display:flex;gap:6px" id="perm-presets"></div>
+            <div class="uw-rows mt-12" id="perm-toggles"></div>
+            <div class="uw-section-caption mt-8">기본으로 할 수 있는 것: AI 학습 보기 · 문자 캠페인 보기 · 챗봇 상담 내역 보기 · 손님 응대</div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn btn-secondary btn-sm" data-action="save-perms">권한 저장</button>
+              <!-- M04 · view: 직원 화면 미리보기 (데모 — userweb.js enter-staff) -->
+              <button class="btn btn-ghost btn-sm" data-module="M04" data-action="enter-staff" data-preset="review_reply" data-staff-name="김하나 매니저" id="preview-staff">👀 이 직원 화면 미리보기</button>
+            </div>
+          </section>
+
+        </div>
+
+        <aside class="uw-col-side">
+
+          <!-- M02 · create: 직원 초대 -->
+          <section class="uw-card" data-module="M02">
+            <h3 class="uw-section-title" style="font-size:15px">새 직원 초대</h3>
+            <div class="uw-section-caption mt-8">문자로 초대 링크를 보내드려요. 직원이 수락하면 목록에 나타나요.</div>
+            <button class="btn btn-primary mt-12" style="width:100%" data-action="open-modal" data-modal="modal-invite">+ 직원 초대하기</button>
+          </section>
+
+          <!-- M05 · edit: 초대 취소·비활성 -->
+          <section class="uw-card" data-module="M05">
+            <h3 class="uw-section-title" style="font-size:15px">보낸 초대</h3>
+            <div class="uw-rows mt-8">
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body">
+                  <div style="font-size:13px;font-weight:600">이수진 (010-****-9012)</div>
+                  <div class="uw-row-desc">어제 초대함 · 아직 수락 전</div>
+                </div>
+                <span class="uw-badge b-orange">대기</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px" class="mt-8">
+              <button class="btn btn-ghost btn-sm" style="flex:1" data-action="toast" data-toast-msg="초대 문자를 다시 보냈어요.">다시 보내기</button>
+              <button class="btn btn-danger-soft btn-sm" style="flex:1" data-action="toast" data-toast-msg="초대를 취소했어요. 기록은 남아 있어요.">초대 취소</button>
+            </div>
+            <div class="uw-section-caption mt-8">그만둔 직원은 목록에서 '이용 중지'로 바꿔주세요. 기록은 지워지지 않아요.</div>
+          </section>
+
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 초대 모달 (M02) ==================== -->
+<div class="uw-modal-backdrop" id="modal-invite">
+  <div class="uw-modal">
+    <div class="uw-modal-title">직원을 초대할게요</div>
+    <div class="uw-modal-body">
+      <div style="font-size:13px;font-weight:600;color:var(--ink-600)">이름</div>
+      <input type="text" placeholder="함께 일하는 분 이름" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px">
+      <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-top:12px">휴대폰 번호</div>
+      <input type="text" placeholder="010-0000-0000" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px">
+      <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-top:12px">처음 권한 (나중에 바꿀 수 있어요)</div>
+      <div class="mt-8" style="display:flex;gap:6px" id="invite-presets">
+        <span class="uw-kw-chip" style="cursor:pointer" data-preset-chip="reply_only">응대만</span>
+        <span class="uw-kw-chip" style="cursor:pointer;background:var(--blue);color:#fff" data-preset-chip="review_reply">검토+응대</span>
+        <span class="uw-kw-chip" style="cursor:pointer" data-preset-chip="full">전체</span>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="send-invite">초대 문자 보내기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 직원 목록·권한 편집 (정본: UW_MOCK.staff + UW_PERMS) ---- */
+(function () {
+  var selected = -1;
+  var edits = {}; // idx -> grants[]
+
+  function grantsOf(i) {
+    var st = window.UW_MOCK.staff[i];
+    return edits[i] || window.UW_PERMS.presets[st.preset].grants.slice();
+  }
+
+  function renderList() {
+    var el = document.getElementById("staff-list");
+    el.innerHTML = window.UW_MOCK.staff.map(function (st, i) {
+      var presetLabel = window.UW_PERMS.presets[st.preset].label;
+      return '<div class="uw-row" data-staff="' + i + '" style="cursor:pointer' + (i === selected ? ';background:var(--blue-50);border-radius:12px;padding-left:10px;padding-right:10px' : "") + '">' +
+        '<div class="uw-row-chip">👤</div>' +
+        '<div class="uw-row-body"><div class="uw-row-title">' + st.name + '</div>' +
+        '<div class="uw-row-desc">' + st.phone + " · " + st.since + "부터 함께해요</div></div>" +
+        '<span class="uw-badge b-blue">' + presetLabel + '</span>' +
+        '<span class="uw-badge b-green">' + st.status + "</span>" +
+        '<span class="uw-row-arrow">›</span></div>';
+    }).join("");
+  }
+
+  function renderPanel() {
+    var panel = document.getElementById("perm-panel");
+    if (selected < 0) { panel.style.display = "none"; return; }
+    panel.style.display = "";
+    var st = window.UW_MOCK.staff[selected];
+    document.getElementById("perm-name").textContent = st.name;
+    var grants = grantsOf(selected);
+    // 프리셋 버튼
+    document.getElementById("perm-presets").innerHTML = Object.keys(window.UW_PERMS.presets).map(function (k) {
+      var p = window.UW_PERMS.presets[k];
+      var on = JSON.stringify(p.grants.slice().sort()) === JSON.stringify(grants.slice().sort());
+      return '<span class="uw-kw-chip" data-apply-preset="' + k + '" style="cursor:pointer' + (on ? ';background:var(--blue);color:#fff' : "") + '">' + p.label + "</span>";
+    }).join("");
+    // 개별 토글 (권한 매트릭스 '권한시' 항목)
+    document.getElementById("perm-toggles").innerHTML = Object.keys(window.UW_PERMS.catalog).map(function (pid) {
+      var on = grants.indexOf(pid) >= 0;
+      return '<label class="uw-row" style="padding:10px 0;cursor:pointer"><input type="checkbox" data-perm="' + pid + '"' + (on ? " checked" : "") + ' style="width:18px;height:18px;accent-color:var(--blue)">' +
+        '<span style="font-size:14px;font-weight:600">' + window.UW_PERMS.catalog[pid] + "</span></label>";
+    }).join("");
+    // 미리보기 버튼에 현재 직원 반영
+    var pv = document.getElementById("preview-staff");
+    pv.setAttribute("data-staff-name", st.name);
+    pv.setAttribute("data-preset", st.preset);
+  }
+
+  document.addEventListener("click", function (e) {
+    var row = e.target.closest("[data-staff]");
+    if (row) { selected = +row.getAttribute("data-staff"); renderList(); renderPanel(); return; }
+    var pr = e.target.closest("[data-apply-preset]");
+    if (pr) {
+      edits[selected] = window.UW_PERMS.presets[pr.getAttribute("data-apply-preset")].grants.slice();
+      renderPanel(); return;
+    }
+    var chip = e.target.closest("[data-preset-chip]");
+    if (chip) {
+      chip.parentNode.querySelectorAll("[data-preset-chip]").forEach(function (c) { c.style.background = ""; c.style.color = ""; });
+      chip.style.background = "var(--blue)"; chip.style.color = "#fff"; return;
+    }
+    var a = e.target.closest("[data-action]");
+    if (!a) return;
+    var act = a.getAttribute("data-action");
+    if (act === "save-perms") {
+      var checked = [].slice.call(document.querySelectorAll("#perm-toggles [data-perm]:checked")).map(function (c) { return c.getAttribute("data-perm"); });
+      edits[selected] = checked;
+      window.UW.toast("권한을 저장했어요. " + window.UW_MOCK.staff[selected].name + "님 화면에 바로 반영돼요.");
+      renderPanel();
+    }
+    if (act === "send-invite") {
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("초대 문자를 보냈어요. 수락하면 알림으로 알려드릴게요.");
+    }
+  });
+
+  document.addEventListener("change", function (e) {
+    if (e.target.matches("#perm-toggles [data-perm]")) {
+      var checked = [].slice.call(document.querySelectorAll("#perm-toggles [data-perm]:checked")).map(function (c) { return c.getAttribute("data-perm"); });
+      edits[selected] = checked;
+      // 프리셋 하이라이트 갱신
+      renderPanel();
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function () { renderList(); });
+})();
+</script>
+</body>
+</html>

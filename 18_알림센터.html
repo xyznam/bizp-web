@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알림 센터 — 비즈플래닛</title>
+<!-- UW_MY_02 · W3 · 스펙: planning/23 §9 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_MY_02">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html" class="is-active">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="01_홈.html" style="color:var(--ink-500);text-decoration:none">홈</a> › 알림 센터</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림">🔔</button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-cols">
+
+        <!-- ========== 좌측: 알림 리스트 ========== -->
+        <div class="uw-col-main">
+
+          <!-- M01 · view: 알림 리스트 -->
+          <section class="uw-card" data-module="M01" style="padding:20px 24px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <h3 class="uw-section-title" style="font-size:16px">알림</h3>
+              <button class="btn btn-ghost btn-sm" style="margin-left:auto" data-action="mark-all-read">모두 읽음</button>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-top:18px">오늘</div>
+            <div class="uw-rows mt-8">
+              <a class="uw-row uw-alert-row is-unread" href="17_요청관리.html?req=cafebombom" data-only-level="L3" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--orange)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">카페봄봄 신촌점 사장님이 새 요청을 보냈어요 · 방금 전</div>
+                </div>
+                <span class="uw-unread-dot" aria-label="미열람" style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px"></span>
+              </a>
+              <a class="uw-row uw-alert-row is-unread" href="02_콘텐츠검토.html" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--red)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">블로그 콘텐츠 3건이 검토를 기다려요 · 방금 전</div>
+                </div>
+                <span class="uw-unread-dot" aria-label="미열람" style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px"></span>
+              </a>
+              <a class="uw-row uw-alert-row is-unread" href="04_비즈챗문자.html" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--blue)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">여름 재방문 문자 제안이 도착했어요 · 1시간 전</div>
+                </div>
+                <span class="uw-unread-dot" aria-label="미열람" style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px"></span>
+              </a>
+              <a class="uw-row uw-alert-row" href="07_마케팅계획.html" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--blue)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">AI가 7월 마케팅 계획을 준비했어요 · 오전 9시</div>
+                </div>
+              </a>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-top:18px">어제</div>
+            <div class="uw-rows mt-8">
+              <a class="uw-row uw-alert-row" href="08_실행결과리포트.html" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--green)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">블로그 글 발행이 완료됐어요</div>
+                </div>
+              </a>
+              <a class="uw-row uw-alert-row" href="05_AI챗봇.html" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--orange)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">챗봇이 답하기 어려운 문의 1건을 넘겼어요</div>
+                </div>
+              </a>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-top:18px">지난주</div>
+            <div class="uw-rows mt-8">
+              <a class="uw-row uw-alert-row" href="08_실행결과리포트.html" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--ink-300)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">비즈챗 문자 480건 발송 완료 (성공률 96%)</div>
+                </div>
+              </a>
+              <a class="uw-row uw-alert-row" href="08_실행결과리포트.html" style="text-decoration:none;color:inherit;padding:11px 0">
+                <span class="uw-alert-dot" style="background:var(--ink-300)"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="uw-alert-text">6월 실행 결과 리포트가 나왔어요</div>
+                </div>
+              </a>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ========== 우측: 알림 설정 (L2+, fallback→L1 대체 카드) ========== -->
+        <aside class="uw-col-side">
+
+          <!-- M02 · edit · L2+ : 알림 설정.
+               정책(2026-08-26, 알림_정책.md 참조): '발송·발행 결과' → '처리 완료 알림'으로 확장(문자
+               발송/요금제 변경/해지 처리/AI 학습 완료/직원 초대 응답까지 포함). 매장 사장님 요청(L3)·
+               챗봇 에스컬레이션·플레이스 연동 끊김은 "누군가 응답을 기다리거나 방치 시 실제 피해가
+               생기는" 알림이라 결제·오류와 함께 필수(끌 수 없음)로 분류. -->
+          <section class="uw-card" data-module="M02" style="padding:20px 24px">
+            <h3 class="uw-section-title" style="font-size:15px">알림 설정</h3>
+            <div class="uw-rows mt-8">
+              <label class="uw-row" style="padding:11px 0;cursor:pointer">
+                <div class="uw-row-body">
+                  <div style="font-size:13px;font-weight:600">검토 요청 알림</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;flex-shrink:0">
+              </label>
+              <label class="uw-row" style="padding:11px 0;cursor:pointer">
+                <div class="uw-row-body">
+                  <div style="font-size:13px;font-weight:600">처리 완료 알림</div>
+                  <div style="font-size:12px;color:var(--ink-500);margin-top:2px">문자 발송, 요금제·해지 처리, AI 학습, 직원 초대 응답 등</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;flex-shrink:0">
+              </label>
+              <label class="uw-row" style="padding:11px 0;cursor:pointer">
+                <div class="uw-row-body">
+                  <div style="font-size:13px;font-weight:600">월 리포트 도착</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;flex-shrink:0">
+              </label>
+              <label class="uw-row" style="padding:11px 0;cursor:pointer">
+                <div class="uw-row-body">
+                  <div style="font-size:13px;font-weight:600">AI 제안 알림</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;flex-shrink:0">
+              </label>
+            </div>
+            <div style="font-size:12px;color:var(--ink-500);margin-top:10px">중요한 알림(결제·오류·매장 요청·연동 끊김 등)은 끌 수 없어요</div>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:14px" data-action="save-notif-settings">저장</button>
+          </section>
+
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 모두 읽음 · 알림 설정 저장 (계약 §1: 화면 고유 표현 한정) ---- */
+(function () {
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-action]");
+    if (!a) return;
+    var act = a.getAttribute("data-action");
+    if (act === "mark-all-read") {
+      document.querySelectorAll(".uw-alert-row.is-unread").forEach(function (row) {
+        row.classList.remove("is-unread");
+        var dot = row.querySelector(".uw-unread-dot");
+        if (dot) dot.remove();
+      });
+      window.UW.toast("모두 읽음으로 표시했어요");
+    }
+    if (act === "save-notif-settings") {
+      window.UW.toast("알림 설정을 저장했어요");
+    }
+  });
+})();
+</script>
+</body>
+</html>

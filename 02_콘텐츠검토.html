@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>콘텐츠 검토 — 비즈플래닛</title>
+<!-- UW_CR_01 · W1 · 스펙: planning/23 §6 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_CR_01">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html" class="is-active">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">콘텐츠 검토</span>
+      <span class="uw-topbar-sub" id="cr-topbar-sub"><b style="color:var(--blue)">3건</b>이 검수를 기다려요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-split">
+
+        <!-- ========== 좌측: 대기 리스트 ========== -->
+        <div class="uw-split-list">
+
+          <!-- M07 · bulk · L3 · 모드 B(대행사 위임형) 전용: 일괄 검수·발행 등록 큐
+               모드 A(사장님 검수형)에서는 대행사가 승인권자가 아니므로 화면 스크립트가 숨긴다. -->
+          <section class="uw-card" data-module="M07" id="m07-card" style="margin-bottom:12px;padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div>
+                <div style="font-size:14px;font-weight:800;letter-spacing:-0.02em">위임 매장 검수 큐 <span class="uw-badge b-blue" style="margin-left:2px">대행사 검수형</span></div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:2px">3개 매장 · 검수 대기 3건</div>
+              </div>
+              <!-- 모드 B: 대행사가 검수하고 바로 발행(직접 등록). 사장님 승인 단계 없음. -->
+              <button class="btn btn-secondary btn-sm" style="margin-left:auto" data-action="toast" data-toast-msg="3건을 검수 완료로 처리했어요. 등록 대기로 넘어가요 — 채널에 직접 등록한 뒤 완료 처리하세요.">3건 일괄 검수 완료</button>
+            </div>
+          </section>
+
+          <!-- M01 · view: 검토 대기 리스트 -->
+          <section data-module="M01">
+            <div id="cr-list-heading" style="font-size:13px;font-weight:700;color:var(--ink-600);margin-bottom:8px">검수 대기 3건</div>
+            <div id="doc-list"></div>
+          </section>
+
+          <!-- M09 · bulk · L2·L3: 등록·발행 완료 처리
+               발행 API가 없어 승인/검수 통과분을 채널에 직접 등록한 뒤 완료 처리한다.
+               L2 셀프는 사장님 본인이, L3는 대행사가 등록 실무자. -->
+          <section class="uw-card" data-module="M09" style="margin-top:16px;padding:14px 16px;border-color:var(--blue-border)">
+            <div style="font-size:13px;font-weight:700;color:var(--ink-600)">등록 대기 <span class="uw-badge b-orange">1건</span></div>
+            <div class="uw-section-caption" style="margin-top:2px" id="m09-caption">검수를 통과한 글이에요. 채널에 직접 올린 뒤 완료 처리하세요.</div>
+            <div class="uw-rows mt-8">
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body">
+                  <div style="font-size:13px;font-weight:600">주말 영업시간 안내 — 네이버 블로그</div>
+                  <div class="uw-row-desc">검수 통과 7.4 · 채널에 직접 등록한 뒤 완료 처리하세요</div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="width:100%" data-action="toast" data-toast-msg="발행 완료로 처리했어요. 실행 결과 리포트에 반영돼요.">등록 확인했어요 · 발행 완료 처리</button>
+          </section>
+
+          <!-- M04 · view: 처리 이력 -->
+          <section class="uw-card" data-module="M04" style="margin-top:16px;padding:14px 16px">
+            <div style="font-size:13px;font-weight:700;color:var(--ink-600)">최근 처리한 콘텐츠</div>
+            <div class="uw-rows mt-8" style="font-size:13px">
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body"><div style="font-size:13px;font-weight:600">주말 영업시간 안내</div><div class="uw-row-desc">7.4 승인</div></div>
+                <span class="uw-badge b-green">발행 완료</span>
+              </div>
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body"><div style="font-size:13px;font-weight:600">6월 단골 감사 쿠폰</div><div class="uw-row-desc">7.2 승인</div></div>
+                <span class="uw-badge b-green">발행 완료</span>
+              </div>
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body"><div style="font-size:13px;font-weight:600">비 오는 날 이벤트 글</div><div class="uw-row-desc">7.1 반려 · 새 글 도착</div></div>
+                <span class="uw-badge b-orange">다시 검토</span>
+              </div>
+            </div>
+            <a href="02_발행이력.html" class="btn btn-ghost btn-sm mt-12" style="display:inline-flex;text-decoration:none">더보기 →</a>
+          </section>
+        </div>
+
+        <!-- ========== 우측: 상세 ========== -->
+        <div class="uw-split-detail">
+          <button class="uw-back" data-action="back-to-list">‹ 목록으로</button>
+          <div class="uw-card" style="padding:24px">
+
+            <!-- M02 · preview: 본문 미리보기 + 검색 노출 점수 -->
+            <section data-module="M02">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="d-ch" id="dt-ch" style="font-size:12px;font-weight:700;color:var(--ink-600)"></span>
+                <span class="uw-badge b-blue" id="dt-badge">AI 자동생성</span>
+                <span style="margin-left:auto;font-size:12px;color:var(--ink-400)" id="dt-time"></span>
+                <!-- M08 · L3: 현재 매장의 검수 방식(읽기전용) + 설정 바로가기 (설정은 06 우리 매장 정보) -->
+                <a class="btn btn-ghost btn-sm" data-module="M08" id="cr-mode-badge" href="06_우리매장정보.html#review-mode" style="text-decoration:none" title="콘텐츠 검수·발행 방식은 우리 매장 정보에서 설정해요">⚙ 검수 방식 ▸ 설정</a>
+              </div>
+              <h1 class="uw-h1" style="font-size:22px;margin-top:14px" id="dt-title"></h1>
+              <div style="font-size:14px;line-height:1.8;color:var(--ink-700);margin-top:14px" id="dt-body"></div>
+
+              <div class="uw-score mt-16">
+                <span class="uw-score-label" id="dt-score-label" title="검색 순위를 보장하는 값이 아니라, 이 글이 우리 매장 룰셋을 얼마나 지켰는지 나타내는 지표예요">검색 노출 점수</span>
+                <span class="uw-score-bar"><i id="dt-score-bar" style="width:87%"></i></span>
+                <span class="uw-score-num" id="dt-score">87점</span>
+                <span class="uw-score-why" data-action="toggle-why">왜 이 점수인가요?</span>
+              </div>
+              <div id="score-why" style="display:none;background:var(--inset);border-radius:12px;padding:12px 14px;margin-top:8px;font-size:13px;line-height:1.9;color:var(--ink-600)">
+                ✓ 제목에 손님들이 많이 찾는 말이 들어있어요<br>
+                ✓ 글 길이가 검색에 알맞아요<br>
+                △ 사진 설명이 아직 없어요 — 사진을 넣으면 점수가 올라가요
+              </div>
+              <div class="mt-12" style="display:flex;gap:6px;align-items:center">
+                <span style="font-size:13px;color:var(--ink-500)" title="이 글이 검색에서 노출되길 노리고 작성된 키워드예요 (블로그 하단 해시태그와는 별개)">타깃 키워드</span>
+                <span id="dt-keywords"></span>
+              </div>
+            </section>
+
+            <!-- M03 · approve: 승인 / 반려
+                 버튼 라벨·노출은 화면 스크립트가 레벨+검수모드로 결정한다.
+                 · 승인 라벨: L2="승인", L1(모드A)="승인", L3(모드B)="검수 완료·발행 등록"
+                 · 반려: 승인권자(사장님=L1·L2)에게만. 대행사(L3)에는 없음.
+                 · "예약/자동 발행" 표현 없음 — 승인·검수 통과분은 등록 대기로 이동. -->
+            <section class="uw-actionbar" data-module="M03">
+              <button class="btn btn-primary" id="btn-approve" data-action="approve-doc">승인</button>
+              <button class="btn btn-danger-soft" id="btn-reject" data-action="open-modal" data-modal="modal-reject">반려</button>
+            </section>
+
+            <!-- 읽기전용/대기 안내 (L3·모드A = 사장님 검토 중 / L1·모드B = 대행사 검수 중) -->
+            <div class="uw-preview-box" id="cr-action-note" style="display:none;margin-top:10px;font-size:13px;font-weight:600;color:var(--ink-600);line-height:1.6"></div>
+
+            <!-- M05 · edit + M06 · create (L2+) — L1은 M05 자리에 통합 대체 카드 -->
+            <section id="cr-edit-actions" style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn-ghost" style="flex:1" data-module="M05" data-action="toast" data-toast-msg="문구 편집기는 다음 웨이브에서 열려요. 지금은 채널에 붙여넣은 뒤 미세 수정하셔도 돼요.">✏️ 문구 수정</button>
+              <button class="btn btn-ghost" style="flex:1" data-module="M06" data-action="open-modal" data-modal="modal-rewrite">↻ AI 다시 쓰기</button>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 반려 모달 ==================== -->
+<div class="uw-modal-backdrop" id="modal-reject">
+  <div class="uw-modal">
+    <div class="uw-modal-title">이 글을 반려할까요?</div>
+    <div class="uw-modal-body">
+      어떤 점이 아쉬웠는지 알려주시면, 그 내용을 반영해서 다시 준비해요.
+      <div class="mt-12" style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="uw-kw-chip" style="cursor:pointer">말투가 안 맞아요</span>
+        <span class="uw-kw-chip" style="cursor:pointer">내용이 사실과 달라요</span>
+        <span class="uw-kw-chip" style="cursor:pointer">사진을 바꾸고 싶어요</span>
+      </div>
+      <textarea placeholder="하고 싶은 말을 편하게 적어주세요 (선택)" style="width:100%;margin-top:12px;height:72px;border:1px solid var(--input-border);border-radius:14px;padding:12px;font-family:inherit;font-size:14px;resize:none"></textarea>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="reject-doc">반려하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== AI 다시 쓰기 시트 (무엇을 바꿀지 입력) ====================
+     반려(거부+사유 기록)와 역할을 분리: 여기서는 무엇을 바꿔 다시 쓸지 지시를 받는다. -->
+<div class="uw-modal-backdrop" id="modal-rewrite">
+  <div class="uw-modal">
+    <div class="uw-modal-title">무엇을 바꿔서 다시 쓸까요?</div>
+    <div class="uw-modal-body">
+      바꾸고 싶은 점을 골라주세요. 고른 내용을 반영해 새 글을 만들어요.
+
+      <div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-top:14px">주제·소재 바꾸기</div>
+      <div class="mt-8" style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="uw-kw-chip" style="cursor:pointer">다른 소재로</span>
+        <span class="uw-kw-chip" style="cursor:pointer">계절·시즌 소재로</span>
+        <span class="uw-kw-chip" style="cursor:pointer">이벤트·혜택 중심으로</span>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-top:14px">톤·방향 조정</div>
+      <div class="mt-8" style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="uw-kw-chip" style="cursor:pointer">더 짧게</span>
+        <span class="uw-kw-chip" style="cursor:pointer">더 따뜻하게</span>
+        <span class="uw-kw-chip" style="cursor:pointer">정보 위주로</span>
+        <span class="uw-kw-chip" style="cursor:pointer">과장 표현 줄이기</span>
+      </div>
+
+      <textarea placeholder="예: 가격 얘기는 빼고, 예약 안내를 넣어줘 (선택)" style="width:100%;margin-top:14px;height:72px;border:1px solid var(--input-border);border-radius:14px;padding:12px;font-family:inherit;font-size:14px;resize:none"></textarea>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="rewrite-doc">이 내용으로 다시 쓰기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 리스트↔상세 전환 + 레벨/검수모드별 렌더 (계약 §1) ----
+   상태 모델(4+1): 검수 대기 / 반려 / (다시 쓰는 중=임시) / 등록 대기 / 발행 완료
+   검수 모드: A 사장님 검수형 · B 대행사 위임형. 셀프(L2)는 항상 A. */
+(function () {
+  var DOCS = [
+    { ch: "네이버 블로그", chColor: "var(--ch-naver)", status: "검수 대기",
+      title: "여름맞이 신메뉴 출시, 제철 재료로 만든 특별한 맛",
+      time: "오늘 08:10 생성", store: "스시오마카세 강남점",
+      score: 87, kw: ["여름 신메뉴", "제철 재료"],
+      body: "무더운 여름이 찾아왔습니다. 이번 시즌 새롭게 선보이는 여름 한정 메뉴를 소개해 드리려고 해요. 제철을 맞은 신선한 재료를 듬뿍 넣어, 매콤하면서도 시원한 맛이 일품입니다. 오래 지켜온 양념 비법은 그대로, 여기에 제철 재료의 풍미를 더해 더욱 깊은 맛을 완성했습니다. 무더위에 지친 입맛을 살려줄 여름 특별 메뉴, 지금 만나보세요." },
+    { ch: "네이버 블로그", chColor: "var(--ch-naver)", status: "검수 대기",
+      title: "30년 전통, 우리 가게 이야기",
+      time: "오늘 08:05 생성", store: "스시오마카세 판교점",
+      score: 74, kw: ["동네 맛집", "단골"],
+      body: "한자리에서 30년, 처음 그 맛을 지켜온 이야기를 들려드릴게요. 오랜 단골손님들이 지금도 찾아주시는 이유는 변하지 않는 정성 때문이라고 생각해요. 오늘도 아침 일찍 재료를 손질하며 하루를 시작합니다." },
+    { ch: "당근마켓", chColor: "var(--ch-daangn)", status: "검수 대기",
+      title: "단골 고객분들께 드리는 감사 인사",
+      time: "어제 17:20 생성", store: "카페봄봄 신촌점",
+      score: 81, kw: ["단골 감사", "동네 가게"],
+      body: "늘 찾아주시는 이웃분들께 감사한 마음을 전해요. 덕분에 오늘도 즐겁게 가게 문을 엽니다. 이번 주에는 작은 감사의 마음을 준비했으니, 지나는 길에 편하게 들러주세요." },
+    /* 사장님이 반려한 글 — 모드A에서 대행사(L3) 재작업 대상 (반려 사유 첨부) */
+    { ch: "네이버 블로그", chColor: "var(--ch-naver)", status: "반려",
+      rejectReason: "내용이 사실과 달라요 — 여름 신메뉴는 아직 출시 전이에요",
+      title: "이번 주 신메뉴 미리 안내",
+      time: "오늘 07:50 생성 · 사장님 반려 09:12", store: "스시오마카세 강남점",
+      score: 68, kw: ["신메뉴", "여름"],
+      body: "이번 주 새롭게 선보이는 신메뉴를 미리 알려드려요. 신선한 제철 재료로 준비한 여름 한정 메뉴, 곧 만나보실 수 있습니다. 자세한 출시 일정은 매장에 문의해 주세요." }
+  ];
+  var current = 0;
+
+  function level() { return document.body.getAttribute("data-level") || "L2"; }
+  /* 실효 검수모드: 셀프(L2)는 대행사가 없어 항상 A */
+  function effMode() {
+    if (level() === "L2") return "A";
+    return (window.UW && window.UW.reviewMode) ? window.UW.reviewMode() : "A";
+  }
+  function pendingCount() {
+    return DOCS.filter(function (d) { return d.status === "검수 대기"; }).length;
+  }
+  function scoreLabel(ch) { return ch === "당근마켓" ? "동네 노출 점수" : "검색 노출 점수"; }
+
+  /* 이 글의 검수 차례: owner(사장님) 또는 agency(대행사).
+     명시값(재작업 등으로 지정)이 있으면 그대로, 없으면 모드로 결정(B=대행사, A=사장님). */
+  function reviewerOf(doc) {
+    if (doc.reviewer === "owner" || doc.reviewer === "agency") return doc.reviewer;
+    return effMode() === "B" ? "agency" : "owner";
+  }
+
+  /* 상태 → 표시 라벨/색. "검수 대기"는 검수 차례(사장님/대행사)에 따라 라벨이 갈린다 */
+  function statusView(doc) {
+    switch (doc.status) {
+      case "검수 대기":
+        if (reviewerOf(doc) === "agency") return { text: "대행사 검수 대기", cls: "b-blue" };
+        return (level() === "L3")
+          ? { text: "사장님 승인 대기", cls: "b-blue" }
+          : { text: "검수 대기", cls: "b-blue" };
+      case "반려":        return { text: "반려", cls: "b-red" };
+      case "다시 쓰는 중": return { text: "다시 쓰는 중", cls: "b-orange" };
+      case "등록 대기":    return { text: "등록 대기", cls: "b-orange" };
+      case "발행 완료":    return { text: "발행 완료", cls: "b-green" };
+      default:            return { text: doc.status, cls: "b-gray" };
+    }
+  }
+
+  function renderList() {
+    var el = document.getElementById("doc-list");
+    var isL3 = level() === "L3";
+    el.innerHTML = DOCS.map(function (d, i) {
+      var sv = statusView(d);
+      return '<div class="uw-doc-card' + (i === current ? " is-selected" : "") + '" data-doc="' + i + '" style="--ch:' + d.chColor + '">' +
+        '<div class="d-top"><span class="d-ch">' + d.ch + '</span><span class="uw-badge ' + sv.cls + '">' + sv.text + "</span></div>" +
+        '<div class="d-title">' + d.title + "</div>" +
+        (isL3 ? '<div class="d-store">🏪 ' + d.store + "</div>" : "") +
+        '<div class="d-meta">' + d.time + "</div></div>";
+    }).join("");
+  }
+
+  function renderDetail() {
+    var d = DOCS[current], sv = statusView(d);
+    document.getElementById("dt-ch").textContent = d.ch;
+    var b = document.getElementById("dt-badge");
+    b.className = "uw-badge " + sv.cls;
+    b.textContent = sv.text;
+    document.getElementById("dt-time").textContent = d.time;
+    document.getElementById("dt-title").textContent = d.title;
+    document.getElementById("dt-body").textContent = d.body;
+    document.getElementById("dt-score-label").textContent = scoreLabel(d.ch);
+    document.getElementById("dt-score").textContent = d.score + "점";
+    document.getElementById("dt-score-bar").style.width = d.score + "%";
+    document.getElementById("dt-keywords").innerHTML = d.kw.map(function (k) { return '<span class="uw-kw-chip" style="margin-right:4px">' + k + "</span>"; }).join("");
+    renderActions();
+  }
+
+  /* 승인/반려/편집 액션 — 레벨·모드·상태에 따라 노출과 라벨 결정 */
+  function renderActions() {
+    var lv = level(), mode = effMode(), doc = DOCS[current], st = doc.status;
+    var bar = document.querySelector(".uw-actionbar");        // M03
+    var editRow = document.getElementById("cr-edit-actions"); // M05·M06
+    var note = document.getElementById("cr-action-note");
+    var approve = document.getElementById("btn-approve");
+    var reject = document.getElementById("btn-reject");
+    note.style.display = "none";
+    bar.style.display = "none";
+    if (editRow) editRow.style.display = "none";
+
+    /* ---- 검수 대기 ---- 검수 차례(사장님/대행사)에 따라 노출을 결정 */
+    if (st === "검수 대기") {
+      var rv = reviewerOf(doc);
+      var viewerIsReviewer = (rv === "owner" && (lv === "L1" || lv === "L2")) ||
+                             (rv === "agency" && lv === "L3");
+      if (!viewerIsReviewer) {
+        /* 내 차례가 아님 → 읽기전용 안내 */
+        note.style.display = "block";
+        note.innerHTML = (rv === "agency")
+          ? "🤝 이 매장은 <b>대행사 검수형</b>이에요. 대행사가 검수하고 바로 발행해요 — 사장님 승인은 필요하지 않아요."
+          : "⏳ AI 초안을 <b>사장님이 검토 중</b>이에요. 사장님이 승인하면 <b>등록 대기</b>로 넘어와요.";
+        return;
+      }
+      bar.style.display = "";
+      if (editRow) editRow.style.display = "flex";
+      if (rv === "agency") {
+        /* 대행사 차례: 모드B=검수 완료 후 발행 등록 / 모드A(재작업 확인)=사장님께 승인 요청 */
+        approve.textContent = (mode === "B") ? "✓ 검수 완료 · 발행 등록" : "✓ 확인 · 사장님께 승인 요청";
+        reject.style.display = "none"; /* 대행사는 반려권 없음 */
+      } else {
+        /* 사장님 차례 */
+        approve.textContent = "✓ 승인";
+        reject.style.display = "";
+      }
+      return;
+    }
+
+    /* ---- 반려 ---- 사장님이 반려한 글. 대행사(L3)는 사유를 반영해 재작업한다. */
+    if (st === "반려") {
+      note.style.display = "block";
+      var reason = doc.rejectReason ? " — “" + doc.rejectReason + "”" : "";
+      if (lv === "L3") {
+        if (editRow) editRow.style.display = "flex"; /* 재작업: AI 다시 쓰기·문구 수정 */
+        note.innerHTML = "↩️ <b>" + (mode === "A" ? "사장님이 반려했어요" : "반려된 글이에요") + "</b>" + reason +
+          "<br>사유를 반영해 아래에서 <b>다시 쓰기</b> 하거나 문구를 고쳐 다시 검수를 올리세요.";
+      } else if (lv === "L1") {
+        note.innerHTML = "↩️ <b>반려</b>했어요. 반려 사유를 대행사에 전달했어요. 대행사가 다시 준비해요.";
+      } else {
+        note.innerHTML = "↩️ <b>반려</b>한 글이에요" + reason + ".";
+      }
+      return;
+    }
+
+    /* ---- 다시 쓰는 중 ---- */
+    if (st === "다시 쓰는 중") {
+      note.style.display = "block";
+      note.innerHTML = "↻ 알려주신 내용으로 <b>다시 쓰는 중</b>이에요. 잠시 뒤 새 글이 도착하면 다시 검수 대기로 올라와요.";
+      return;
+    }
+
+    /* ---- 등록 대기 ---- */
+    if (st === "등록 대기") {
+      note.style.display = "block";
+      note.innerHTML = "✅ 승인됐어요. <b>" + doc.ch + "</b>에 직접 등록한 뒤 왼쪽 <b>등록 대기</b>에서 완료 처리하세요.";
+      return;
+    }
+
+    /* ---- 그 외(발행 완료 등) ---- */
+    note.style.display = "block";
+    note.innerHTML = "이 글은 <b>" + statusView(doc).text + "</b> 상태예요.";
+  }
+
+  /* 상단 부제·리스트 헤딩·모드 배지·M07 노출 */
+  function renderChrome() {
+    var lv = level(), mode = effMode(), n = pendingCount();
+
+    var sub = document.getElementById("cr-topbar-sub");
+    if (sub) sub.innerHTML = '<b style="color:var(--blue)">' + n + '건</b>이 검수를 기다려요';
+
+    var head = document.getElementById("cr-list-heading");
+    if (head) head.textContent = "검수 대기 " + n + "건";
+
+    var badge = document.getElementById("cr-mode-badge");
+    if (badge) badge.textContent = "⚙ " + (mode === "B" ? "대행사 검수형" : "사장님 검수형") + " ▸ 설정";
+
+    /* 일괄 검수 큐(M07)는 L3·모드B에서만 */
+    var m07 = document.getElementById("m07-card");
+    if (m07) m07.style.display = (lv === "L3" && mode === "B") ? "" : "none";
+  }
+
+  function refresh() { renderChrome(); renderList(); renderDetail(); }
+
+  /* 다시 쓰는 중 → (약 3초) 새 초안 도착 → 검수 대기로 복귀.
+     재작업 지시 레벨에 따라 다음 검수 주체 결정:
+       L3 지시 → 대행사가 먼저 확인(agency) → (모드A는) 확인 후 사장님
+       L2 지시 → 사장님 본인(owner) */
+  function scheduleRework(doc) {
+    setTimeout(function () {
+      if (doc.status !== "다시 쓰는 중") return; /* 그새 상태가 바뀌면 무시 */
+      doc.status = "검수 대기";
+      doc.reviewer = (doc._reworkAt === "L3") ? "agency" : "owner";
+      if (doc.title.indexOf("(수정본)") < 0) doc.title += " (수정본)";
+      doc.score = Math.min(99, (doc.score || 70) + 7);
+      refresh();
+      if (window.UW && window.UW.toast) window.UW.toast("새 글이 도착했어요. 다시 검수해 주세요.");
+    }, 3000);
+  }
+
+  document.addEventListener("click", function (e) {
+    var card = e.target.closest(".uw-doc-card");
+    if (card) {
+      current = +card.getAttribute("data-doc"); refresh();
+      /* 모바일 2단계 내비 (26 ISS-3): 리스트 → 상세 전환 */
+      if (window.matchMedia && window.matchMedia("(max-width:767px)").matches) document.body.classList.add("uw-show-detail");
+      return;
+    }
+    var a = e.target.closest("[data-action]");
+    if (!a) return;
+    var act = a.getAttribute("data-action");
+
+    if (act === "back-to-list") { document.body.classList.remove("uw-show-detail"); return; }
+    if (act === "toggle-why") {
+      var w = document.getElementById("score-why");
+      w.style.display = w.style.display === "none" ? "block" : "none";
+      return;
+    }
+    if (act === "approve-doc") {
+      var lv = level(), mode = effMode(), d = DOCS[current], rv = reviewerOf(d);
+      if (rv === "agency" && mode === "A") {
+        /* 대행사가 재작업물 확인 → 사장님께 (재)승인 요청 (상태는 검수 대기 유지, 주체만 사장님으로) */
+        d.reviewer = "owner";
+        window.UW.toast("확인했어요. 사장님에게 승인을 요청했어요.");
+      } else if (rv === "agency") {
+        /* 모드 B: 대행사 검수 완료 → 바로 등록 대기 */
+        d.status = "등록 대기";
+        window.UW.toast("검수 완료. " + d.ch + "에 직접 등록한 뒤 완료 처리하세요.");
+      } else {
+        /* 사장님 승인 */
+        d.status = "등록 대기";
+        if (lv === "L1") window.UW.toast("승인했어요. 대행사가 확인 후 " + d.ch + "에 올려드려요.");
+        else            window.UW.toast("승인했어요. " + d.ch + "에 직접 등록한 뒤 완료 처리하세요.");
+      }
+      refresh();
+      return;
+    }
+    if (act === "reject-doc") {
+      var lvr = level(), dr = DOCS[current];
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      if (lvr === "L1") {
+        dr.status = "반려"; /* 대행사가 이어받아 재작업 */
+        window.UW.toast("반려했어요. 반려 사유를 대행사에 전달했어요.");
+      } else {
+        /* L2 셀프: 반려 = 즉시 다시쓰기 → 3초 뒤 새 초안 */
+        dr.status = "다시 쓰는 중"; dr._reworkAt = "L2";
+        window.UW.toast("반려했어요. 알려주신 내용으로 AI가 다시 써요.");
+        scheduleRework(dr);
+      }
+      refresh();
+      return;
+    }
+    if (act === "rewrite-doc") {
+      var dw = DOCS[current];
+      dw.status = "다시 쓰는 중"; dw._reworkAt = level(); /* 재작업 지시 레벨 기억 */
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("알려주신 내용으로 다시 쓰고 있어요. 잠시 뒤 새 글이 와요.");
+      refresh();
+      scheduleRework(dw);
+      return;
+    }
+  });
+
+  document.addEventListener("uw:levelchange", refresh);
+  document.addEventListener("DOMContentLoaded", refresh);
+})();
+</script>
+</body>
+</html>

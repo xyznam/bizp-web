@@ -1,0 +1,176 @@
+{
+  "$comment": "교체 가능한 정책 설정 — 템플릿·정책 가이드 갱신 시 이 파일만 바꾼다. 코드에 네이밍·임계값 하드코딩 금지.",
+  "board": {
+    "width": 1920,
+    "designWidth": 1500,
+    "descriptionWidth": 420,
+    "minHeight": 1080,
+    "gap": 120,
+    "headerRowHeight": 34,
+    "fontFamily": "Pretendard, 'Pretendard Variable', sans-serif",
+    "application": "Web Admin"
+  },
+  "controls": {
+    "$comment": "브라우저 네이티브 위젯의 표시 문구. DOM에 없어 추출할 수 없으므로 캡처 기준값을 여기에 둔다. OS·로케일이 바뀌면 이 값만 교체한다",
+    "fileInput": {
+      "button": "Choose File",
+      "empty": "No file chosen"
+    }
+  },
+  "layout": {
+    "$comment": "캔버스 배치 — 화면 하나가 가로 띠(band) 하나를 차지한다. 띠 안에서 메인 보드는 계위 깊이만큼 오른쪽으로 밀리고, 그 화면의 부속 보드가 메인 오른쪽으로 이어진다. 다음 화면은 아래 띠로 내려간다",
+    "colGap": 160,
+    "rowGap": 240,
+    "auxPerRow": 4,
+    "$comment2": "depthSource : 계위는 매니페스트 cases의 Screen Path 뎁스에서 얻는다. 'A > B'는 LNB 화면(레벨 0), 'A > B > C'는 B의 하위 화면(레벨 1). DUP-01 행 클릭 그래프는 순환이 있어(51>52, 52>67, 67>51) 트리로 쓸 수 없다"
+  },
+  "colors": {
+    "callout.region": "#FF5700",
+    "callout.item": "#FF9F6D",
+    "flag.confirm": "#D23838",
+    "flag.reference": "#1DB459",
+    "flag.common": "#000000",
+    "header.chapter": "#EDEDED",
+    "header.path": "#FEE500",
+    "header.app": "#FFCD9F",
+    "table.stripe": "#E6E6E6",
+    "table.line": "#808080"
+  },
+  "naming": {
+    "page": "UID_admin-v3_v{version}",
+    "backupPage": "UID_admin-v3_backup_{stamp}",
+    "boardLayer": "{label}",
+    "auxBoardLayer": "{label}__{auxId}",
+    "variableCollection": "admin-v3/tokens",
+    "variablePath": "{group}/{token}",
+    "component": "admin-v3/{signature}",
+    "screenIdScheme": {
+      "$comment": "가안 채번 — 정식 체계 확정 전까지 사용, IA에 ID 열 신설 시 교체",
+      "page": "BZP-AD-PG-{no3}",
+      "aux": "BZP-AD-PP-{no3}-{seq2}",
+      "commonPopup": "BZP-AD-CP-{seq3}",
+      "$comment2": "commonPopup : 여러 화면에 공통 주입되는 팝업. 화면에 종속되지 않으므로 화면 번호를 쓰지 않는다. 001~099는 00 공통 팝업 카탈로그의 COMMON_P 번호에 맞춘다 (COMMON_P14 → BZP-AD-CP-014). 101 이상은 카탈로그 미등재 상태로 발견된 공통 팝업이며 빨강 ※로 등재 필요를 기록한다"
+    },
+    "projectLabel": "admin-v3"
+  },
+  "tokens": {
+    "$comment": "CSS 변수 → Variables 그룹 매핑. 미기재 변수는 misc 그룹.",
+    "groups": {
+      "color": [
+        "--bg",
+        "--surface",
+        "--surface2",
+        "--text",
+        "--text2",
+        "--text3",
+        "--border",
+        "--border2",
+        "--blue",
+        "--blue-l",
+        "--blue-d",
+        "--green",
+        "--green-l",
+        "--orange",
+        "--orange-l",
+        "--red",
+        "--red-l",
+        "--gray",
+        "--gray-l",
+        "--yellow",
+        "--yellow-l"
+      ],
+      "layout": [
+        "--sidebar-w",
+        "--topbar-h"
+      ]
+    }
+  },
+  "componentPromotion": {
+    "minOccurrences": 3,
+    "variantClasses": [
+      "btn-primary",
+      "btn-ghost",
+      "btn-danger",
+      "sm",
+      "active",
+      "kpi-filterable"
+    ],
+    "exclude": [
+      "main",
+      "sidebar",
+      "topbar"
+    ]
+  },
+  "extraction": {
+    "allowedRemoteHosts": [
+      "cdn.jsdelivr.net",
+      "fonts.googleapis.com",
+      "fonts.gstatic.com"
+    ],
+    "domContract": {
+      "$comment": "admin-v3 실측값. 원래 extract_ir.mjs에 하드코딩돼 있던 것을 키트에서 계약으로 외부화했다",
+      "contentRoot": ".main",
+      "overlayContainers": ".modal-backdrop, .pii-backdrop, [class*=backdrop]",
+      "overlayOpenClass": "open",
+      "overlayFlexSelector": ".modal-backdrop",
+      "overlayNamePattern": "backdrop",
+      "primaryActionSelectors": ".btn-primary, .btn.btn-primary",
+      "formSubmitSelectors": "{root} .btn-primary, .form-actions button, .card-foot button",
+      "triggerGroups": [
+        "[data-modal-open]",
+        "[data-act]",
+        "[data-tr-bulk], [data-bulk-action], .bulk-bar button",
+        ".tbl-wrap button:not(.tbl-refresh):not(.pagination *)",
+        ".page-actions button, .pii-btn",
+        ".tbl tbody tr td:not(.col-check)"
+      ],
+      "namedTriggers": [
+        {
+          "match": "pii",
+          "selector": ".pii-btn"
+        }
+      ]
+    },
+    "boardStrip": {
+      "$comment": "보드에 싣지 않는 프로토타입 전용 블록 (PLAN 4-2). 원본 HTML은 비파괴 — 추출 시점에 DOM에서만 제거한다. 제거는 스크린샷·bbox 측정 전에 일어나야 좌표가 어긋나지 않는다",
+      "selectors": [
+        ".def-toggle",
+        ".definition-strip",
+        "details.policy-fold",
+        ".auth-demo"
+      ]
+    },
+    "auxFrameSelectors": [
+      "section.modal",
+      ".modal-backdrop > .modal",
+      ".pii-backdrop > .pii-modal"
+    ],
+    "auxExclude": {
+      "$comment": "보드화 제외: V2_SHORTCUTS=프로토타입 단축키 헬퍼. V3_DETAIL=템플릿 자동 상세 드로어(행 컬럼 echo + 타임라인 placeholder, 설계 화면 아님 — 행 클릭 동선은 디스크립션 1줄 서술). DUP-01 화면(01→50, 02→51, 06→52)은 전용 상세 페이지 이동",
+      "ids": [
+        "V2_SHORTCUTS",
+        "V3_DETAIL"
+      ],
+      "patterns": [
+        "^COMMON_P"
+      ],
+      "manifestOnlyPatterns": [
+        "^piiModal$",
+        "^PW_DONE$",
+        "^MY_PW_DONE$"
+      ],
+      "$comment3": "manifestOnlyPatterns : IR에는 남기되 화면별 보드는 만들지 않는다. piiModal(COMMON_P14)은 13화면에 동일 주입되는 공통 팝업이라 보드를 1개만 두는데(BZP-AD-CP-014), 그 1개의 원천이 IR의 이 프레임이므로 추출 단계에서 걷어내면 안 된다",
+      "$comment2": "patterns: 00 공통 팝업 정의의 화면 내 인스턴스 — 보드 중복 방지, 디스크립션 초록 참조로 처리 (IR에는 유지, 매니페스트에서 제외)"
+    },
+    "boardExcludeFiles": {
+      "$comment": "보드화 대상 아님 — 38 기준 47 실화면 외 문서 4종",
+      "files": [
+        "00_공통팝업정의.html",
+        "36_공통Shell정의.html",
+        "index.html",
+        "qa_렌더링검증.html"
+      ]
+    },
+    "irMappingRateGate": 0.9
+  }
+}

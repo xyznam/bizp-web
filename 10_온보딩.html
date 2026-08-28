@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>온보딩 — 비즈플래닛</title>
+<!-- UW_ON_01 · v3 · L2 온보딩 전면 개편
+     Step1: 가게 이름 검색 → 선택 or 플레이스 주소로 찾기(v4, 2026-08-25 추가, 98_매장설정과 동일 패턴) or 직접 입력 (이름·업종2단계·주소·전화)
+     Step2: 채널 연결 (플레이스·블로그 URL팝업 / 인스타·당근 토스트)
+     Step3: AI 학습 시작 → 블로그 연결 여부 3분기 완료 CTA
+     L1: M06 확인형 온보딩 그대로 유지
+     변경: 로그인 링크 제거
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+@media (max-width: 767px) {
+  .on-split { flex-direction: column !important; }
+  .on-brand { width: 100% !important; padding: 28px 20px !important; }
+}
+
+/* 스텝퍼 */
+.ob-stepper { display: flex; align-items: center; gap: 8px; margin-bottom: 32px; }
+.ob-step-dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ob-step-dot.is-current { background: var(--blue); color: #fff; }
+.ob-step-dot.is-done    { background: var(--blue-50); color: var(--blue); }
+.ob-step-dot.is-idle    { background: var(--inset); color: var(--ink-400); }
+.ob-step-label { font-size: 13px; font-weight: 700; }
+.ob-step-label.is-current { color: var(--ink-900); }
+.ob-step-label.is-idle    { color: var(--ink-400); }
+.ob-step-line { flex: 1; height: 1px; background: var(--card-border); }
+.ob-step-line.is-done { background: var(--blue-border); }
+
+/* 검색 */
+.ob-search-wrap { position: relative; }
+.ob-search-input {
+  width: 100%; height: 52px; border: 1.5px solid var(--input-border);
+  border-radius: 14px; padding: 0 48px 0 16px;
+  font-family: inherit; font-size: 15px; color: var(--ink-900); outline: none;
+}
+.ob-search-input:focus { border-color: var(--blue); }
+.ob-search-btn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; font-size: 20px; cursor: pointer; padding: 4px;
+}
+.ob-search-results {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--white); border: 1px solid var(--blue-border);
+  border-radius: var(--radius-tile); box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  z-index: 100; overflow: hidden; display: none;
+}
+.ob-search-item {
+  padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--divider);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ob-search-item:last-child { border-bottom: 0; }
+.ob-search-item:hover { background: var(--inset); }
+.ob-search-item-name { font-size: 14px; font-weight: 700; color: var(--ink-900); }
+.ob-search-item-addr { font-size: 12px; color: var(--ink-500); }
+.ob-search-none { padding: 14px 16px; font-size: 13px; color: var(--ink-500); text-align: center; }
+
+/* 직접 입력 폼 */
+.ob-field { margin-top: 14px; }
+.ob-label { font-size: 13px; font-weight: 700; color: var(--ink-700); margin-bottom: 6px; display: flex; gap: 4px; }
+.ob-req { color: var(--red); }
+.ob-input {
+  width: 100%; height: 48px; border: 1px solid var(--input-border);
+  border-radius: 14px; padding: 0 16px;
+  font-family: inherit; font-size: 14px; color: var(--ink-900); outline: none;
+}
+.ob-input:focus { border-color: var(--blue); }
+.ob-input.is-error { border-color: var(--red); }
+.ob-select {
+  width: 100%; height: 48px; border: 1px solid var(--input-border);
+  border-radius: 14px; padding: 0 16px;
+  font-family: inherit; font-size: 14px; color: var(--ink-900);
+  background: var(--white); outline: none;
+}
+.ob-select:focus { border-color: var(--blue); }
+.ob-row2 { display: flex; gap: 8px; }
+.ob-row2 .ob-input { flex: 1; }
+
+/* 확인된 가게 카드 */
+.ob-confirmed {
+  background: var(--blue-50); border: 1px solid var(--blue-border);
+  border-radius: var(--radius-tile); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; margin-top: 16px;
+}
+.ob-confirmed-icon { font-size: 24px; flex-shrink: 0; }
+.ob-confirmed-name { font-size: 15px; font-weight: 800; color: var(--ink-900); }
+.ob-confirmed-addr { font-size: 12px; color: var(--ink-500); margin-top: 2px; }
+.ob-confirmed-change { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--blue); cursor: pointer; flex-shrink: 0; background: none; border: 0; font-family: inherit; }
+
+/* 채널 카드 */
+.ob-ch-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border: 1px solid var(--card-border);
+  border-radius: var(--radius-card); background: var(--white);
+  margin-top: 10px;
+}
+.ob-ch-icon { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+
+/* URL 입력 모달 */
+.ob-url-modal-inner { display: flex; flex-direction: column; gap: 0; }
+
+/* 학습 완료 CTA 박스 */
+.ob-done-box {
+  background: var(--inset); border-radius: var(--radius-tile);
+  padding: 16px; margin-top: 18px;
+  font-size: 13px; color: var(--ink-600); line-height: 1.6;
+}
+</style>
+</head>
+<body data-screen="UW_ON_01">
+
+<!-- 레벨 스위처 (프로토타입) -->
+<div style="position:fixed;top:16px;right:16px;z-index:80;display:flex;align-items:center;gap:8px">
+  <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+    <button data-level-btn="L1">L1 위탁</button>
+    <button data-level-btn="L2">L2 셀프</button>
+    <button data-level-btn="L3">L3 대행사</button>
+  </div>
+  <span class="uw-lvl-note">데모: 레벨 전환</span>
+</div>
+
+<div class="on-split" style="display:flex;min-height:100vh">
+
+  <!-- 좌측 브랜드 패널 -->
+  <div class="on-brand" style="width:40%;flex-shrink:0;background:#1E2A44;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:48px 44px">
+    <section style="display:flex;flex-direction:column;flex:1">
+      <div style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;letter-spacing:-0.02em">
+        <span class="uw-logo-mark">✦</span> 비즈플래닛
+      </div>
+      <div style="margin-top:64px">
+        <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.03em;line-height:1.4;color:#fff">AI가 우리 가게 마케팅을 대신 해드려요</h1>
+        <p style="font-size:14px;line-height:1.7;color:rgba(255,255,255,.7);margin-top:12px">블로그 글쓰기, 단골 문자, 손님 상담까지. 사장님은 검토하고 승인만 하면 돼요.</p>
+      </div>
+      <div style="margin-top:40px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✏️</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#fff">블로그 글을 자동으로</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px">AI가 우리 가게 소식을 글로 써드려요</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💬</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#fff">단골에게 문자 발송</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px">재방문 쿠폰과 소식을 알맞은 때에 보내드려요</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🤖</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#fff">손님 문의 24시간 응대</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px">AI 챗봇이 잠든 사이에도 손님을 맞아드려요</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- 로그인 링크 제거 (온보딩은 가입 후 진입, 이미 로그인 상태) -->
+  </div>
+
+  <!-- 우측 폼 영역 -->
+  <div style="width:60%;display:flex;justify-content:center;padding:56px 40px;overflow-y:auto">
+    <div style="width:100%;max-width:520px">
+
+      <!-- ====================================================== -->
+      <!-- Step 1 · 가게 찾기 (L2) -->
+      <!-- ====================================================== -->
+      <section id="ob-step-1" data-module="M02">
+
+        <!-- 스텝퍼 -->
+        <div class="ob-stepper">
+          <span class="ob-step-dot is-current" id="dot-1">1</span>
+          <span class="ob-step-label is-current">가게 정보</span>
+          <span class="ob-step-line" id="line-1"></span>
+          <span class="ob-step-dot is-idle" id="dot-2">2</span>
+          <span class="ob-step-label is-idle" id="lbl-2">채널 연결</span>
+          <span class="ob-step-line" id="line-2"></span>
+          <span class="ob-step-dot is-idle" id="dot-3">3</span>
+          <span class="ob-step-label is-idle" id="lbl-3">AI 학습</span>
+        </div>
+
+        <!-- 검색 모드 -->
+        <div id="ob-search-mode">
+          <h1 class="uw-h1">우리 가게를 찾아볼게요</h1>
+          <p class="uw-h1-caption" style="margin-top:6px" id="ob-search-caption">네이버 플레이스에 등록된 가게 이름으로 검색해 주세요</p>
+
+          <!-- 이름 검색 (기본) -->
+          <div id="ob-name-search-row" style="display:flex;gap:8px;margin-top:24px">
+            <input class="ob-search-input" id="ob-search-input" type="text" placeholder="가게 이름을 입력하세요 (예: 카페봄봄)" style="flex:1">
+            <button class="btn btn-primary" id="btn-ob-search" style="flex-shrink:0;height:52px;border-radius:14px;padding:0 18px">검색</button>
+          </div>
+
+          <!-- 플레이스 주소로 찾기 (기본 숨김) -->
+          <div id="ob-url-search-row" style="display:none;margin-top:24px">
+            <div style="display:flex;gap:8px">
+              <input class="ob-search-input" id="ob-url-search-input" type="url" placeholder="https://naver.me/... 또는 플레이스 주소 붙여넣기" style="flex:1">
+              <button class="btn btn-primary" id="btn-ob-url-load" style="flex-shrink:0;height:52px;border-radius:14px;padding:0 18px">불러오기</button>
+            </div>
+            <div style="font-size:12px;color:var(--ink-500);margin-top:8px">플레이스 주소는 네이버 지도에서 우리 매장을 찾아 '공유' 버튼을 누르면 복사할 수 있어요.</div>
+          </div>
+
+          <!-- 검색 결과 목록 (버튼 클릭 후 노출) -->
+          <div id="ob-search-results" style="display:none;margin-top:12px;display:none;flex-direction:column;gap:8px"></div>
+
+          <div style="margin-top:14px;text-align:center;display:flex;flex-direction:column;gap:8px">
+            <button id="btn-ob-to-url" style="background:none;border:0;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer;text-decoration:underline">플레이스 주소로 찾을게요</button>
+            <button id="btn-ob-to-search" style="display:none;background:none;border:0;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer;text-decoration:underline">← 이름으로 찾을게요</button>
+            <button id="btn-ob-manual" style="background:none;border:0;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer;text-decoration:underline">플레이스가 없어요, 직접 입력할게요</button>
+          </div>
+        </div>
+
+        <!-- 선택 확인 모드 -->
+        <div id="ob-confirmed-mode" style="display:none">
+          <h1 class="uw-h1">이 가게가 맞나요?</h1>
+          <div class="ob-confirmed" id="ob-confirmed-card">
+            <div class="ob-confirmed-icon">🏪</div>
+            <div style="flex:1;min-width:0">
+              <div class="ob-confirmed-name" id="ob-confirmed-name">—</div>
+              <div class="ob-confirmed-addr" id="ob-confirmed-addr">—</div>
+            </div>
+            <button class="ob-confirmed-change" id="btn-ob-reselect">다시 찾기</button>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:24px">
+            <button class="btn btn-primary" id="btn-ob-place-confirm">맞아요, 시작할게요 →</button>
+          </div>
+        </div>
+
+        <!-- 직접 입력 모드 -->
+        <div id="ob-manual-mode" style="display:none">
+          <h1 class="uw-h1">가게 정보를 알려주세요</h1>
+          <p class="uw-h1-caption" style="margin-top:6px">기본 정보만 입력하면 돼요. 상세 설정은 나중에 <b style="color:var(--ink-700)">우리 매장 정보</b>에서 언제든 바꿀 수 있어요.</p>
+
+          <div class="ob-field">
+            <div class="ob-label">가게 이름 <span class="ob-req">*</span></div>
+            <input class="ob-input" id="ob-name" placeholder="가게 이름을 입력해 주세요" required>
+          </div>
+
+          <div class="ob-field">
+            <div class="ob-label">업종 <span class="ob-req">*</span></div>
+            <div class="ob-row2">
+              <select class="ob-select" id="ob-cat1" required>
+                <option value="">대분류 선택</option>
+                <option>뷰티/패션</option>
+                <option>IT/테크</option>
+                <option>마케팅/미디어</option>
+                <option>전문서비스</option>
+                <option>의료/건강</option>
+                <option>교육</option>
+                <option>금융/부동산</option>
+                <option>유통/물류</option>
+                <option>제조/생산</option>
+                <option>건설/인테리어</option>
+                <option>식음료/프랜차이즈</option>
+                <option>여행/레저/문화</option>
+                <option>생활/환경</option>
+                <option>기타</option>
+              </select>
+              <select class="ob-select" id="ob-cat2" disabled required>
+                <option value="">소분류 선택</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="ob-field">
+            <div class="ob-label">주소 <span class="ob-req">*</span></div>
+            <div class="ob-row2">
+              <input class="ob-input" id="ob-addr" placeholder="주소를 입력해 주세요" required>
+              <button class="btn btn-ghost btn-sm" style="height:48px;flex-shrink:0" data-action="toast" data-toast-msg="주소 찾기는 프로토타입에서 준비 중이에요">주소 찾기</button>
+            </div>
+          </div>
+
+          <div class="ob-field">
+            <div class="ob-label">전화번호 <span class="ob-req">*</span></div>
+            <input class="ob-input" id="ob-tel" type="tel" placeholder="02-1234-5678" required>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+            <button id="btn-ob-back-search" style="background:none;border:0;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer">← 검색으로 돌아가기</button>
+            <button class="btn btn-primary" id="btn-ob-manual-next">다음 — 채널 연결 →</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- Step 2 · 채널 연결 (L2) -->
+      <!-- ====================================================== -->
+      <section id="ob-step-2" data-module="M03" style="display:none">
+
+        <!-- 스텝퍼 -->
+        <div class="ob-stepper">
+          <span class="ob-step-dot is-done" id="dot-1-2">✓</span>
+          <span class="ob-step-label is-idle">가게 정보</span>
+          <span class="ob-step-line is-done"></span>
+          <span class="ob-step-dot is-current">2</span>
+          <span class="ob-step-label is-current">채널 연결</span>
+          <span class="ob-step-line" id="line-2-2"></span>
+          <span class="ob-step-dot is-idle">3</span>
+          <span class="ob-step-label is-idle">AI 학습</span>
+        </div>
+
+        <h1 class="uw-h1">어디에서 소식을 알릴까요?</h1>
+        <p class="uw-h1-caption" style="margin-top:6px">연결한 채널로 AI가 만든 글과 소식을 올려드려요. 나중에 추가할 수도 있어요.</p>
+
+        <div style="margin-top:24px;display:flex;flex-direction:column;gap:0">
+
+          <!-- 네이버 플레이스 -->
+          <div class="ob-ch-card">
+            <div class="ob-ch-icon" style="background:#E8F5E9">🗺</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:700">네이버 플레이스</div>
+              <div style="font-size:12px;color:var(--ink-500);margin-top:2px">리뷰·사진·기본 정보를 읽어와요</div>
+            </div>
+            <div id="ch-place-action">
+              <button class="btn btn-ghost btn-sm" id="btn-ch-place" data-action="open-modal" data-modal="modal-url">연결하기</button>
+            </div>
+          </div>
+
+          <!-- 네이버 블로그 -->
+          <div class="ob-ch-card">
+            <div class="ob-ch-icon" style="background:#E8F5E9">📝</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:700">네이버 블로그</div>
+              <div style="font-size:12px;color:var(--ink-500);margin-top:2px">블로그 글을 자동으로 올려드려요</div>
+            </div>
+            <div id="ch-blog-action">
+              <button class="btn btn-ghost btn-sm" id="btn-ch-blog" data-action="open-modal" data-modal="modal-url">연결하기</button>
+            </div>
+          </div>
+
+          <!-- 인스타그램 -->
+          <div class="ob-ch-card">
+            <div class="ob-ch-icon" style="background:#FCE4EC">📸</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:700">인스타그램</div>
+              <div style="font-size:12px;color:var(--ink-500);margin-top:2px">사진·캡션에서 매장 분위기를 배워요</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="인스타그램 연결은 준비 중이에요 (OAuth 인증)">연결하기</button>
+          </div>
+
+          <!-- 당근마켓 -->
+          <div class="ob-ch-card">
+            <div class="ob-ch-icon" style="background:#FFF3E0">🥕</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:700">당근마켓</div>
+              <div style="font-size:12px;color:var(--ink-500);margin-top:2px">동네 이웃에게 소식을 알려요</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="당근마켓 연결은 준비 중이에요">연결하기</button>
+          </div>
+
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+          <button style="background:none;border:0;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer" id="btn-ch-skip">나중에 연결할게요</button>
+          <button class="btn btn-primary" id="btn-ch-next">다음 — AI 학습 →</button>
+        </div>
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- Step 3 · AI 학습 시작 (L2) -->
+      <!-- ====================================================== -->
+      <section id="ob-step-3" data-module="M04" style="display:none">
+
+        <!-- 스텝퍼 -->
+        <div class="ob-stepper">
+          <span class="ob-step-dot is-done">✓</span>
+          <span class="ob-step-label is-idle">가게 정보</span>
+          <span class="ob-step-line is-done"></span>
+          <span class="ob-step-dot is-done">✓</span>
+          <span class="ob-step-label is-idle">채널 연결</span>
+          <span class="ob-step-line is-done"></span>
+          <span class="ob-step-dot is-current">3</span>
+          <span class="ob-step-label is-current">AI 학습</span>
+        </div>
+
+        <!-- 채널 있을 때만 표시 -->
+        <div id="ob-learn-head">
+          <h1 class="uw-h1">AI가 우리 가게를 배우기 시작했어요</h1>
+          <div class="uw-bar mt-16"><i id="ob-learn-bar" style="width:12%;background:var(--blue)"></i></div>
+          <p class="uw-h1-caption" style="margin-top:10px">채널에서 리뷰와 글을 읽고 있어요 · <b style="color:var(--ink-700)">보통 3~5분 걸려요</b></p>
+        </div>
+
+        <!-- 채널 없을 때 대체 타이틀 -->
+        <div id="ob-learn-head-none" style="display:none">
+          <h1 class="uw-h1">채널을 연결하면 AI가 더 잘 배울 수 있어요</h1>
+          <p class="uw-h1-caption" style="margin-top:6px">지금은 기본 정보만으로 시작해요. 채널을 연결하면 블로그·리뷰에서 우리 가게를 더 풍부하게 배워요.</p>
+        </div>
+
+        <!-- 채널 없음 안내 -->
+        <div id="ob-no-channel-warn" style="display:none;background:#fff8e6;border:1px solid #f5c842;border-radius:var(--radius-tile);padding:12px 14px;margin-top:16px;font-size:13px;font-weight:500;color:var(--ink-700);line-height:1.6">
+          ⚠ 연결된 채널이 없어 배울 자료가 부족해요. 채널을 연결하면 AI가 더 잘 배울 수 있어요. 그래도 지금 시작할 수 있어요.
+        </div>
+
+        <!-- 학습 항목 목록 -->
+        <div class="uw-rows mt-16" id="ob-learn-items"></div>
+
+        <!-- 완료 CTA 박스 (블로그 연결 여부 분기) -->
+        <div class="ob-done-box" id="ob-done-blog">
+          💡 학습이 끝나면 <b style="color:var(--ink-700)">첫 블로그 글 초안이 검토함에 도착해요.</b> 홈에서 알림으로 알려드릴게요.
+        </div>
+        <div class="ob-done-box" id="ob-done-no-blog" style="display:none">
+          💡 학습이 끝나면 알려드릴게요. 블로그 채널을 연결하면 AI가 글을 직접 써드릴 수 있어요.
+        </div>
+        <div class="ob-done-box" id="ob-done-no-channel" style="display:none">
+          💡 채널을 연결하거나 자료를 올리면 AI가 우리 가게를 더 잘 배울 수 있어요.
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px" id="ob-done-actions"></div>
+
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- M06 · L1 전용: 대행사 등록 확인형 온보딩 -->
+      <!-- ====================================================== -->
+      <section data-module="M06">
+        <h1 class="uw-h1">대행사가 등록한 가게 정보를 확인해 주세요</h1>
+        <p class="uw-h1-caption">마케팅파트너스가 가게 정보를 미리 채워뒀어요. 맞는지 한 번만 봐주세요.</p>
+        <div class="uw-card mt-16" style="padding:18px">
+          <div class="uw-rows">
+            <div class="uw-row">
+              <div class="uw-row-chip">🏪</div>
+              <div class="uw-row-body">
+                <div class="uw-row-desc">가게 이름</div>
+                <div class="uw-row-title">카페봄봄 신촌점</div>
+              </div>
+            </div>
+            <div class="uw-row">
+              <div class="uw-row-chip c-purple">🍰</div>
+              <div class="uw-row-body">
+                <div class="uw-row-desc">업종</div>
+                <div class="uw-row-title">카페·디저트</div>
+              </div>
+            </div>
+            <div class="uw-row">
+              <div class="uw-row-chip c-green">📍</div>
+              <div class="uw-row-body">
+                <div class="uw-row-desc">주소</div>
+                <div class="uw-row-title">서울 마포구 ○○로 12</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:20px">
+          <button class="btn btn-ghost" style="flex:1" data-action="toast" data-toast-msg="대행사에 알려드렸어요. 곧 연락드릴 거예요.">수정이 필요해요</button>
+          <!-- 의도적으로 btn-primary 클래스를 안 씀(색은 인라인으로 동일하게 유지) — UID 파이프라인의
+               extract_ir.mjs가 부속 모달을 찾을 때 '.on-split .btn-primary'를 폼 제출 버튼 후보로 보고
+               순서대로 클릭해보는데, 이 링크가 그 후보에 걸리면 실제로 01_홈.html로 이동해버려서
+               캡처가 중간에 죽는다(2026-08-25 발견). 실사용자 클릭 동작은 그대로다 -->
+          <a href="01_홈.html" class="btn" style="flex:1;text-decoration:none;text-align:center;background:var(--blue);color:#fff">맞아요, 시작할게요 →</a>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: URL 입력 (플레이스·블로그 공용) ========== -->
+<div class="uw-modal-backdrop" id="modal-url">
+  <div class="uw-modal" style="max-width:420px">
+    <div class="uw-modal-title" id="url-modal-title">채널 연결</div>
+    <div class="uw-modal-body ob-url-modal-inner">
+      <div style="font-size:13px;font-weight:500;color:var(--ink-600);line-height:1.7" id="url-modal-desc">URL을 붙여넣어 주세요</div>
+      <div style="margin-top:12px">
+        <input class="ob-input" id="url-modal-input" type="url" placeholder="https://">
+        <div style="font-size:12px;color:var(--ink-500);margin-top:6px" id="url-modal-help"></div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" id="btn-url-confirm">연결하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---- 업종 소분류 데이터 ---- */
+  var SUB_CATS = {
+    "뷰티/패션":    ["화장품","향수/아로마","뷰티디바이스","피부관리/에스테틱","헤어/미용","패션/의류","주얼리/액세서리","안경/렌즈"],
+    "IT/테크":      ["IT/소프트웨어","AI/데이터","앱/플랫폼","게임","정보보안","IoT/하드웨어","호스팅/클라우드","통신"],
+    "마케팅/미디어":["광고대행사","PR/홍보","매체사","영상제작","디자인에이전시","브랜딩","인플루언서/MCN","인쇄/출판"],
+    "전문서비스":   ["법률(변호사)","노무사","세무/회계","특허/지식재산","경영컨설팅","번역/통역","인사/채용","법무사","감정평가","관세사"],
+    "의료/건강":    ["병원/의원","치과","한의원","약국/제약","건강식품/보조제","피트니스/헬스","의료기기","심리상담/정신건강","동물병원"],
+    "교육":         ["학원/교습소","어학원","유아교육/어린이집","온라인교육/이러닝","입시/유학컨설팅","코딩/IT교육","예체능(미술/음악)","기업교육/연수"],
+    "금융/부동산":  ["금융/핀테크","보험","부동산/중개","투자/자산관리","대출/캐피탈"],
+    "유통/물류":    ["유통","도매","수출입/무역","물류/택배","이커머스/온라인쇼핑"],
+    "제조/생산":    ["일반제조","식품제조","전자/반도체","소재/화학","기계/장비","섬유/원단"],
+    "건설/인테리어":["건설/시공","인테리어","건축설계","부동산개발","전기/설비","조경"],
+    "식음료/프랜차이즈":["프랜차이즈본사","식자재/원료","외식업","카페/베이커리","음료/주류"],
+    "여행/레저/문화":["여행사","호텔/숙박","레저/스포츠","공연/이벤트","웨딩/브라이덜","사진/영상스튜디오"],
+    "생활/환경":    ["청소/세탁","이사/용달","경비/보안","반려동물","농업/축산","환경/에너지","자동차/정비"],
+    "기타":         ["비영리/사회적기업","공공기관/협회","스타트업","기타"]
+  };
+
+  /* ---- 검색 목데이터 ---- */
+  var PLACE_DB = [
+    { name: "카페봄봄 신촌점",     addr: "서울 서대문구 신촌로 12길 8" },
+    { name: "카페봄봄 홍대점",     addr: "서울 마포구 어울마당로 12" },
+    { name: "테라스의원",           addr: "서울 종로구 새문안로 12" },
+    { name: "민준헤어",             addr: "서울 강남구 역삼로 12" },
+    { name: "스시오마카세 강남점", addr: "서울 강남구 압구정로 12길 7" },
+    { name: "봄봄분식 마포점",     addr: "서울 마포구 홍익로 5길 3" },
+    { name: "더착한치과 강남점",   addr: "서울 강남구 테헤란로 44길 8" },
+    { name: "피자나라 홍대점",     addr: "서울 마포구 양화로 100" },
+    { name: "신촌 꽃집",           addr: "서울 서대문구 신촌로 85" },
+    { name: "한빛태권도",          addr: "서울 은평구 통일로 856" },
+    { name: "강남 세탁왕",         addr: "서울 강남구 선릉로 100길 5" },
+    { name: "수진네 분식",         addr: "서울 노원구 동일로 1234" },
+  ];
+
+  /* ---- 채널 연결 상태 ---- */
+  var channels = { place: false, blog: false };
+  var urlModalTarget = null;
+  var selectedPlace  = null;
+
+  /* ========================= Step 1 ========================= */
+
+  /* 검색 */
+  function doSearch() {
+    var q       = document.getElementById("ob-search-input").value.trim();
+    var wrap    = document.getElementById("ob-search-results");
+    var pool    = q ? PLACE_DB.filter(function (p) { return p.name.indexOf(q) >= 0 || p.addr.indexOf(q) >= 0; }) : [];
+    var hits    = pool.length ? pool.slice(0, 4) : PLACE_DB.slice(0, 3);
+
+    wrap.innerHTML = hits.map(function (p, i) {
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--card-border);border-radius:var(--radius-tile);background:var(--white);cursor:pointer" data-place-name="' + p.name + '" data-place-addr="' + p.addr + '" class="ob-result-item">' +
+        '<span style="font-size:20px">🏪</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:14px;font-weight:700;color:var(--ink-900)">' + p.name + '</div>' +
+          '<div style="font-size:12px;color:var(--ink-500);margin-top:2px">' + p.addr + '</div>' +
+        '</div>' +
+        '<span style="font-size:12px;font-weight:700;color:var(--blue)">선택</span>' +
+        '</div>';
+    }).join("") +
+    '<div style="text-align:center;padding:10px 0;font-size:12px;color:var(--ink-400)">내 가게가 없다면 — <button id="btn-search-to-manual" style="background:none;border:0;font-family:inherit;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;padding:0">직접 입력할게요 →</button></div>';
+
+    wrap.style.display = "flex";
+
+    /* 결과 클릭 */
+    wrap.querySelectorAll(".ob-result-item").forEach(function (el) {
+      el.addEventListener("click", function () {
+        selectedPlace = { name: el.getAttribute("data-place-name"), addr: el.getAttribute("data-place-addr") };
+        document.getElementById("ob-confirmed-name").textContent = selectedPlace.name;
+        document.getElementById("ob-confirmed-addr").textContent = selectedPlace.addr;
+        document.getElementById("ob-search-mode").style.display    = "none";
+        document.getElementById("ob-confirmed-mode").style.display = "";
+        channels.place = true;
+      });
+    });
+
+    /* 직접 입력 링크 */
+    var manualBtn = document.getElementById("btn-search-to-manual");
+    if (manualBtn) manualBtn.addEventListener("click", function () {
+      wrap.style.display = "none";
+      document.getElementById("ob-search-mode").style.display = "none";
+      document.getElementById("ob-manual-mode").style.display = "";
+    });
+  }
+
+  document.getElementById("btn-ob-search").addEventListener("click", doSearch);
+  document.getElementById("ob-search-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") doSearch();
+  });
+
+  /* 검색 결과 선택 — 이벤트 위임 방식은 doSearch 내부에서 처리 */
+
+  /* 이름 검색 ↔ 플레이스 주소로 찾기 전환 (98_매장설정과 동일 패턴을 온보딩 검색에 추가) */
+  function toggleUrlMode(toUrl) {
+    document.getElementById("ob-name-search-row").style.display = toUrl ? "none" : "flex";
+    document.getElementById("ob-url-search-row").style.display  = toUrl ? "" : "none";
+    document.getElementById("ob-search-results").style.display  = "none";
+    document.getElementById("btn-ob-to-url").style.display      = toUrl ? "none" : "";
+    document.getElementById("btn-ob-to-search").style.display   = toUrl ? "" : "none";
+    document.getElementById("ob-search-caption").textContent = toUrl
+      ? "네이버 플레이스 URL을 붙여넣어 주세요"
+      : "네이버 플레이스에 등록된 가게 이름으로 검색해 주세요";
+  }
+  document.getElementById("btn-ob-to-url").addEventListener("click", function () { toggleUrlMode(true); });
+  document.getElementById("btn-ob-to-search").addEventListener("click", function () { toggleUrlMode(false); });
+
+  /* 플레이스 주소로 불러오기 (프로토타입: 실서비스는 URL로 플레이스 정보를 조회, 여기선 목데이터 1건을 그대로 채움) */
+  document.getElementById("btn-ob-url-load").addEventListener("click", function () {
+    var url = document.getElementById("ob-url-search-input").value.trim();
+    if (!url) { if (window.UW) window.UW.toast("플레이스 주소를 입력해 주세요"); return; }
+    var p = PLACE_DB[0];
+    selectedPlace = { name: p.name, addr: p.addr };
+    document.getElementById("ob-confirmed-name").textContent = selectedPlace.name;
+    document.getElementById("ob-confirmed-addr").textContent = selectedPlace.addr;
+    document.getElementById("ob-search-mode").style.display    = "none";
+    document.getElementById("ob-confirmed-mode").style.display = "";
+    channels.place = true;
+    if (window.UW) window.UW.toast("플레이스 정보를 가져왔어요");
+  });
+
+  /* 다시 찾기 */
+  document.getElementById("btn-ob-reselect").addEventListener("click", function () {
+    selectedPlace = null; channels.place = false;
+    document.getElementById("ob-confirmed-mode").style.display = "none";
+    document.getElementById("ob-search-mode").style.display    = "";
+    document.getElementById("ob-search-input").value = "";
+  });
+
+  /* 맞아요 확인 → Step 2 */
+  document.getElementById("btn-ob-place-confirm").addEventListener("click", function () {
+    goStep(2);
+  });
+
+  /* 직접 입력으로 전환 */
+  document.getElementById("btn-ob-manual").addEventListener("click", function () {
+    document.getElementById("ob-search-mode").style.display = "none";
+    document.getElementById("ob-manual-mode").style.display = "";
+  });
+  document.getElementById("btn-ob-back-search").addEventListener("click", function () {
+    document.getElementById("ob-manual-mode").style.display = "none";
+    document.getElementById("ob-search-mode").style.display = "";
+  });
+
+  /* 업종 대분류 → 소분류 연동 */
+  document.getElementById("ob-cat1").addEventListener("change", function () {
+    var cat2 = document.getElementById("ob-cat2");
+    var subs  = SUB_CATS[this.value] || [];
+    cat2.innerHTML = '<option value="">소분류 선택</option>' +
+      subs.map(function (s) { return '<option>' + s + '</option>'; }).join("");
+    cat2.disabled = !subs.length;
+  });
+
+  /* 직접 입력 → Step 2 */
+  document.getElementById("btn-ob-manual-next").addEventListener("click", function () {
+    var name = document.getElementById("ob-name");
+    var cat1 = document.getElementById("ob-cat1");
+    var addr = document.getElementById("ob-addr");
+    var tel  = document.getElementById("ob-tel");
+    var ok   = true;
+    [name, addr, tel].forEach(function (el) {
+      var empty = !el.value.trim();
+      el.classList.toggle("is-error", empty);
+      if (empty) ok = false;
+    });
+    if (!cat1.value) { ok = false; if (window.UW) window.UW.toast("업종을 선택해 주세요"); }
+    if (!ok) { if (window.UW) window.UW.toast("빨간 칸을 채워 주세요"); return; }
+    goStep(2);
+  });
+
+  /* ========================= Step 2 ========================= */
+
+  /* URL 모달 열기 */
+  var URL_CONFIG = {
+    place: { title: "네이버 플레이스 연결", desc: "네이버 플레이스 URL을 붙여넣어 주세요", help: "예: https://map.naver.com/p/entry/place/12345678" },
+    blog:  { title: "네이버 블로그 연결",  desc: "네이버 블로그 URL을 붙여넣어 주세요",   help: "예: https://blog.naver.com/아이디" }
+  };
+
+  function openUrlModal(target) {
+    urlModalTarget = target;
+    var cfg = URL_CONFIG[target];
+    document.getElementById("url-modal-title").textContent   = cfg.title;
+    document.getElementById("url-modal-desc").textContent    = cfg.desc;
+    document.getElementById("url-modal-help").textContent    = cfg.help;
+    document.getElementById("url-modal-input").value         = "";
+    document.getElementById("modal-url").classList.add("is-open");
+  }
+
+  document.getElementById("btn-ch-place").addEventListener("click", function () { openUrlModal("place"); });
+  document.getElementById("btn-ch-blog").addEventListener("click",  function () { openUrlModal("blog"); });
+
+  /* URL 확인 → 연결됨 상태 전환 */
+  document.getElementById("btn-url-confirm").addEventListener("click", function () {
+    var url = document.getElementById("url-modal-input").value.trim();
+    if (!url) { if (window.UW) window.UW.toast("URL을 입력해 주세요"); return; }
+    channels[urlModalTarget] = true;
+    /* 버튼 → 연결됨 배지로 교체 */
+    var actionEl = document.getElementById("ch-" + urlModalTarget + "-action");
+    if (actionEl) {
+      actionEl.innerHTML = '<span class="uw-badge b-green">연결됨</span>';
+    }
+    document.getElementById("modal-url").classList.remove("is-open");
+    if (window.UW) window.UW.toast((urlModalTarget === "place" ? "플레이스" : "블로그") + "를 연결했어요");
+  });
+
+  /* Step 2 → Step 3 */
+  function goStep3() {
+    var hasAny  = channels.place || channels.blog;
+    var hasBlog = channels.blog;
+
+    /* 타이틀·게이지 분기 */
+    document.getElementById("ob-learn-head").style.display      = hasAny ? "" : "none";
+    document.getElementById("ob-learn-head-none").style.display = hasAny ? "none" : "";
+
+    /* 채널 없음 경고 */
+    document.getElementById("ob-no-channel-warn").style.display = hasAny ? "none" : "";
+
+    /* 학습 항목 */
+    var items = [];
+    if (channels.place) items.push({ icon: "🗺", label: "플레이스 리뷰 수집", badge: "b-blue", badgeLabel: "수집 중" });
+    if (channels.blog)  items.push({ icon: "📝", label: "블로그 글 읽기",     badge: "b-blue", badgeLabel: "수집 중" });
+    document.getElementById("ob-learn-items").innerHTML = items.map(function (it) {
+      return '<div class="uw-row">' +
+        '<div class="uw-row-chip">' + it.icon + '</div>' +
+        '<div class="uw-row-body"><div class="uw-row-title">' + it.label + '</div></div>' +
+        '<span class="uw-badge ' + it.badge + '">' + it.badgeLabel + '</span>' +
+        '</div>';
+    }).join("");
+
+    /* 완료 CTA 박스 분기 */
+    document.getElementById("ob-done-blog").style.display       = hasBlog ? "" : "none";
+    document.getElementById("ob-done-no-blog").style.display    = (!hasBlog && hasAny) ? "" : "none";
+    document.getElementById("ob-done-no-channel").style.display = !hasAny ? "" : "none";
+
+    /* 액션 버튼 분기. 여기도 btn-primary 대신 인라인 배경색 — 위 '맞아요, 시작할게요' 주석과 같은 이유 */
+    var actions = document.getElementById("ob-done-actions");
+    if (hasBlog) {
+      actions.innerHTML = '<a href="01_홈.html" class="btn" style="text-decoration:none;background:var(--blue);color:#fff">홈으로 →</a>';
+    } else if (hasAny) {
+      /* 블로그 없고 다른 채널 있음 → 이전 버튼 + 홈으로 */
+      actions.innerHTML =
+        '<button class="btn btn-ghost btn-sm" onclick="goStep(2)">← 이전</button>' +
+        '<a href="01_홈.html" class="btn btn-sm" style="text-decoration:none;background:var(--blue);color:#fff">홈으로 →</a>';
+    } else {
+      /* 채널 없음 → 이전 버튼 + 홈으로 */
+      actions.innerHTML =
+        '<button class="btn btn-ghost btn-sm" onclick="goStep(2)">← 이전</button>' +
+        '<a href="01_홈.html" class="btn btn-sm" style="text-decoration:none;background:var(--blue);color:#fff">홈으로 →</a>';
+    }
+
+    goStep(3);
+  }
+
+  document.getElementById("btn-ch-next").addEventListener("click", goStep3);
+  document.getElementById("btn-ch-skip").addEventListener("click", goStep3);
+
+  /* ========================= 스텝 전환 ========================= */
+  function goStep(n) {
+    document.getElementById("ob-step-1").style.display = n === 1 ? "" : "none";
+    document.getElementById("ob-step-2").style.display = n === 2 ? "" : "none";
+    document.getElementById("ob-step-3").style.display = n === 3 ? "" : "none";
+    window.scrollTo(0, 0);
+  }
+  window.goStep = goStep; /* onclick 인라인 핸들러에서 접근 가능하도록 전역 노출 */
+
+  /* ========================= 입력 에러 해제 ========================= */
+  document.addEventListener("input", function (e) {
+    if (e.target.classList.contains("is-error") && e.target.value.trim()) {
+      e.target.classList.remove("is-error");
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

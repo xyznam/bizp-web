@@ -1,0 +1,96 @@
+<style>
+  * { box-sizing: border-box; }
+  body { font: 12px/1.5 Inter, -apple-system, sans-serif; margin: 0; padding: 14px; color: #1A1A2E; }
+  h2 { font-size: 13px; margin: 0 0 4px; }
+  p.hint { color: #6B7280; margin: 0 0 12px; }
+  .drop { border: 1.5px dashed #C7CBD4; border-radius: 8px; padding: 14px; margin-bottom: 10px; background: #FAFBFC; }
+  .drop.on { border-color: #3B5BDB; background: #EEF2FF; }
+  .drop b { display: block; margin-bottom: 4px; }
+  .drop small { color: #6B7280; }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  button { flex: 1; height: 32px; border: 0; border-radius: 6px; background: #3B5BDB; color: #fff; font-weight: 600; cursor: pointer; }
+  button:disabled { background: #C7CBD4; cursor: not-allowed; }
+  button.ghost { background: #fff; color: #4A5568; border: 1px solid #E2E8F0; }
+  .stat { margin-top: 10px; padding: 8px 10px; background: #F7F8FA; border-radius: 6px; white-space: pre-wrap; max-height: 160px; overflow: auto; font-size: 11px; }
+  .err { color: #C92A2A; }
+  label.opt { display: flex; align-items: center; gap: 6px; color: #4A5568; }
+</style>
+
+<h2>UID 보드 생성기</h2>
+<p class="hint">번들 JSON과 디자인 PNG를 넣고 [보드 생성]을 누르세요. 현재 페이지에 보드가 만들어집니다.</p>
+
+<div class="drop" id="dropBundle">
+  <b>1. 번들 JSON</b>
+  <small>output/figma/bundle-*.json 파일 1개</small>
+  <input type="file" id="fBundle" accept=".json">
+</div>
+
+<div class="drop" id="dropImgs">
+  <b>2. 디자인 PNG</b>
+  <small>output/screens/ 의 PNG (여러 개 선택 가능. General 보드만 만들 때는 생략)</small>
+  <input type="file" id="fImgs" accept="image/png" multiple>
+</div>
+
+<label class="opt"><input type="checkbox" id="optPage" checked> 새 페이지를 만들어 배치</label>
+<label class="opt"><input type="checkbox" id="optImage"> 디자인 영역을 PNG로 (네이티브 대신 이미지 폴백)</label>
+
+<div class="row">
+  <button id="go" disabled>보드 생성</button>
+  <button id="cancel" class="ghost">닫기</button>
+</div>
+
+<div class="stat" id="stat">대기 중</div>
+
+<script>
+  let bundle = null;
+  const images = {};
+  const $ = (id) => document.getElementById(id);
+  const stat = (s, err) => { $('stat').textContent = s; $('stat').className = 'stat' + (err ? ' err' : ''); };
+  const ready = () => { $('go').disabled = !bundle; };
+
+  $('fBundle').onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      bundle = JSON.parse(await f.text());
+      const need = bundle.boards.filter((b) => b.design).map((b) => b.design.image);
+      stat(`번들 로드: 보드 ${bundle.boards.length}개\n필요 PNG ${need.length}개\n보유 PNG ${Object.keys(images).length}개`);
+    } catch (err) { bundle = null; stat('번들 파싱 실패: ' + err.message, true); }
+    ready();
+  };
+
+  $('fImgs').onchange = async (e) => {
+    for (const f of e.target.files) {
+      images[f.name] = new Uint8Array(await f.arrayBuffer());
+    }
+    const need = bundle ? bundle.boards.filter((b) => b.design).map((b) => b.design.image) : [];
+    const miss = need.filter((n) => !images[n]);
+    stat(`PNG ${Object.keys(images).length}개 로드${miss.length ? '\n누락 ' + miss.length + '개: ' + miss.slice(0, 5).join(', ') : ''}`);
+    ready();
+  };
+
+  // 드래그&드롭도 지원
+  for (const [zone, input] of [[$('dropBundle'), $('fBundle')], [$('dropImgs'), $('fImgs')]]) {
+    zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('on'); };
+    zone.ondragleave = () => zone.classList.remove('on');
+    zone.ondrop = (e) => {
+      e.preventDefault(); zone.classList.remove('on');
+      input.files = e.dataTransfer.files;
+      input.dispatchEvent(new Event('change'));
+    };
+  }
+
+  $('go').onclick = () => {
+    $('go').disabled = true;
+    stat('생성 중…');
+    parent.postMessage({ pluginMessage: { type: 'build', bundle, images, newPage: $('optPage').checked, forceImage: $('optImage').checked } }, '*');
+  };
+  $('cancel').onclick = () => parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
+
+  onmessage = (e) => {
+    const m = e.data.pluginMessage;
+    if (!m) return;
+    if (m.type === 'progress') stat(m.text);
+    if (m.type === 'done') { stat(m.text); $('go').disabled = false; }
+    if (m.type === 'error') { stat(m.text, true); $('go').disabled = false; }
+  };
+</script>

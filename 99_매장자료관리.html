@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매장 자료 관리 — 비즈플래닛</title>
+<!-- UW_ST_09 · 매장 자료 관리
+     섹션: 사진(그리드+더보기) / 메뉴판 / 소개 문서 / 기타 자료
+     플레이스 수집 사진과 직접 업로드 사진 구분 표시
+     파일 목록(메뉴판·소개문서·기타): 파일명·크기·등록일·삭제
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* ---- 섹션 헤더 ---- */
+.dm-section { margin-top: 20px; }
+.dm-section-head {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--divider);
+}
+.dm-section-title { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.dm-section-count { font-size: 13px; font-weight: 600; color: var(--ink-500); }
+
+/* ---- 사진 그리드 ---- */
+.dm-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.dm-photo {
+  position: relative; aspect-ratio: 1;
+  border-radius: var(--radius-tile); overflow: hidden;
+  background: var(--inset); cursor: pointer;
+}
+.dm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dm-photo:hover .dm-photo-overlay { opacity: 1; }
+.dm-photo-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s;
+}
+.dm-photo-del {
+  background: rgba(255,255,255,.9); color: var(--red);
+  border: 0; border-radius: 8px; padding: 6px 12px;
+  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.dm-photo-badge {
+  position: absolute; top: 6px; left: 6px;
+  font-size: 10px; font-weight: 700;
+  background: rgba(0,0,0,.55); color: #fff;
+  border-radius: 4px; padding: 2px 6px; pointer-events: none;
+}
+.dm-photo-add {
+  aspect-ratio: 1; border-radius: var(--radius-tile);
+  border: 1.5px dashed var(--blue-border); background: var(--blue-50);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; gap: 6px; color: var(--blue);
+  font-size: 12px; font-weight: 700;
+}
+.dm-photo-add-icon { font-size: 24px; }
+
+/* ---- 더보기 ---- */
+.dm-more-btn {
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 12px;
+}
+
+/* ---- 파일 목록 ---- */
+.dm-file-list { margin-top: 14px; display: flex; flex-direction: column; gap: 0; }
+.dm-file-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--divider);
+}
+.dm-file-row:last-child { border-bottom: 0; }
+.dm-file-icon { font-size: 24px; flex-shrink: 0; }
+.dm-file-info { flex: 1; min-width: 0; }
+.dm-file-name { font-size: 14px; font-weight: 700; color: var(--ink-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-file-meta { font-size: 12px; color: var(--ink-500); margin-top: 2px; }
+.dm-file-del {
+  flex-shrink: 0; background: none; border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 5px 10px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  color: var(--red); cursor: pointer;
+}
+.dm-file-del:hover { background: var(--red-bg, #fff0f0); }
+
+/* ---- 업로드 드롭존 ---- */
+.dm-drop {
+  margin-top: 12px; border: 1.5px dashed var(--input-border);
+  border-radius: var(--radius-tile); padding: 20px;
+  text-align: center; cursor: pointer; background: var(--inset);
+}
+.dm-drop:hover { border-color: var(--blue); background: var(--blue-50); }
+.dm-drop-title { font-size: 14px; font-weight: 700; color: var(--ink-700); }
+.dm-drop-desc { font-size: 12px; color: var(--ink-500); margin-top: 4px; }
+
+/* ---- 빈 상태 ---- */
+.dm-empty { padding: 28px; text-align: center; color: var(--ink-400); font-size: 13px; font-weight: 500; }
+</style>
+</head>
+<body data-screen="UW_ST_09">
+
+<div class="uw-frame">
+
+  <!-- LNB -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html" class="is-active">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer">
+      <div class="u-avatar">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 메인 -->
+  <div class="uw-main">
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">
+        <a href="06_우리매장정보.html" style="color:var(--ink-500);text-decoration:none">우리 매장 정보</a> › 매장 자료 관리
+      </span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">카페봄봄 신촌점</span> ▾</button>
+        <button class="uw-bell" aria-label="알림">🔔</button>
+      </div>
+    </header>
+
+    <main class="uw-body" style="max-width:880px">
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+        <h1 style="font-size:22px;font-weight:800;letter-spacing:-0.03em">매장 자료 관리</h1>
+      </div>
+      <p style="font-size:14px;color:var(--ink-500);font-weight:500;line-height:1.6">AI가 학습에 쓸 자료를 관리해요. 사진·메뉴판·소개 문서를 추가하면 더 좋은 글을 써드려요.</p>
+
+      <!-- ======================================================= -->
+      <!-- 사진 섹션 -->
+      <!-- ======================================================= -->
+      <section class="uw-card dm-section" id="sec-photos">
+        <div class="dm-section-head">
+          <div class="dm-section-title">📷 사진</div>
+          <div class="dm-section-count" id="photo-count">4장</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--ink-500)">플레이스에서 가져온 사진은 🗺 표시돼요</div>
+        </div>
+
+        <div class="dm-photo-grid" id="photo-grid"></div>
+
+        <div class="dm-more-btn" id="photo-more-wrap">
+          <button class="btn btn-ghost btn-sm" id="btn-photo-more">사진 더 보기 <span id="photo-more-count"></span></button>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 메뉴판 섹션 -->
+      <!-- ======================================================= -->
+      <section class="uw-card dm-section" id="sec-menu">
+        <div class="dm-section-head">
+          <div class="dm-section-title">📋 메뉴판</div>
+          <div class="dm-section-count" id="menu-count">2개</div>
+        </div>
+        <div class="dm-file-list" id="menu-list"></div>
+        <div class="dm-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
+          <div class="dm-drop-title">+ 메뉴판 추가</div>
+          <div class="dm-drop-desc">JPG · PNG · PDF, 10MB까지</div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 소개 문서 섹션 -->
+      <!-- ======================================================= -->
+      <section class="uw-card dm-section" id="sec-docs">
+        <div class="dm-section-head">
+          <div class="dm-section-title">📄 소개 문서</div>
+          <div class="dm-section-count" id="docs-count">1개</div>
+        </div>
+        <div class="dm-file-list" id="docs-list"></div>
+        <div class="dm-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
+          <div class="dm-drop-title">+ 소개 문서 추가</div>
+          <div class="dm-drop-desc">PDF · DOCX · PPTX, 20MB까지 — AI 챗봇이 손님 질문에 답할 때 참고해요</div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 기타 자료 섹션 -->
+      <!-- ======================================================= -->
+      <section class="uw-card dm-section" id="sec-etc">
+        <div class="dm-section-head">
+          <div class="dm-section-title">📎 기타 자료</div>
+          <div class="dm-section-count" id="etc-count">0개</div>
+        </div>
+        <div class="dm-file-list" id="etc-list">
+          <div class="dm-empty">아직 추가한 자료가 없어요</div>
+        </div>
+        <div class="dm-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
+          <div class="dm-drop-title">+ 기타 자료 추가</div>
+          <div class="dm-drop-desc">JPG · PNG · PDF · DOCX, 20MB까지</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div class="uw-modal-backdrop" id="modal-del">
+  <div class="uw-modal">
+    <div class="uw-modal-title" id="del-modal-title">삭제할까요?</div>
+    <div class="uw-modal-body" id="del-modal-body">삭제하면 AI가 이 자료를 더 이상 쓰지 않아요.</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-sm" id="btn-del-confirm" style="background:var(--red);color:#fff;border:0;border-radius:var(--radius-btn);padding:0 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---- 목데이터 ---- */
+  var PHOTOS = [
+    { id: "p1", src: "https://ldb-phinf.pstatic.net/20230727_121/169045881818019jJh_JPEG/P1224594.jpg",    from: "place" },
+    { id: "p2", src: "https://ldb-phinf.pstatic.net/20260530_238/1780113729032thJON_JPEG/1780113721563.jpg", from: "place" },
+    { id: "p3", src: "https://ldb-phinf.pstatic.net/20260519_13/1779197326656DaNJa_JPEG/1778638045759.jpg",  from: "place" },
+    { id: "p4", src: "https://ldb-phinf.pstatic.net/20260519_84/17791973264680EK2K_JPEG/1779194635927.jpg",  from: "place" },
+    { id: "p5", src: "https://ldb-phinf.pstatic.net/20230727_121/169045881818019jJh_JPEG/P1224594.jpg",    from: "upload" },
+    { id: "p6", src: "https://ldb-phinf.pstatic.net/20260530_238/1780113729032thJON_JPEG/1780113721563.jpg", from: "upload" },
+    { id: "p7", src: "https://ldb-phinf.pstatic.net/20260519_13/1779197326656DaNJa_JPEG/1778638045759.jpg",  from: "upload" },
+    { id: "p8", src: "https://ldb-phinf.pstatic.net/20260519_84/17791973264680EK2K_JPEG/1779194635927.jpg",  from: "upload" },
+    { id: "p9", src: "https://ldb-phinf.pstatic.net/20230727_121/169045881818019jJh_JPEG/P1224594.jpg",    from: "upload" },
+  ];
+
+  var FILES = {
+    menu: [
+      { id: "m1", icon: "📷", name: "메뉴판_2026_봄.jpg",   size: "2.1MB", date: "2026.04.12" },
+      { id: "m2", icon: "📄", name: "메뉴판_음료_PDF.pdf",  size: "1.4MB", date: "2026.03.05" },
+    ],
+    docs: [
+      { id: "d1", icon: "📄", name: "카페봄봄_소개서.pdf",  size: "4.8MB", date: "2026.01.20" },
+    ],
+    etc: []
+  };
+
+  var PAGE_SIZE = 4;
+  var photoPage = 1;
+  var deleteTarget = null; /* { type, id } */
+
+  /* ---- 사진 그리드 렌더 ---- */
+  function renderPhotos() {
+    var grid  = document.getElementById("photo-grid");
+    var shown = PHOTOS.slice(0, PAGE_SIZE * photoPage);
+    var rest  = PHOTOS.length - shown.length;
+
+    grid.innerHTML = shown.map(function (p) {
+      return '<div class="dm-photo" data-photo-id="' + p.id + '">' +
+        '<img src="' + p.src + '" alt="" onerror="this.style.display=\'none\'">' +
+        (p.from === "place" ? '<div class="dm-photo-badge">🗺 플레이스</div>' : '') +
+        '<div class="dm-photo-overlay"><button class="dm-photo-del" data-del-photo="' + p.id + '">삭제</button></div>' +
+        '</div>';
+    }).join("") +
+    '<div class="dm-photo-add" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요"><div class="dm-photo-add-icon">+</div>사진 추가</div>';
+
+    /* 더보기 버튼 */
+    var moreWrap = document.getElementById("photo-more-wrap");
+    var moreBtn  = document.getElementById("btn-photo-more");
+    if (rest > 0) {
+      moreWrap.style.display = "";
+      document.getElementById("photo-more-count").textContent = "(+" + rest + "장)";
+    } else {
+      moreWrap.style.display = "none";
+    }
+    document.getElementById("photo-count").textContent = PHOTOS.length + "장";
+  }
+
+  document.getElementById("btn-photo-more").addEventListener("click", function () {
+    photoPage++;
+    renderPhotos();
+  });
+
+  /* ---- 파일 목록 렌더 ---- */
+  function renderFiles(type) {
+    var list  = document.getElementById(type + "-list");
+    var count = document.getElementById(type + "-count");
+    var items = FILES[type];
+    count.textContent = items.length + "개";
+    if (!items.length) {
+      list.innerHTML = '<div class="dm-empty">아직 추가한 자료가 없어요</div>';
+      return;
+    }
+    list.innerHTML = items.map(function (f) {
+      return '<div class="dm-file-row" data-file-id="' + f.id + '">' +
+        '<div class="dm-file-icon">' + f.icon + '</div>' +
+        '<div class="dm-file-info">' +
+          '<div class="dm-file-name">' + f.name + '</div>' +
+          '<div class="dm-file-meta">' + f.size + ' · ' + f.date + '</div>' +
+        '</div>' +
+        '<button class="dm-file-del" data-del-file="' + type + ':' + f.id + '">삭제</button>' +
+        '</div>';
+    }).join("");
+  }
+
+  /* ---- 삭제 처리 ---- */
+  document.addEventListener("click", function (e) {
+    /* 사진 삭제 */
+    var photoDelBtn = e.target.closest("[data-del-photo]");
+    if (photoDelBtn) {
+      deleteTarget = { type: "photo", id: photoDelBtn.getAttribute("data-del-photo") };
+      document.getElementById("del-modal-title").textContent = "사진을 삭제할까요?";
+      document.getElementById("del-modal-body").textContent  = "삭제하면 AI가 이 사진을 더 이상 쓰지 않아요.";
+      document.getElementById("modal-del").classList.add("is-open");
+      return;
+    }
+    /* 파일 삭제 */
+    var fileDelBtn = e.target.closest("[data-del-file]");
+    if (fileDelBtn) {
+      var parts = fileDelBtn.getAttribute("data-del-file").split(":");
+      deleteTarget = { type: "file", fileType: parts[0], id: parts[1] };
+      document.getElementById("del-modal-title").textContent = "파일을 삭제할까요?";
+      document.getElementById("del-modal-body").textContent  = "삭제하면 AI가 이 파일을 더 이상 쓰지 않아요.";
+      document.getElementById("modal-del").classList.add("is-open");
+      return;
+    }
+  });
+
+  document.getElementById("btn-del-confirm").addEventListener("click", function () {
+    if (!deleteTarget) return;
+    if (deleteTarget.type === "photo") {
+      PHOTOS = PHOTOS.filter(function (p) { return p.id !== deleteTarget.id; });
+      renderPhotos();
+      if (window.UW) window.UW.toast("사진을 삭제했어요");
+    } else {
+      FILES[deleteTarget.fileType] = FILES[deleteTarget.fileType].filter(function (f) { return f.id !== deleteTarget.id; });
+      renderFiles(deleteTarget.fileType);
+      if (window.UW) window.UW.toast("파일을 삭제했어요");
+    }
+    document.getElementById("modal-del").classList.remove("is-open");
+    deleteTarget = null;
+  });
+
+  /* ---- 초기 렌더 ---- */
+  renderPhotos();
+  renderFiles("menu");
+  renderFiles("docs");
+  renderFiles("etc");
+})();
+</script>
+</body>
+</html>

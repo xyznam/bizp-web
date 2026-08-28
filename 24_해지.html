@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>해지 — 비즈플래닛</title>
+<!-- UW_BL_03 · P-B/P-C · OD-U13 잠정: 기간 만료 해지 · 스펙: planning/27 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_BL_03">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="09_요금제비용.html" style="color:var(--ink-500);text-decoration:none">요금제·비용</a> › <span data-bind="persona"></span> 해지</span>
+      <span class="uw-topbar-sub">그만두시기 전에 확인해 주세요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-col-main">
+
+        <!-- M01 · view: 지금 쓰고 계신 것 + 해지하면 멈추는 것 -->
+        <section class="uw-card" data-module="M01">
+          <h3 class="uw-section-title" style="font-size:15px">지금 쓰고 계신 것</h3>
+          <div style="font-size:12px;color:var(--ink-500);margin-top:4px">🏪 <span data-bind="persona"></span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;background:var(--inset);border-radius:var(--radius-tile);padding:14px 16px">
+            <div>
+              <div style="font-size:16px;font-weight:800" id="cur-plan-name">Basic 요금제</div>
+              <div style="font-size:13px;color:var(--ink-500);margin-top:2px" id="cur-plan-price">₩39,000 / 월</div>
+            </div>
+            <span class="uw-badge b-blue">이용 중</span>
+          </div>
+
+          <div class="uw-section-caption mt-16">해지하면 멈추는 것</div>
+          <div class="uw-rows mt-8">
+            <div class="uw-row">
+              <div class="uw-row-chip">📝</div>
+              <div class="uw-row-body">
+                <div class="uw-row-title" style="font-size:14px">블로그 자동 발행</div>
+                <div class="uw-row-desc">자동으로 올라가던 블로그 글이 멈춰요</div>
+              </div>
+            </div>
+            <div class="uw-row">
+              <div class="uw-row-chip c-green">💬</div>
+              <div class="uw-row-body">
+                <div class="uw-row-title" style="font-size:14px">비즈챗 문자</div>
+                <div class="uw-row-desc">보내드리던 문자가 멈춰요</div>
+              </div>
+            </div>
+            <div class="uw-row">
+              <div class="uw-row-chip c-purple">🤖</div>
+              <div class="uw-row-body">
+                <div class="uw-row-title" style="font-size:14px">AI 챗봇 응대</div>
+                <div class="uw-row-desc">24시간 손님 응대가 멈춰요</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--blue-50);border-radius:var(--radius-tile);padding:14px 16px;margin-top:14px;font-size:13px;color:var(--ink-700);line-height:1.7">
+            🔒 데이터는 90일 동안 안전하게 보관해요. 다시 오시면 그대로 이어서 쓸 수 있어요.
+          </div>
+        </section>
+
+        <!-- M02 · edit · L2+: 해지 사유 선택 (사유 코드는 어드민 66 해지 사유 리포트 수집 원천) -->
+        <section class="uw-card mt-16" data-module="M02">
+          <h3 class="uw-section-title" style="font-size:15px">어떤 점이 아쉬우셨나요?</h3>
+          <div class="uw-section-caption mt-8">알려주시면 서비스를 더 좋게 만드는 데 참고할게요 (선택)</div>
+          <div class="mt-12" style="display:flex;flex-wrap:wrap;gap:8px">
+            <span class="uw-kw-chip" style="cursor:pointer" data-reason-chip="cost">비용이 부담돼요</span>
+            <span class="uw-kw-chip" style="cursor:pointer" data-reason-chip="effect">효과를 잘 모르겠어요</span>
+            <span class="uw-kw-chip" style="cursor:pointer" data-reason-chip="time">직접 쓸 시간이 없어요</span>
+            <span class="uw-kw-chip" style="cursor:pointer" data-reason-chip="situation">가게 사정이 생겼어요</span>
+            <span class="uw-kw-chip" style="cursor:pointer" data-reason-chip="etc">기타</span>
+          </div>
+          <textarea placeholder="더 하고 싶은 말씀이 있으면 적어주세요 (선택)" style="width:100%;margin-top:12px;min-height:80px;border:1px solid var(--input-border);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:14px;resize:vertical"></textarea>
+        </section>
+
+        <!-- M03 · view: 기간 만료 해지 안내 (OD-U13 잠정) -->
+        <section class="uw-card mt-16" data-module="M03">
+          <h3 class="uw-section-title" style="font-size:15px">해지하면 이렇게 진행돼요</h3>
+          <div style="background:var(--orange-bg);border-radius:var(--radius-tile);padding:16px;margin-top:12px;font-size:14px;line-height:1.8;color:var(--ink-700)">
+            해지해도 <b style="color:var(--ink-900)">7월 31일까지는 그대로</b> 쓸 수 있어요. 8월 1일부터 멈춰요. 그 전엔 언제든 되돌릴 수 있어요.
+          </div>
+        </section>
+
+        <!-- 하단 액션: 잔류 유도가 주 행동 -->
+        <div class="uw-actionbar">
+          <a href="09_요금제비용.html" class="btn btn-primary">계속 쓸게요</a>
+          <button class="btn btn-danger-soft" data-action="open-modal" data-modal="modal-cancel-confirm">해지 예약하기</button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 해지 확인 모달 ==================== -->
+<div class="uw-modal-backdrop" id="modal-cancel-confirm">
+  <div class="uw-modal">
+    <div class="uw-modal-title" id="modal-cancel-title">정말 해지 예약할까요?</div>
+    <div class="uw-modal-body">7월 31일까지는 그대로 이용하실 수 있고, 이후 자동 결제가 멈춰요.</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-danger-soft btn-sm" data-action="confirm-cancel">해지 예약하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 현재 요금제 레벨 동기화 + 사유 칩 선택 + 해지 예약 확정 ---- */
+(function () {
+  function syncPlanCard() {
+    var lv = document.body.getAttribute("data-level") || "L2";
+    var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+    if (!mock.plan) return;
+    document.getElementById("cur-plan-name").textContent = mock.plan + " 요금제";
+    document.getElementById("cur-plan-price").textContent = "₩" + mock.planPrice + " / 월";
+    // 매장 단위 해지라 확인 모달에도 어느 매장인지 다시 보여줌(L3가 담당 매장 78곳 중 잘못 고르는 걸 방지)
+    var titleEl = document.getElementById("modal-cancel-title");
+    if (titleEl && mock.persona) titleEl.textContent = "정말 " + mock.persona + " 해지를 예약할까요?";
+  }
+  document.addEventListener("uw:levelchange", syncPlanCard);
+  document.addEventListener("DOMContentLoaded", syncPlanCard);
+
+  document.addEventListener("click", function (e) {
+    var chip = e.target.closest("[data-reason-chip]");
+    if (chip) {
+      chip.parentNode.querySelectorAll("[data-reason-chip]").forEach(function (c) {
+        c.style.background = ""; c.style.color = "";
+      });
+      chip.style.background = "var(--blue)"; chip.style.color = "var(--white)";
+      return;
+    }
+    var confirmBtn = e.target.closest('[data-action="confirm-cancel"]');
+    if (confirmBtn) {
+      confirmBtn.closest(".uw-modal-backdrop").classList.remove("is-open");
+      var lv = document.body.getAttribute("data-level") || "L2";
+      var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+      var name = mock.persona ? mock.persona + " " : "";
+      window.UW.toast(name + "해지를 예약했어요. 마음이 바뀌면 요금제 화면에서 되돌릴 수 있어요.");
+    }
+  });
+})();
+</script>
+</body>
+</html>

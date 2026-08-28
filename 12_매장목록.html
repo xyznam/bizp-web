@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매장 목록 — 비즈플래닛</title>
+<!-- UW_ST_02 · W3 · L3 전용 · v15 반영
+     - 컬럼: 매장명·업종·사장님·운영상태·초대상태·오늘할일·요주의·상세
+     - 매장 상세 팝업: 사업자번호·휴대폰·업종·요금제·운영상태·초대상태 + 초대 보내기
+     - 13_계약관리 흡수 (폐기) · LNB에서 계약관리 제거
+     - 운영상태(설정전/학습전/운영중)와 초대상태(초대 전/초대 대기/가입 완료) 분리 표시
+     - v16: 신규 매장 등록 — 업체유형(소호/프랜차이즈) 구분 제거. 이 화면은 대행사 전용이고
+       대행사는 브랜드없음(독립매장)/공식브랜드검색/신규브랜드입력(검증대기) 3가지로 브랜드만 선택.
+       매장 데이터는 brandStatus("none"|"official"|"pending") + brand로 표현.
+     - [정의만, 화면 미구현] 프랜차이즈 본사용 신규 매장(자사 브랜드 신규 지점) 등록 화면은 별도 필요.
+       그 화면에서는 브랜드 필드가 "자사 소유 브랜드 검색"으로 한정되고(더본코리아처럼 본사가
+       브랜드를 여러 개 소유할 수 있음), 신규 브랜드 직접 입력 옵션은 없음(브랜드 생성은 별도 관리 화면).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* ---- 필터 바 ---- */
+.sl-filter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sl-search { flex: 1; min-width: 160px; height: 36px; border: 1px solid var(--input-border); border-radius: 10px; padding: 0 12px; font-family: inherit; font-size: 13px; color: var(--ink-900); outline: none; }
+.sl-search:focus { border-color: var(--blue); }
+.sl-select { height: 36px; border: 1px solid var(--input-border); border-radius: 10px; padding: 0 10px; font-family: inherit; font-size: 13px; color: var(--ink-700); background: var(--white); outline: none; }
+
+/* ---- 테이블 ---- */
+#store-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; }
+#store-table thead tr { background: var(--inset); }
+#store-table th { padding: 11px 10px; text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-600); white-space: nowrap; }
+#store-table td { padding: 11px 10px; border-top: 1px solid var(--divider); vertical-align: middle; }
+.store-row { cursor: pointer; }
+.store-row:hover td { background: var(--inset); }
+.sl-store-name { font-weight: 700; color: var(--ink-900); }
+.sl-owner { font-size: 12px; color: var(--ink-600); font-weight: 500; }
+
+/* ---- 상세 팝업 ---- */
+.sl-popup-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.28);
+  display: none; align-items: center; justify-content: center; z-index: 85;
+}
+.sl-popup-backdrop.is-open { display: flex; }
+.sl-popup {
+  background: var(--white); border-radius: var(--radius-card);
+  width: 100%; max-width: 440px; margin: 0 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18); overflow: hidden;
+}
+.sl-popup-header { padding: 20px 22px 16px; border-bottom: 1px solid var(--divider); display: flex; align-items: flex-start; gap: 12px; }
+.sl-popup-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; flex: 1; }
+.sl-popup-close { width: 32px; height: 32px; border: 0; background: var(--inset); border-radius: 8px; font-size: 16px; cursor: pointer; flex-shrink: 0; color: var(--ink-600); }
+.sl-popup-body { padding: 18px 22px; display: flex; flex-direction: column; gap: 12px; }
+.sl-info-row { display: flex; align-items: center; gap: 0; }
+.sl-info-label { width: 100px; font-size: 12px; font-weight: 700; color: var(--ink-500); flex-shrink: 0; }
+.sl-info-value { flex: 1; font-size: 14px; font-weight: 600; color: var(--ink-900); }
+.sl-popup-footer { padding: 14px 22px 18px; border-top: 1px solid var(--divider); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* 등록 모달 필드 (13에서 이식) */
+.cm-field { margin-top: 14px; }
+.cm-label { font-size: 12px; font-weight: 700; color: var(--ink-600); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+.cm-req { color: var(--red); }
+.cm-input { width: 100%; height: 44px; border: 1px solid var(--input-border); border-radius: 12px; padding: 0 12px; font-family: inherit; font-size: 14px; color: var(--ink-900); background: var(--white); outline: none; }
+.cm-input:focus { border-color: var(--blue); }
+.cm-input.is-error { border-color: var(--red); }
+.cm-input:disabled { background: var(--inset); color: var(--ink-400); cursor: not-allowed; }
+.cm-select-modal { width: 100%; height: 44px; border: 1px solid var(--input-border); border-radius: 12px; padding: 0 12px; font-family: inherit; font-size: 14px; color: var(--ink-900); background: var(--white); outline: none; }
+.cm-inline { display: flex; gap: 8px; }
+.cm-inline .cm-input { margin-top: 0; }
+.cm-help { font-size: 12px; color: var(--ink-500); font-weight: 500; margin-top: 5px; line-height: 1.6; }
+.cm-match-ok { background: var(--blue-50); border: 1px solid var(--blue-border); color: var(--ink-700); border-radius: var(--radius-tile); padding: 10px 12px; font-size: 13px; font-weight: 500; line-height: 1.7; margin-top: 10px; }
+.cm-match-warn { background: #fff8e6; border: 1px solid #f5c842; color: var(--ink-700); border-radius: var(--radius-tile); padding: 10px 12px; font-size: 13px; font-weight: 500; line-height: 1.7; margin-top: 10px; }
+.cm-match-block { background: var(--red-bg, #fff0f0); border: 1px solid var(--red); color: var(--ink-700); border-radius: var(--radius-tile); padding: 10px 12px; font-size: 13px; font-weight: 500; line-height: 1.7; margin-top: 10px; }
+.cm-brand-cards { display: flex; gap: 8px; margin-top: 8px; }
+.cm-brand-card { flex: 1; border: 1px solid var(--input-border); border-radius: 12px; padding: 10px 12px; cursor: pointer; font-family: inherit; background: var(--white); text-align: left; }
+.cm-brand-card.is-on { border-color: var(--blue); background: var(--blue-50); }
+.cm-brand-card-title { font-size: 13px; font-weight: 700; color: var(--ink-800); }
+.cm-brand-card-desc { font-size: 11px; font-weight: 500; color: var(--ink-500); margin-top: 2px; }
+
+/* ---- 활성 토글 ---- */
+.sl-toggle { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+.sl-toggle input { opacity: 0; width: 0; height: 0; }
+.sl-toggle-track { position: absolute; inset: 0; background: var(--ink-300); border-radius: 999px; cursor: pointer; transition: background .15s; }
+.sl-toggle-track::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: var(--white); border-radius: 50%; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.sl-toggle input:checked + .sl-toggle-track { background: var(--blue); }
+.sl-toggle input:checked + .sl-toggle-track::before { transform: translateX(16px); }
+.sl-toggle input:disabled + .sl-toggle-track { opacity: .4; cursor: not-allowed; }
+
+/* ---- 하단 액션바 비활성 상태 ---- */
+#bulk-actionbar [data-bulk-btn].is-disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+</style>
+</head>
+<body data-screen="UW_ST_02">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html" class="is-active">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">매장 목록</span>
+      <span class="uw-topbar-sub">담당 78곳 중 요주의부터 챙겨보세요</span>
+      <div class="uw-topbar-right">
+        <button class="btn btn-primary btn-sm" data-action="open-modal" data-modal="modal-reg">+ 신규 매장 등록</button>
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- L1/L2 가드 -->
+      <div data-only-level="L1">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">🏬</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">매장 목록은 담당 대행사 직원이 여러 매장을 관리할 때 쓰는 화면이에요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="01_홈.html">홈으로 가기</a>
+        </div>
+      </div>
+      <div data-only-level="L2">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">🏬</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">매장 목록은 담당 대행사 직원이 여러 매장을 관리할 때 쓰는 화면이에요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="01_홈.html">홈으로 가기</a>
+        </div>
+      </div>
+
+      <!-- M01 · 필터 바 -->
+      <section class="uw-card" data-module="M01" style="padding:14px 16px;margin-bottom:12px">
+        <div class="sl-filter">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink-700);cursor:pointer;flex-shrink:0">
+            <input type="checkbox" id="flt-warn-only"> 요주의만
+          </label>
+          <input type="text" id="flt-search" class="sl-search" placeholder="매장명·사장님·업종으로 찾기">
+          <select id="flt-ops" class="sl-select">
+            <option value="">운영상태 전체</option>
+            <option value="설정전">설정전</option>
+            <option value="학습전">학습전</option>
+            <option value="운영중">운영중</option>
+          </select>
+          <select id="flt-inv" class="sl-select">
+            <option value="">초대상태 전체</option>
+            <option value="초대 전">초대 전</option>
+            <option value="초대 대기">초대 대기</option>
+            <option value="가입 완료">가입 완료</option>
+          </select>
+          <select id="flt-sort" class="sl-select">
+            <option value="todo-desc">할 일 많은 순</option>
+            <option value="name-asc">이름순</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- M02 · 매장 테이블 -->
+      <section class="uw-card" data-module="M02" style="padding:0;overflow-x:auto">
+        <table id="store-table">
+          <thead>
+            <tr>
+              <th style="width:36px;text-align:center"><input type="checkbox" id="store-select-all" aria-label="전체 선택"></th>
+              <th>매장</th>
+              <th>업종</th>
+              <th>사장님</th>
+              <th>운영상태</th>
+              <th style="text-align:center">활성</th>
+              <th>초대상태</th>
+              <th>오늘 할 일</th>
+              <th>요주의</th>
+              <th style="width:68px"></th>
+            </tr>
+          </thead>
+          <tbody id="store-tbody" data-module="M03"></tbody>
+        </table>
+        <div style="padding:10px 14px;font-size:12px;color:var(--ink-400);border-top:1px solid var(--divider)" id="store-caption"></div>
+      </section>
+
+      <!-- M04 · 일괄 액션바 (상시 노출, 미선택 시 버튼 비활성) -->
+      <div class="uw-card" id="bulk-actionbar" data-module="M04" style="display:flex;margin-top:12px;padding:14px 16px;align-items:center;gap:10px">
+        <span id="bulk-hint" style="font-size:13px;font-weight:600;color:var(--ink-400)">매장을 선택하면 일괄 작업을 할 수 있어요</span>
+        <span style="font-size:13px;font-weight:700;color:var(--ink-700);display:none" id="bulk-count-wrap">선택한 <b id="bulk-count" style="color:var(--blue)">0</b>개 매장:</span>
+        <button class="btn btn-secondary btn-sm is-disabled" data-bulk-btn data-action="toast" data-toast-msg="선택한 매장의 학습을 시작했어요">다시 학습</button>
+        <a class="btn btn-ghost btn-sm is-disabled" data-bulk-btn href="02_콘텐츠검토.html">검토 큐 열기</a>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ========== 매장 상세 팝업 ========== -->
+<div class="sl-popup-backdrop" id="popup-detail">
+  <div class="sl-popup">
+    <div class="sl-popup-header">
+      <div>
+        <div class="sl-popup-title" id="popup-store-name">—</div>
+      </div>
+      <button class="sl-popup-close" id="btn-popup-close">✕</button>
+    </div>
+    <div class="sl-popup-body">
+      <div class="sl-info-row"><span class="sl-info-label">업종</span><span class="sl-info-value" id="popup-cat">—</span></div>
+      <div class="sl-info-row"><span class="sl-info-label">브랜드</span><span class="sl-info-value" id="popup-brand">—</span></div>
+      <div class="sl-info-row"><span class="sl-info-label">사업자번호</span><span class="sl-info-value" id="popup-bizno">—</span></div>
+      <div class="sl-info-row" id="popup-owner-row"><span class="sl-info-label">사장님</span><span class="sl-info-value" id="popup-owner">—</span></div>
+      <div class="sl-info-row" id="popup-phone-row"><span class="sl-info-label">휴대폰</span><span class="sl-info-value" id="popup-phone">—</span></div>
+      <div class="sl-info-row"><span class="sl-info-label">요금제</span><span class="sl-info-value" id="popup-plan">—</span></div>
+      <div style="border-top:1px solid var(--divider);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <div><div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-bottom:5px">운영상태</div><span id="popup-ops-badge">—</span></div>
+        <div style="margin-left:16px"><div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-bottom:5px">초대상태</div><span id="popup-inv-badge">—</span></div>
+      </div>
+    </div>
+    <div class="sl-popup-footer">
+      <button class="btn btn-ghost btn-sm" id="btn-popup-close2">닫기</button>
+      <button class="btn btn-secondary btn-sm" id="btn-popup-setup" style="display:none">매장설정</button>
+      <button class="btn btn-secondary btn-sm" id="btn-popup-invite-info" style="display:none" data-action="open-modal" data-modal="modal-invite">초대정보</button>
+      <button class="btn btn-secondary btn-sm" id="btn-popup-edit">수정</button>
+      <button class="btn btn-primary btn-sm" id="btn-popup-invite" style="display:none" data-action="open-modal" data-modal="modal-invite">초대 보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 매장 정보 수정 ========== -->
+<div class="uw-modal-backdrop" id="modal-edit">
+  <div class="uw-modal" style="max-width:440px">
+    <div class="uw-modal-title">매장 정보 수정</div>
+    <div class="uw-modal-body" style="display:flex;flex-direction:column;gap:0">
+      <div class="cm-field" style="margin-top:0">
+        <div class="cm-label">매장 이름 <span class="cm-req">*</span></div>
+        <input class="cm-input" id="edit-name" required>
+      </div>
+      <div class="cm-field" id="edit-owner-field">
+        <div class="cm-label">사장님</div>
+        <input class="cm-input" id="edit-owner">
+        <div class="cm-help" id="edit-owner-locked-help" style="display:none">가입 완료된 사장님 정보는 여기서 수정할 수 없어요. 변경이 필요하면 고객센터에 문의해 주세요.</div>
+      </div>
+      <div class="cm-field" id="edit-phone-field">
+        <div class="cm-label">휴대폰</div>
+        <input class="cm-input" id="edit-phone">
+      </div>
+      <div class="cm-field">
+        <div class="cm-label">요금제</div>
+        <select class="cm-select-modal" id="edit-plan">
+          <option value="Basic">Basic</option>
+          <option value="Pro">Pro</option>
+        </select>
+      </div>
+      <div class="cm-help">사업자번호·업종은 수정할 수 없어요. 변경이 필요하면 어드민에 문의해 주세요.</div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" id="btn-edit-save">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 신규 매장 등록 ========== -->
+<div class="uw-modal-backdrop" id="modal-reg">
+  <div class="uw-modal" style="max-width:480px">
+    <div class="uw-modal-title">신규 매장 등록</div>
+    <div class="uw-modal-body" style="display:flex;flex-direction:column;gap:0">
+      <div class="cm-field">
+        <div class="cm-label">매장 이름 <span class="cm-req">*</span></div>
+        <input class="cm-input" id="reg-name" placeholder="예: 테라스의원 2호점" required>
+      </div>
+      <div class="cm-field">
+        <div class="cm-label">사업자번호 <span class="cm-req">*</span></div>
+        <div class="cm-inline">
+          <input class="cm-input" id="reg-bizno" inputmode="numeric" placeholder="숫자 10자리" maxlength="12" required>
+          <button class="btn btn-secondary" id="btn-reg-bizcheck" style="flex-shrink:0;height:44px;border-radius:12px;padding:0 14px">확인</button>
+        </div>
+        <div class="cm-help">확인하면 기존 등록 여부와 소유자를 자동으로 검토해요</div>
+      </div>
+      <div id="reg-biz-result" style="display:none"></div>
+      <div id="reg-extra" style="display:none">
+        <div class="cm-field">
+          <div class="cm-label">업종 <span class="cm-req">*</span></div>
+          <select class="cm-select-modal" id="reg-category" required>
+            <option value="">골라 주세요</option>
+            <option>음식점·카페</option>
+            <option>의료/건강</option>
+            <option>미용·뷰티</option>
+            <option>학원·교육</option>
+            <option>소매·판매</option>
+            <option>기타</option>
+          </select>
+        </div>
+
+        <div class="cm-field">
+          <div class="cm-label">브랜드</div>
+          <div class="cm-brand-cards" id="reg-brand-type-cards">
+            <button type="button" class="cm-brand-card is-on" data-brand-type="none">
+              <div class="cm-brand-card-title">브랜드 없음</div>
+              <div class="cm-brand-card-desc">독립 매장이에요</div>
+            </button>
+            <button type="button" class="cm-brand-card" data-brand-type="search">
+              <div class="cm-brand-card-title">공식 브랜드 검색</div>
+              <div class="cm-brand-card-desc">기존에 등록된 브랜드예요</div>
+            </button>
+            <button type="button" class="cm-brand-card" data-brand-type="new">
+              <div class="cm-brand-card-title">신규 브랜드 등록</div>
+              <div class="cm-brand-card-desc">어드민 검증 후 활성화</div>
+            </button>
+          </div>
+
+          <!-- 공식 브랜드 검색 콤보 -->
+          <div id="reg-brand-search-wrap" style="display:none;margin-top:8px">
+            <div style="position:relative" id="reg-combo-wrap">
+              <input class="cm-input" id="reg-franchise-search" placeholder="브랜드명 검색..." autocomplete="off">
+              <div id="reg-combo-drop" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);border:1px solid var(--blue-border);border-radius:var(--radius-tile);box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:200;max-height:220px;overflow-y:auto"></div>
+            </div>
+            <div id="reg-franchise-selected" style="display:none;margin-top:8px">
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--blue-50);border:1px solid var(--blue-border);border-radius:var(--radius-tile)">
+                <span style="font-size:13px;font-weight:700;color:var(--blue)" id="reg-franchise-selected-name"></span>
+                <button type="button" id="btn-franchise-clear" style="margin-left:auto;font-size:12px;color:var(--ink-500);background:none;border:0;cursor:pointer;font-family:inherit">✕ 변경</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 신규 브랜드 직접 입력 -->
+          <div id="reg-brand-new-wrap" style="display:none;margin-top:8px">
+            <input class="cm-input" id="reg-franchise-brand-name" placeholder="브랜드 이름을 정확히 입력해 주세요">
+            <div class="cm-help" style="margin-top:6px">목록에 없는 브랜드예요. 어드민 검증 후 활성화돼요. 그 전까지 매장 등록과 운영은 정상 진행돼요.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" id="btn-reg-submit" disabled>등록하고 설정하러 가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 초대 보내기 ========== -->
+<div class="uw-modal-backdrop" id="modal-invite">
+  <div class="uw-modal" style="max-width:420px">
+    <div class="uw-modal-title">초대 보내기</div>
+    <div class="uw-modal-body" style="display:flex;flex-direction:column;gap:0">
+      <div style="font-size:13px;font-weight:500;color:var(--ink-600);line-height:1.7;margin-bottom:4px">사장님 정보를 입력하면 초대 문자를 보내드려요. 이미 가입된 사장님이라면 자동으로 계정을 연결해요.</div>
+      <div class="cm-field">
+        <div class="cm-label">사장님 이름 <span class="cm-req">*</span></div>
+        <input class="cm-input" id="inv-name" placeholder="실명" required>
+      </div>
+      <div class="cm-field">
+        <div class="cm-label">휴대폰 번호 <span class="cm-req">*</span></div>
+        <div class="cm-inline">
+          <input class="cm-input" id="inv-phone" type="tel" inputmode="numeric" placeholder="010-0000-0000" required>
+          <button class="btn btn-secondary" id="btn-inv-check" style="flex-shrink:0;height:44px;border-radius:12px;padding:0 14px">확인</button>
+        </div>
+      </div>
+      <div id="inv-result" style="display:none"></div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" id="btn-inv-submit" disabled>초대 보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 비활성화 ========== -->
+<div class="uw-modal-backdrop" id="modal-deactivate">
+  <div class="uw-modal">
+    <div class="uw-modal-title"><span id="deactivate-target-name">이 매장</span>을 비활성화할까요?</div>
+    <div class="uw-modal-body">
+      <div style="background:var(--red-bg,#fff0f0);border:1px solid var(--red);border-radius:var(--radius-tile);padding:10px 12px;font-size:13px;font-weight:600;color:var(--red)">
+        ⚠ 비활성화 시 해당 매장의 모든 서비스가 즉시 중단돼요.
+      </div>
+      <div class="cm-field" style="margin-top:12px">
+        <div class="cm-label">사유 메모 <span style="font-weight:500;color:var(--ink-400)">(선택)</span></div>
+        <input class="cm-input" placeholder="내부 메모용이에요. 사장님에게는 보이지 않아요">
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-sm" id="btn-deactivate-confirm" style="background:var(--red);color:#fff;border:0;border-radius:var(--radius-btn);padding:0 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">비활성화</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---- 목데이터 ---- */
+  var OPS_BADGE = {
+    "설정전": "b-blue", "학습전": "b-orange", "운영중": "b-green", "비활성": "b-red"
+  };
+  var INV_BADGE = {
+    "초대 전": "b-orange", "초대 대기": "b-purple", "가입 완료": "b-gray"
+  };
+
+  var STORES = [
+    { name: "스시오마카세 강남점", cat: "음식점·카페",  owner: "홍길동",  phone: "010-****-5678", bizno: "8708700393", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 5, warn: null,                              brandStatus: "official", brand: "스시오마카세", active: true },
+    { name: "스시오마카세 판교점", cat: "음식점·카페",  owner: "홍길동",  phone: "010-****-5678", bizno: "9876543210", plan: "Basic", ops: "운영중", inv: "초대 전",   todo: 3, warn: null,                              brandStatus: "official", brand: "스시오마카세", active: true },
+    { name: "카페봄봄 신촌점",     cat: "음식점·카페",  owner: "김영희",  phone: "010-****-2345", bizno: "1111111111", plan: "Basic", ops: "학습전", inv: "초대 대기", todo: 4, warn: { label: "수집 실패", cls: "b-red" }, brandStatus: "none",     brand: null,            active: false },
+    { name: "테라스의원",           cat: "의료/건강",    owner: "박민준",  phone: "010-****-9012", bizno: "2222222222", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 2, warn: null,                              brandStatus: "none",     brand: null,            active: true },
+    { name: "민준헤어",             cat: "미용·뷰티",   owner: "이수진",  phone: "010-****-3456", bizno: "3333333333", plan: "Basic", ops: "설정전", inv: "가입 완료", todo: 0, warn: null,                              brandStatus: "pending",  brand: "민준헤어",      active: true }
+  ];
+
+  var selected = {};
+  var currentStore = null;
+
+  /* ---- 뱃지 헬퍼 ---- */
+  function opsBadge(v) { return v ? '<span class="uw-badge ' + (OPS_BADGE[v] || "b-gray") + '">' + v + '</span>' : '—'; }
+  function invBadge(v) { return v ? '<span class="uw-badge ' + (INV_BADGE[v] || "b-gray") + '">' + v + '</span>' : '—'; }
+  function warnBadge(w) { return w ? '<span class="uw-badge ' + w.cls + '">' + w.label + '</span>' : '<span style="color:var(--ink-300)">—</span>'; }
+
+  /* ---- 필터·정렬 ---- */
+  function getFiltered() {
+    var warnOnly = document.getElementById("flt-warn-only").checked;
+    var q        = document.getElementById("flt-search").value.trim();
+    var fOps     = document.getElementById("flt-ops").value;
+    var fInv     = document.getElementById("flt-inv").value;
+    var sort     = document.getElementById("flt-sort").value;
+
+    return STORES.filter(function (s) {
+      if (warnOnly && !s.warn)                          return false;
+      if (q && [s.name, s.owner, s.cat].join(" ").indexOf(q) === -1) return false;
+      if (fOps && s.ops !== fOps)                       return false;
+      if (fInv && s.inv !== fInv)                       return false;
+      return true;
+    }).slice().sort(function (a, b) {
+      return sort === "name-asc" ? a.name.localeCompare(b.name, "ko") : b.todo - a.todo;
+    });
+  }
+
+  /* ---- 테이블 렌더 ---- */
+  function renderTable() {
+    var list  = getFiltered();
+    var tbody = document.getElementById("store-tbody");
+
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="10" style="padding:28px;text-align:center;color:var(--ink-400)">조건에 맞는 매장이 없어요</td></tr>';
+    } else {
+      tbody.innerHTML = list.map(function (s) {
+        var chk = selected[s.name] ? "checked" : "";
+        return '<tr class="store-row" data-store="' + s.name + '">' +
+          '<td style="text-align:center" data-role="checkbox-cell"><input type="checkbox" class="store-row-check" data-store-check="' + s.name + '" ' + chk + '></td>' +
+          '<td><div class="sl-store-name">' + s.name + (s.brandStatus === "official" ? ' <span class="uw-badge b-purple" style="font-size:10px;vertical-align:middle">' + s.brand + '</span>' : s.brandStatus === "pending" ? ' <span class="uw-badge" style="font-size:10px;vertical-align:middle;background:var(--inset);color:var(--ink-500)">' + s.brand + ' · 검증대기</span>' : '') + '</div></td>' +
+          '<td style="color:var(--ink-500);font-size:12px">' + s.cat + '</td>' +
+          '<td><div class="sl-owner">' + (s.inv === "초대 전" ? '<span style="color:var(--ink-300)">-</span>' : s.owner) + '</div></td>' +
+          '<td>' + opsBadge(s.ops) + '</td>' +
+          '<td style="text-align:center" data-role="toggle-cell"><label class="sl-toggle"><input type="checkbox" class="store-active-toggle" data-store-toggle="' + s.name + '" ' + (s.active ? "checked" : "") + '><span class="sl-toggle-track"></span></label></td>' +
+          '<td>' + invBadge(s.inv) + '</td>' +
+          '<td style="font-weight:600;color:var(--ink-700)">' + (s.todo ? s.todo + '건' : '<span style="color:var(--ink-300)">—</span>') + '</td>' +
+          '<td>' + warnBadge(s.warn) + '</td>' +
+          '<td style="padding-right:14px;white-space:nowrap"><button class="btn btn-ghost btn-sm" data-detail="' + s.name + '">상세</button></td>' +
+          '</tr>';
+      }).join("");
+    }
+
+    document.getElementById("store-caption").textContent =
+      "표본 " + STORES.length + "곳 중 " + list.length + "곳 표시 · 전체 78곳은 검색으로 찾아요";
+    syncSelectAll(list);
+    renderBulkBar();
+  }
+
+  /* ---- 상세 팝업 ---- */
+  function openDetail(name) {
+    var s = STORES.find(function (x) { return x.name === name; });
+    if (!s) return;
+    currentStore = s;
+    document.getElementById("popup-store-name").textContent = s.name;
+    document.getElementById("popup-cat").textContent        = s.cat;
+    document.getElementById("popup-brand").innerHTML        =
+      s.brandStatus === "official" ? s.brand :
+      s.brandStatus === "pending"  ? s.brand + ' <span class="uw-badge" style="background:var(--inset);color:var(--ink-500)">검증 대기</span>' :
+      '<span style="color:var(--ink-400)">브랜드 없음</span>';
+    document.getElementById("popup-bizno").textContent      = s.bizno;
+    var hasOwnerInfo = s.inv === "가입 완료";
+    document.getElementById("popup-owner-row").style.display = hasOwnerInfo ? "" : "none";
+    document.getElementById("popup-phone-row").style.display = hasOwnerInfo ? "" : "none";
+    if (hasOwnerInfo) {
+      document.getElementById("popup-owner").textContent = s.owner;
+      document.getElementById("popup-phone").textContent = s.phone;
+    }
+    document.getElementById("popup-plan").textContent       = s.plan;
+    document.getElementById("popup-ops-badge").innerHTML    = opsBadge(s.ops);
+    document.getElementById("popup-inv-badge").innerHTML    = invBadge(s.inv);
+    /* 초대 보내기 버튼: 초대 전 매장에만 노출 */
+    document.getElementById("btn-popup-invite").style.display = s.inv === "초대 전" ? "" : "none";
+    /* 초대정보 버튼: 초대 대기 매장에만 노출 (재확인·재발송용) */
+    document.getElementById("btn-popup-invite-info").style.display = s.inv === "초대 대기" ? "" : "none";
+    /* 매장설정 버튼: 운영상태가 설정전인 매장에만 노출 */
+    document.getElementById("btn-popup-setup").style.display = s.ops === "설정전" ? "" : "none";
+    document.getElementById("popup-detail").classList.add("is-open");
+  }
+
+  function closeDetail() {
+    document.getElementById("popup-detail").classList.remove("is-open");
+  }
+
+  document.getElementById("btn-popup-close").addEventListener("click", closeDetail);
+  document.getElementById("btn-popup-close2").addEventListener("click", closeDetail);
+
+  /* ---- 매장설정 이동 (설정전 매장) ---- */
+  document.getElementById("btn-popup-setup").addEventListener("click", function () {
+    location.href = "98_매장설정.html";
+  });
+
+  /* ---- 수정 모달 ---- */
+  document.getElementById("btn-popup-edit").addEventListener("click", function () {
+    if (!currentStore) return;
+    var s = currentStore;
+    var hasOwnerInfo = s.inv !== "초대 전";
+    var locked = s.inv === "가입 완료";
+
+    document.getElementById("edit-name").value = s.name;
+    document.getElementById("edit-plan").value  = s.plan;
+    document.getElementById("edit-name").classList.remove("is-error");
+
+    document.getElementById("edit-owner-field").style.display = hasOwnerInfo ? "" : "none";
+    document.getElementById("edit-phone-field").style.display = hasOwnerInfo ? "" : "none";
+
+    var ownerInput = document.getElementById("edit-owner");
+    var phoneInput = document.getElementById("edit-phone");
+    var ownerHelp  = document.getElementById("edit-owner-locked-help");
+    if (hasOwnerInfo) {
+      ownerInput.value = s.owner;
+      phoneInput.value = s.phone;
+      ownerInput.disabled = locked;
+      phoneInput.disabled = locked;
+      ownerHelp.style.display = locked ? "" : "none";
+    }
+
+    document.getElementById("modal-edit").classList.add("is-open");
+  });
+  document.getElementById("btn-edit-save").addEventListener("click", function () {
+    if (!currentStore) return;
+    var name = document.getElementById("edit-name").value.trim();
+    if (!name) { document.getElementById("edit-name").classList.add("is-error"); return; }
+    currentStore.name = name;
+    if (currentStore.inv !== "초대 전" && currentStore.inv !== "가입 완료") {
+      currentStore.owner = document.getElementById("edit-owner").value.trim() || currentStore.owner;
+      currentStore.phone = document.getElementById("edit-phone").value.trim();
+    }
+    currentStore.plan = document.getElementById("edit-plan").value;
+    document.getElementById("modal-edit").classList.remove("is-open");
+    openDetail(currentStore.name);
+    renderTable();
+    if (window.UW) window.UW.toast("매장 정보를 수정했어요");
+  });
+
+  /* ---- 초대정보 (초대 대기 매장 재확인·재발송) ---- */
+  document.getElementById("btn-popup-invite-info").addEventListener("click", function (e) {
+    if (!currentStore) return;
+    document.getElementById("inv-name").value  = currentStore.owner;
+    document.getElementById("inv-phone").value = currentStore.phone;
+    document.getElementById("inv-result").style.display = "none";
+    document.getElementById("btn-inv-submit").disabled = true;
+    invCase = null;
+  });
+  document.getElementById("popup-detail").addEventListener("click", function (e) {
+    if (e.target === this) closeDetail();
+  });
+
+  /* ---- 이벤트 위임 ---- */
+  document.getElementById("store-tbody").addEventListener("click", function (e) {
+    /* 상세 버튼 — 가장 먼저 확인해서 행 전환과 분리 */
+    var detailBtn = e.target.closest("[data-detail]");
+    if (detailBtn) { openDetail(detailBtn.getAttribute("data-detail")); return; }
+    /* 체크박스 셀 · 활성 토글 셀 */
+    if (e.target.closest('[data-role="checkbox-cell"]')) return;
+    if (e.target.closest('[data-role="toggle-cell"]')) return;
+    /* 행 클릭 → 매장 컨텍스트 전환 */
+    var row = e.target.closest(".store-row");
+    if (!row) return;
+    var name = row.getAttribute("data-store");
+    var sw = document.querySelector(".uw-store-switch span[data-bind='persona']");
+    if (sw) sw.textContent = name;
+    if (window.UW) window.UW.toast(name + "(으)로 전환했어요");
+  });
+
+  /* ---- 체크박스 ---- */
+  function syncSelectAll(list) {
+    var all = document.getElementById("store-select-all");
+    if (!list.length) { all.checked = false; all.indeterminate = false; return; }
+    var n = list.filter(function (s) { return selected[s.name]; }).length;
+    all.checked = n === list.length;
+    all.indeterminate = n > 0 && n < list.length;
+  }
+  function renderBulkBar() {
+    var n = Object.values(selected).filter(Boolean).length;
+    document.getElementById("bulk-count").textContent = n;
+    document.getElementById("bulk-hint").style.display = n ? "none" : "";
+    document.getElementById("bulk-count-wrap").style.display = n ? "" : "none";
+    document.querySelectorAll("#bulk-actionbar [data-bulk-btn]").forEach(function (b) {
+      b.classList.toggle("is-disabled", n === 0);
+      if (b.tagName === "A") { if (n === 0) b.setAttribute("aria-disabled","true"); else b.removeAttribute("aria-disabled"); }
+    });
+  }
+
+  var pendingDeactivate = null;
+
+  document.addEventListener("change", function (e) {
+    if (["flt-warn-only","flt-ops","flt-inv","flt-sort"].includes(e.target.id)) { renderTable(); return; }
+    if (e.target.id === "store-select-all") {
+      getFiltered().forEach(function (s) { selected[s.name] = e.target.checked; });
+      renderTable(); return;
+    }
+    var sc = e.target.getAttribute && e.target.getAttribute("data-store-check");
+    if (sc) { selected[sc] = e.target.checked; syncSelectAll(getFiltered()); renderBulkBar(); return; }
+
+    var tg = e.target.getAttribute && e.target.getAttribute("data-store-toggle");
+    if (tg) {
+      var s = STORES.find(function (x) { return x.name === tg; });
+      if (!s) return;
+      if (e.target.checked) {
+        /* 재활성화는 확인 없이 즉시 반영 */
+        s.active = true;
+        if (window.UW) window.UW.toast(tg + "을(를) 다시 활성화했어요");
+      } else {
+        /* 비활성화는 확인 모달을 거침 — 확정 전까지 스위치는 켜진 채로 되돌림 */
+        e.target.checked = true;
+        pendingDeactivate = tg;
+        document.getElementById("deactivate-target-name").textContent = tg;
+        document.getElementById("modal-deactivate").classList.add("is-open");
+      }
+    }
+  });
+  document.getElementById("flt-search").addEventListener("input", renderTable);
+
+  /* ---- 신규 매장 등록 모달 ---- */
+  var BIZ_CASES = { "1111111111": "EXISTING_SAME", "2222222222": "EXISTING_OTHER", "3333333333": "EXISTING_SELF" };
+  var regBizCase = null;
+  var regMatchedOwner = null; /* EXISTING_SAME일 때 자동 연결할 기존 사장님 정보 */
+
+  /* 브랜드 선택 (브랜드없음/공식브랜드검색/신규등록) */
+  var brandType = "none"; /* none | search | new */
+  document.getElementById("reg-brand-type-cards").addEventListener("click", function (e) {
+    var card = e.target.closest("[data-brand-type]");
+    if (!card) return;
+    brandType = card.getAttribute("data-brand-type");
+    document.querySelectorAll("[data-brand-type]").forEach(function (c) { c.classList.remove("is-on"); });
+    card.classList.add("is-on");
+    document.getElementById("reg-brand-search-wrap").style.display = brandType === "search" ? "" : "none";
+    document.getElementById("reg-brand-new-wrap").style.display    = brandType === "new"    ? "" : "none";
+    if (brandType !== "search") resetFranchiseCombo();
+    if (brandType !== "new") document.getElementById("reg-franchise-brand-name").value = "";
+  });
+
+  /* 공식 브랜드 자동완성 콤보박스 */
+  var OFFICIAL_BRANDS = [
+    "BBQ 치킨", "BHC 치킨", "교촌치킨", "굽네치킨", "이디야 커피",
+    "메가MGC 커피", "컴포즈 커피", "더벤티", "파리바게뜨", "뚜레쥬르",
+    "맥도날드", "롯데리아", "버거킹", "써브웨이", "GS25", "CU", "세븐일레븐",
+    "올리브영", "다이소", "이마트24"
+  ];
+  var franchiseValue = null; /* 선택된 공식 브랜드명 */
+
+  function renderCombo(q) {
+    var drop = document.getElementById("reg-combo-drop");
+    var results = q
+      ? OFFICIAL_BRANDS.filter(function (b) { return b.indexOf(q) !== -1; })
+      : OFFICIAL_BRANDS.slice(0, 8);
+    drop.innerHTML = results.map(function (b) {
+      return '<div class="reg-combo-item" data-brand-name="' + b + '" style="padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink-900)">' + b + '</div>';
+    }).join("");
+    drop.style.display = "";
+  }
+
+  function setFranchiseBrand(name) {
+    franchiseValue = name;
+    document.getElementById("reg-franchise-search").style.display = "none";
+    document.getElementById("reg-franchise-selected-name").textContent = name;
+    document.getElementById("reg-franchise-selected").style.display = "";
+    document.getElementById("reg-combo-drop").style.display = "none";
+  }
+
+  function resetFranchiseCombo() {
+    franchiseValue = null;
+    var search = document.getElementById("reg-franchise-search");
+    search.value = ""; search.style.display = "";
+    document.getElementById("reg-franchise-selected").style.display = "none";
+    document.getElementById("reg-combo-drop").style.display = "none";
+  }
+
+  document.getElementById("reg-franchise-search").addEventListener("input", function () {
+    renderCombo(this.value.trim());
+  });
+  document.getElementById("reg-franchise-search").addEventListener("focus", function () {
+    renderCombo(this.value.trim());
+  });
+  document.getElementById("reg-combo-drop").addEventListener("mousedown", function (e) {
+    var item = e.target.closest(".reg-combo-item");
+    if (item) { e.preventDefault(); setFranchiseBrand(item.getAttribute("data-brand-name")); }
+  });
+  document.getElementById("btn-franchise-clear").addEventListener("click", resetFranchiseCombo);
+  document.addEventListener("click", function (e) {
+    if (!document.getElementById("reg-combo-wrap").contains(e.target)) {
+      document.getElementById("reg-combo-drop").style.display = "none";
+    }
+  });
+
+  /* 콤보박스 hover 스타일 */
+  document.getElementById("reg-combo-drop").addEventListener("mouseover", function (e) {
+    var item = e.target.closest(".reg-combo-item");
+    document.querySelectorAll(".reg-combo-item").forEach(function (i) { i.style.background = ""; });
+    if (item) item.style.background = "var(--inset)";
+  });
+
+  function renderRegBizResult(bizno) {
+    var c = BIZ_CASES[bizno] || "NEW";
+    regBizCase = c;
+    regMatchedOwner = null;
+    var wrap = document.getElementById("reg-biz-result");
+    var extra = document.getElementById("reg-extra");
+    var btn = document.getElementById("btn-reg-submit");
+    wrap.style.display = ""; extra.style.display = "none"; btn.disabled = true;
+
+    if (c === "EXISTING_SAME") {
+      var matched = STORES.find(function (s) { return s.bizno === bizno; });
+      if (matched) {
+        regMatchedOwner = { owner: matched.owner, phone: matched.phone };
+        wrap.innerHTML = '<div class="cm-match-ok">✅ 이미 담당 중인 <b>' + matched.owner + '</b> 사장님의 사업자번호예요 (' + matched.name + ').<br>같은 사장님 계정으로 자동 연결해서 새 지점으로 등록할게요.</div>';
+      } else {
+        wrap.innerHTML = '<div class="cm-match-ok">✅ 이미 담당 중인 사장님의 사업자번호예요. 같은 사장님 계정으로 자동 연결할게요.</div>';
+      }
+      extra.style.display = ""; btn.disabled = false;
+    } else if (c === "EXISTING_OTHER") {
+      wrap.innerHTML = '<div class="cm-match-block">⛔ 이미 다른 대행사가 담당하는 사업자번호예요. <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="CS 접수됐어요">고객센터에 문의</a>해 주세요.</div>';
+    } else if (c === "EXISTING_SELF") {
+      wrap.innerHTML = '<div class="cm-match-block">⛔ 이미 비즈플래닛을 직접 사용 중인 사장님의 사업자번호예요. <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="CS 접수됐어요">고객센터에 문의</a>해 주세요.</div>';
+      btn.disabled = true;
+    } else {
+      wrap.innerHTML = '<div class="cm-match-ok">✅ 새로운 사업자번호예요. 신규 매장으로 등록할게요.</div>';
+      extra.style.display = ""; btn.disabled = false;
+    }
+  }
+
+  document.getElementById("btn-reg-bizcheck").addEventListener("click", function () {
+    var bizno = document.getElementById("reg-bizno").value.replace(/\D/g, "");
+    if (bizno.length !== 10) { document.getElementById("reg-bizno").classList.add("is-error"); if (window.UW) window.UW.toast("사업자번호 10자리를 입력해 주세요"); return; }
+    document.getElementById("reg-bizno").classList.remove("is-error");
+    renderRegBizResult(bizno);
+  });
+
+  document.getElementById("btn-reg-submit").addEventListener("click", function () {
+    var name = document.getElementById("reg-name").value.trim();
+    if (!name) { document.getElementById("reg-name").classList.add("is-error"); if (window.UW) window.UW.toast("매장 이름을 입력해 주세요"); return; }
+    if (!document.getElementById("reg-category").value) { if (window.UW) window.UW.toast("업종을 선택해 주세요"); return; }
+    if (brandType === "search" && !franchiseValue) { if (window.UW) window.UW.toast("브랜드를 검색해서 선택해 주세요"); return; }
+    if (brandType === "new" && !document.getElementById("reg-franchise-brand-name").value.trim()) {
+      document.getElementById("reg-franchise-brand-name").classList.add("is-error");
+      if (window.UW) window.UW.toast("브랜드 이름을 입력해 주세요"); return;
+    }
+    var bizno = document.getElementById("reg-bizno").value.replace(/\D/g, "");
+    var category = document.getElementById("reg-category").value;
+    var brandStatus = brandType === "none" ? "none" : brandType === "new" ? "pending" : "official";
+    var brandName = brandType === "none" ? null : brandType === "new" ? document.getElementById("reg-franchise-brand-name").value.trim() : franchiseValue;
+
+    var newStore = {
+      name: name, cat: category, bizno: bizno, plan: "Basic",
+      ops: "설정전", todo: 0, warn: null,
+      brandStatus: brandStatus, brand: brandName, active: true
+    };
+    if (regBizCase === "EXISTING_SAME" && regMatchedOwner) {
+      newStore.owner = regMatchedOwner.owner;
+      newStore.phone = regMatchedOwner.phone;
+      newStore.inv   = "가입 완료";
+    } else {
+      newStore.owner = "";
+      newStore.phone = "";
+      newStore.inv   = "초대 전";
+    }
+    STORES.push(newStore);
+    renderTable();
+
+    document.getElementById("modal-reg").classList.remove("is-open");
+    /* 상태 리셋 */
+    brandType = "none";
+    document.querySelectorAll("[data-brand-type]").forEach(function (c) { c.classList.toggle("is-on", c.getAttribute("data-brand-type") === "none"); });
+    document.getElementById("reg-brand-search-wrap").style.display = "none";
+    document.getElementById("reg-brand-new-wrap").style.display = "none";
+    document.getElementById("reg-franchise-brand-name").value = "";
+    resetFranchiseCombo();
+    document.getElementById("reg-biz-result").style.display = "none";
+    document.getElementById("reg-extra").style.display = "none";
+    document.getElementById("btn-reg-submit").disabled = true;
+    var wasExistingSame = regBizCase === "EXISTING_SAME";
+    regBizCase = null;
+    regMatchedOwner = null;
+    if (window.UW) window.UW.toast(wasExistingSame ? name + " 등록 완료 · 같은 사장님 계정으로 자동 연결했어요" : name + " 등록 완료 · 매장 정보를 설정해 주세요");
+  });
+
+  /* ---- 초대 모달 ---- */
+  /* 이미 비즈플래닛에 가입된 사장님 목록(프로토타입 목데이터) — 휴대폰이 조회 기준키 */
+  var REGISTERED_OWNERS = [
+    { name: "홍길동", phone: "010-1234-5678" }
+  ];
+  var invCase = null;
+
+  document.getElementById("btn-inv-check").addEventListener("click", function () {
+    var name  = document.getElementById("inv-name").value.trim();
+    var phone = document.getElementById("inv-phone").value.trim();
+    if (!name || !phone) { if (window.UW) window.UW.toast("이름과 번호를 모두 입력해 주세요"); return; }
+
+    var byPhone = REGISTERED_OWNERS.find(function (o) { return o.phone.replace(/\D/g, "") === phone.replace(/\D/g, ""); });
+    if (byPhone && byPhone.name === name) {
+      invCase = "LINKED";
+    } else if (byPhone) {
+      invCase = "PHONE_MISMATCH";
+    } else {
+      invCase = "NEW";
+    }
+
+    var wrap = document.getElementById("inv-result");
+    var btn = document.getElementById("btn-inv-submit");
+    wrap.style.display = "";
+    if (invCase === "LINKED") {
+      wrap.innerHTML = '<div class="cm-match-ok" style="margin-top:10px">✅ 이미 가입된 사장님이에요. 초대 문자 없이 매장을 바로 연결할게요.</div>';
+      btn.textContent = "계정에 연결하기";
+      btn.disabled = false;
+    } else if (invCase === "PHONE_MISMATCH") {
+      wrap.innerHTML = '<div class="cm-match-block">이 휴대폰 번호로 이미 가입된 다른 사장님이 있어요.<br>이름을 다시 확인하시거나, 정확한 확인이 필요하면 <b>고객센터</b>에 문의해 주세요.</div>';
+      btn.disabled = true;
+    } else {
+      wrap.innerHTML = '<div class="cm-match-ok" style="margin-top:10px">✅ 새로운 사장님이에요. 초대 문자를 보낼게요.</div>';
+      btn.textContent = "초대 보내기";
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById("btn-inv-submit").addEventListener("click", function () {
+    var name  = document.getElementById("inv-name").value.trim();
+    var phone = document.getElementById("inv-phone").value.trim();
+    if (currentStore) {
+      currentStore.owner = name;
+      currentStore.phone = phone;
+      currentStore.inv   = invCase === "LINKED" ? "가입 완료" : "초대 대기";
+      openDetail(currentStore.name);
+      renderTable();
+    }
+    document.getElementById("modal-invite").classList.remove("is-open");
+    if (window.UW) window.UW.toast(invCase === "LINKED" ? name + " 사장님 계정에 매장을 연결했어요" : name + " 사장님에게 초대 문자를 보냈어요");
+  });
+
+
+  /* ---- 비활성화 확정 ---- */
+  document.getElementById("btn-deactivate-confirm").addEventListener("click", function () {
+    if (pendingDeactivate) {
+      var s = STORES.find(function (x) { return x.name === pendingDeactivate; });
+      if (s) s.active = false;
+      renderTable();
+      if (window.UW) window.UW.toast(pendingDeactivate + "을(를) 비활성화했어요. 모든 서비스가 중단됐어요");
+      pendingDeactivate = null;
+    }
+    document.getElementById("modal-deactivate").classList.remove("is-open");
+  });
+  document.getElementById("modal-deactivate").addEventListener("click", function (e) {
+    /* 백드롭·취소 클릭 시 대기 중이던 토글 취소 상태 초기화 */
+    if (e.target === this || (e.target.getAttribute && e.target.getAttribute("data-action") === "close-modal")) {
+      pendingDeactivate = null;
+    }
+  });
+
+  /* ---- 입력 에러 해제 ---- */
+
+  document.addEventListener("input", function (e) {
+    if (e.target.classList.contains("is-error") && e.target.value.trim()) e.target.classList.remove("is-error");
+    if (e.target.id === "reg-bizno") {
+      document.getElementById("reg-biz-result").style.display = "none";
+      document.getElementById("reg-extra").style.display = "none";
+      document.getElementById("btn-reg-submit").disabled = true;
+      regBizCase = null;
+      regMatchedOwner = null;
+    }
+    if (e.target.id === "inv-name" || e.target.id === "inv-phone") {
+      document.getElementById("inv-result").style.display = "none";
+      document.getElementById("btn-inv-submit").disabled = true;
+      invCase = null;
+    }
+  });
+
+  document.addEventListener("uw:levelchange", renderTable);
+  document.addEventListener("DOMContentLoaded", renderTable);
+})();
+</script>
+</body>
+</html>

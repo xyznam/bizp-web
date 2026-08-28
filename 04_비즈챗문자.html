@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>비즈챗 문자 — 비즈플래닛</title>
+<!-- UW_BC_01 · W1 · 스펙: planning/23 시안 슬라이드 3 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_BC_01">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html" class="is-active">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">비즈챗 문자</span>
+      <span class="uw-topbar-sub" data-copy="topbar.sub">AI 발송 제안이 <b style="color:var(--blue)">1건</b> 도착했어요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-cols">
+
+        <!-- ========== 본문 ========== -->
+        <div class="uw-col-main">
+
+          <!-- M01 · stat: 이번 달 문자 발송 현황 -->
+          <section class="uw-card" data-module="M01">
+            <div style="display:flex;align-items:flex-start">
+              <h3 class="uw-section-title" style="font-size:15px">이번 달 문자 발송</h3>
+              <span class="uw-section-caption" style="margin-left:auto">7월 한도 1,000건</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px">
+              <div class="uw-num-xl">480 <small style="font-size:14px;font-weight:600;color:var(--ink-500)">/ 1,000건 발송</small></div>
+              <span class="uw-badge b-green" style="margin-left:auto;font-size:13px;padding:5px 10px">520건 남음</span>
+            </div>
+            <div class="uw-bar"><i style="width:48%"></i></div>
+            <div class="uw-tile-sub mt-8">남은 한도로 약 1.6회 더 발송할 수 있어요 · 매월 1일 초기화</div>
+          </section>
+
+          <!-- M02 · preview: AI 발송 제안 미리보기 -->
+          <section class="uw-card mt-16" data-module="M02" style="padding:20px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <h3 class="uw-section-title" style="font-size:16px">✦ AI 발송 제안</h3>
+              <!-- M09 · advanced · L3: 발송 대상 상세 -->
+              <button class="btn btn-ghost btn-sm" data-module="M09" data-action="open-modal" data-modal="modal-target" style="margin-left:auto">⚙ 발송 대상 상세</button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+              <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em">여름 단골 재방문 쿠폰</div>
+              <span class="uw-badge b-blue">RCS 이미지 문자</span>
+            </div>
+
+            <div class="uw-preview-box">사장님의 단골 손님께 — 무더운 여름, 시원한 신메뉴로 다시 모실게요! 이 문자를 보여주시면 여름 세트를 할인해 드려요. (7/31까지)</div>
+
+            <div class="mt-12" style="display:flex;gap:8px">
+              <div class="uw-tile-inner" style="flex:1"><div class="n">320명</div><div class="l">보낼 대상 단골</div></div>
+              <div class="uw-tile-inner" style="flex:1"><div class="n">320건</div><div class="l">예상 발송</div></div>
+              <div class="uw-tile-inner" style="flex:1"><div class="n">토요일 11시</div><div class="l">발송 예정</div></div>
+            </div>
+
+            <!-- M04 · approve: 승인하고 예약 / 다음에 -->
+            <section class="uw-actionbar" data-module="M04">
+              <button class="btn btn-primary" data-action="approve-bc" data-copy="approve.btn">✓ 승인하고 예약</button>
+              <button class="btn btn-ghost" data-action="toast" data-toast-msg="알겠어요. 제안은 알림함에 보관해 둘게요.">다음에</button>
+              <!-- M05 · edit · L2+: 문구 수정 (fallback 없음, 숨김만) -->
+              <button class="btn btn-ghost" data-module="M05" data-action="toast" data-toast-msg="문구를 눌러 바로 고칠 수 있어요">✏️ 문구 수정</button>
+            </section>
+          </section>
+
+          <!-- M06 · create · L2+: 새 문자 만들기 (L1은 대체 카드 자동 삽입) -->
+          <section class="uw-card mt-16" data-module="M06">
+            <h3 class="uw-section-title" style="font-size:15px">새 문자 만들기</h3>
+            <div class="uw-h1-caption" style="margin-top:4px">단골에게 알리고 싶은 소식을 직접 보낼 수 있어요</div>
+            <button class="btn btn-secondary mt-12" data-action="toast" data-toast-msg="새 문자 작성은 W2에서 열려요 (문자 편집기)">+ 새 문자 만들기</button>
+          </section>
+
+          <!-- M07 · edit · L2+: 문자 충전 안내 배너 -->
+          <section class="mt-16" data-module="M07" style="display:flex;align-items:center;gap:14px;background:var(--orange-bg);border-radius:var(--radius-card);padding:16px 20px">
+            <div style="font-size:13px;font-weight:600;color:var(--ink-700)">문자가 더 필요하면 100건당 8,000원으로 추가할 수 있어요</div>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto;background:transparent;border:0;color:var(--orange)" data-action="toast" data-toast-msg="충전 결제는 정책 확정 후 열려요 (OD-U6)">문자 충전</button>
+          </section>
+
+        </div>
+
+        <!-- ========== 사이드 ========== -->
+        <aside class="uw-col-side">
+
+          <!-- M08 · bulk · L3: 담당 매장 일괄 발송 -->
+          <section class="uw-card" data-module="M08">
+            <h3 class="uw-section-title" style="font-size:15px">담당 매장 일괄 발송</h3>
+            <div class="uw-h1-caption" style="margin-top:2px">같은 제안을 여러 매장에 한 번에 보낼 수 있어요</div>
+            <div class="mt-12" style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="uw-store-chip">스시오마카세 강남점</span>
+              <span class="uw-store-chip">스시오마카세 판교점</span>
+              <span class="uw-store-chip">카페봄봄 신촌점</span>
+            </div>
+            <button class="btn btn-secondary btn-sm mt-12" style="width:100%" data-action="toast" data-toast-msg="매장별 문구를 순서대로 검수해요. 다음: 스시오마카세 판교점">3개 매장 검수 시작</button>
+          </section>
+
+          <!-- M03 · view: 최근 발송 결과 -->
+          <section class="uw-card" data-module="M03">
+            <h3 class="uw-section-title" style="font-size:15px">최근 발송 결과</h3>
+            <div class="uw-rows mt-8">
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">6월 단골 감사 쿠폰</div>
+                  <div class="uw-row-desc">발송 300건 · <b style="color:var(--green)">성공률 96%</b></div>
+                </div>
+                <span class="uw-badge b-green">발송 완료</span>
+              </div>
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">신메뉴 출시 안내</div>
+                  <div class="uw-row-desc">180건 · <b style="color:var(--green)">성공률 94%</b></div>
+                </div>
+                <span class="uw-badge b-green">발송 완료</span>
+              </div>
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">주말 영업시간 변경 안내</div>
+                  <div class="uw-row-desc">240건 · <b style="color:var(--green)">성공률 97%</b></div>
+                </div>
+                <span class="uw-badge b-green">발송 완료</span>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm mt-12" style="width:100%" data-action="toast" data-toast-msg="전체 내역은 W2에서 열려요">발송 내역 전체 보기</button>
+          </section>
+
+          <!-- M10 · view: 수신거부 목록 (P-C G13, OD-U11 잠정: 자동 반영=시스템·조회=여기) -->
+          <section class="uw-card" data-module="M10">
+            <h3 class="uw-section-title" style="font-size:15px">문자 안 받는 손님</h3>
+            <div class="uw-section-caption mt-8">수신거부 12명 · 발송 대상에서 자동으로 빠져요</div>
+            <button class="btn btn-ghost btn-sm mt-12" style="width:100%" data-action="open-modal" data-modal="modal-optout">목록 보기</button>
+          </section>
+
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 발송 대상 상세 모달 (M09 · L3) ==================== -->
+<div class="uw-modal-backdrop" id="modal-target">
+  <div class="uw-modal">
+    <div class="uw-modal-title">발송 대상 상세</div>
+    <div class="uw-modal-body">
+      누구에게 보낼지 정해요.
+      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:10px">
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="bc-target" checked> 전체 단골 320명</label>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="bc-target"> 최근 1개월 방문 180명</label>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="bc-target"> 6개월 이상 안 온 손님 95명</label>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="save-target">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 수신거부 목록 모달 (M10) -->
+<div class="uw-modal-backdrop" id="modal-optout">
+  <div class="uw-modal">
+    <div class="uw-modal-title">문자 안 받는 손님 12명</div>
+    <div class="uw-modal-body">
+      손님이 수신거부하면 자동으로 여기 모이고, 발송 대상에서 빠져요. 사장님이 따로 할 일은 없어요.
+      <div class="uw-rows mt-12">
+        <div class="uw-row" style="padding:9px 0"><div class="uw-row-body"><div style="font-size:13px;font-weight:600">010-****-3421</div><div class="uw-row-desc">7.2 수신거부</div></div></div>
+        <div class="uw-row" style="padding:9px 0"><div class="uw-row-body"><div style="font-size:13px;font-weight:600">010-****-8890</div><div class="uw-row-desc">6.28 수신거부</div></div></div>
+        <div class="uw-row" style="padding:9px 0"><div class="uw-row-body"><div style="font-size:13px;font-weight:600">010-****-1102</div><div class="uw-row-desc">6.15 수신거부</div></div></div>
+      </div>
+      <div class="uw-section-caption mt-8">외 9명 · 법에 따라 수신거부는 바로 반영돼요</div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 승인 토스트(레벨별 카피)·발송 대상 저장 (계약 §1: 화면 고유 표현 한정) ---- */
+(function () {
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-action]");
+    if (!a) return;
+    var act = a.getAttribute("data-action");
+    if (act === "approve-bc") {
+      var lv = document.body.getAttribute("data-level") || "L2";
+      var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+      var copy = (window.UW_COPY && window.UW_COPY["UW_BC_01"] && window.UW_COPY["UW_BC_01"]["approve.toast"]) || {};
+      var msg = copy[lv] || copy.L2 || copy.L1 || copy.L3 || "승인했어요.";
+      msg = msg.replace(/\{(\w+)\}/g, function (m, k) { return mock[k] != null ? mock[k] : m; });
+      window.UW.toast(msg);
+    }
+    if (act === "save-target") {
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("발송 대상을 저장했어요.");
+    }
+  });
+})();
+</script>
+</body>
+</html>

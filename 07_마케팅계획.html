@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마케팅 계획 — 비즈플래닛</title>
+<!-- UW_PL_01 · W2 · 스펙: planning/23 §6, 시안 슬라이드 6 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_PL_01">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html" class="is-active">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <a href="09_요금제비용.html" class="uw-lnb-user" style="text-decoration:none;color:inherit">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </a>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="01_홈.html" style="color:var(--ink-500);text-decoration:none">홈</a> › 마케팅 계획</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- M01 · view: AI 월 계획 요약 배너.
+           정책(2026-08-26): 승인 절차 폐지 — 매월 셋째주 월요일에 다음 달 계획(날짜+채널 슬롯만,
+           구체적 주제는 미정)이 자동 생성되고 전원(L1/L2/L3 모두)에게 알림만 감. 대행사 검수 단계도
+           없앰 — 대행사도 사장님과 동일하게 조정 권한만 가짐. 아무도 조정하지 않으면 생성된 대로
+           그대로 진행된다("확인" 버튼 자체가 없음). -->
+      <section class="uw-card uw-hero" data-module="M01" style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px">
+            <div class="uw-hero-title" style="font-size:18px;font-weight:800">✦ 7월 계획, 6월 15일(셋째주 월요일)에 자동으로 만들어졌어요</div>
+            <div class="uw-row-desc" data-copy="banner.desc" style="color:rgba(255,255,255,.85);margin-top:8px;font-size:13px;line-height:1.7"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+            <!-- M05 · edit · L2+ (fallback→L1 자동 대체 카드). 조정 모드 토글 — 실제 빼기/옮기기 동작함(스크립트 참조) -->
+            <button class="btn btn-on-blue" id="btn-adjust-toggle" data-module="M05" style="background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3)">조정하기</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- M07 · bulk · L3 전용: 다매장 계획 일괄 적용 -->
+      <section class="uw-agency-strip" data-module="M07" style="margin-top:12px">
+        <div class="s-title">이 계획을 다른 매장에도 적용</div>
+        <span class="uw-store-chip">🏪 스시오마카세 판교점</span>
+        <span class="uw-store-chip">🏪 카페봄봄 신촌점</span>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto" data-action="toast" data-toast-msg="매장별로 같은 일정을 적용해요.">다른 매장에도 적용</button>
+      </section>
+
+      <!-- M02 · view: 월 캘린더 -->
+      <section class="uw-card" data-module="M02" style="margin-top:16px;padding:20px 22px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="다른 달은 W3에서 열려요" aria-label="이전 달">‹</button>
+          <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em">2026년 7월</div>
+          <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="다른 달은 W3에서 열려요" aria-label="다음 달">›</button>
+
+          <!-- M08 · advanced · L3: 계획 룰 설정 -->
+          <button class="btn btn-ghost btn-sm" data-module="M08" style="margin-left:auto" data-action="open-modal" data-modal="modal-rule">⚙ 계획 룰</button>
+
+          <div style="display:flex;align-items:center;gap:14px;font-size:12px;color:var(--ink-600);width:100%;justify-content:flex-end;order:3;margin-top:2px">
+            <span style="display:flex;align-items:center;gap:5px"><i style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block"></i>블로그</span>
+            <span style="display:flex;align-items:center;gap:5px"><i style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></i>문자</span>
+            <span style="display:flex;align-items:center;gap:5px"><i style="width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--ink-400);display:inline-block"></i>주제 미정</span>
+          </div>
+        </div>
+
+        <div class="uw-cal-grid" style="margin-top:14px" id="cal-grid"></div>
+        <div class="uw-agenda" id="cal-agenda" style="margin-top:14px"></div>
+
+        <!-- 2026-08-26 결정: '일정 직접 추가'는 없앰 — 직접 만들고 싶은 콘텐츠가 있으면
+             03 콘텐츠만들기/04 비즈챗문자로 바로 가면 되므로, 이 화면은 자동 생성된 계획을
+             보고 조정(빼기/옮기기)만 하는 역할로 한정 -->
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 일정 미리보기 모달 (M03) ==================== -->
+<div class="uw-modal-backdrop" id="modal-preview" data-module="M03">
+  <div class="uw-modal">
+    <div class="uw-modal-title">일정 미리보기</div>
+    <div class="uw-modal-body">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="uw-badge" id="pv-badge" style="background:var(--blue-50);color:var(--blue)"></span>
+        <span style="font-size:13px;color:var(--ink-500)" id="pv-date"></span>
+      </div>
+      <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;margin-top:10px" id="pv-title"></div>
+      <div class="uw-preview-box" id="pv-desc">이 글은 예정일 전날 검토함에 도착해요</div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 계획 룰 모달 (M08 · L3) ==================== -->
+<div class="uw-modal-backdrop" id="modal-rule">
+  <div class="uw-modal">
+    <div class="uw-modal-title">계획 룰 설정</div>
+    <div class="uw-modal-body">
+      다음 달 계획을 만들 때 적용할 기준이에요.
+      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--ink-700);margin-bottom:8px">주당 블로그 횟수</div>
+          <div style="display:flex;gap:14px">
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="radio" name="rule-blog"> 1회</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="radio" name="rule-blog" checked> 2회</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="radio" name="rule-blog"> 3회</label>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--ink-700);margin-bottom:8px">문자 월 제안 횟수</div>
+          <div style="font-size:12px;color:var(--ink-500);margin:-4px 0 8px">여기서 정하는 건 '몇 번 제안할지'예요. 실제 발송은 매번 검토·승인을 거쳐요.</div>
+          <div style="display:flex;gap:14px">
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="radio" name="rule-sms"> 1회</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="radio" name="rule-sms" checked> 2회</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="radio" name="rule-sms"> 3회</label>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-500);margin-top:10px">채널 비중은 매장 상황에 따라 AI가 자동으로 조정해요.</div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="save-plan-rule">저장</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* 화면 고유 표현: 캘린더 그리드 (계약 §1 — 인라인 스타일 최소 허용) */
+  .uw-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .uw-cal-head { font-size: 12px; font-weight: 700; color: var(--ink-500); text-align: left; padding: 4px 6px; }
+  .uw-cal-head.is-sun { color: var(--red); }
+  .uw-cal-head.is-sat { color: var(--blue); }
+  .uw-cal-cell { min-height: 84px; border-radius: 10px; background: var(--inset); padding: 6px 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+  .uw-cal-cell.is-out { opacity: .45; }
+  .uw-cal-cell.is-today { border: 2px solid var(--blue); padding: 5px 5px 7px; background: var(--white); }
+  .uw-cal-num { font-size: 12px; font-weight: 700; color: var(--ink-600); }
+  .uw-cal-num.is-sun { color: var(--red); }
+  .uw-cal-num.is-sat { color: var(--blue); }
+  .uw-cal-chip { font-size: 11px; font-weight: 600; border-radius: 7px; padding: 3px 6px; cursor: pointer; line-height: 1.3; }
+  .uw-cal-chip.c-blog { background: var(--blue-50); color: var(--blue); }
+  .uw-cal-chip.c-sms { background: var(--green-bg); color: var(--green); }
+  .uw-cal-chip.is-pending { background: transparent; border: 1.5px dashed var(--ink-300); color: var(--ink-500); }
+  .uw-cal-chip.is-adjust { position: relative; padding-right: 20px; }
+  .uw-cal-chip-x { position: absolute; right: 3px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border-radius: 50%; background: rgba(0,0,0,.12); font-size: 10px; line-height: 14px; text-align: center; }
+  .uw-agenda-row.is-pending .uw-agenda-title { color: var(--ink-500); }
+  /* v2 모바일 (26 ISS-5): 칩 → 색 점, 상세는 아래 아젠다 리스트에서 */
+  @media (max-width: 767px) {
+    .uw-cal-grid { gap: 3px; }
+    .uw-cal-cell { min-height: 42px; padding: 4px; }
+    .uw-cal-cell.is-today { padding: 3px; }
+    .uw-cal-chip { font-size: 0; width: 8px; height: 8px; padding: 0; border-radius: 50%; }
+  }
+  .uw-agenda-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--divider); cursor: pointer; }
+  .uw-agenda-row:last-child { border-bottom: 0; }
+  .uw-agenda-day { font-size: 13px; font-weight: 800; width: 44px; flex-shrink: 0; }
+  .uw-agenda-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .uw-agenda-title { font-size: 14px; font-weight: 600; }
+</style>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 월 캘린더 렌더 + 일정 미리보기 + 조정 모드 (계약 §1: 화면 고유 표현 한정) ----
+   정책(2026-08-26): 승인 절차 없음 — 매월 셋째주 월요일에 슬롯(날짜+채널)만 자동 생성되고,
+   구체적 주제는 발행 TOPIC_LEAD_DAYS일 전에 AI가 정해서 채운다. 그 전까지는 "예정" 상태로만 표시.
+   [조정하기]는 토스트가 아니라 실제 조정 모드를 켠다 — 슬롯 빼기(×) / 다른 날짜로 옮기기(칸 클릭). */
+(function () {
+  var CHANNEL = {
+    blog: { cls: "c-blog", label: "네이버 블로그", short: "블로그", dot: "var(--blue)" },
+    sms:  { cls: "c-sms",  label: "비즈챗 문자",   short: "문자",   dot: "var(--green)" }
+  };
+  var EVENTS = [
+    { day: 1,  ch: "blog", title: "여름 신메뉴 소개",   today: true },
+    { day: 4,  ch: "sms",  title: "재방문 쿠폰 문자" },
+    { day: 8,  ch: "blog" },
+    { day: 15, ch: "blog" },
+    { day: 18, ch: "sms" },
+    { day: 22, ch: "blog" },
+    { day: 29, ch: "blog" }
+  ];
+  var DAY_HEAD = ["일", "월", "화", "수", "목", "금", "토"];
+  var TODAY_DAY = 1; // 2026-07-01 = 오늘(시안 기준)
+  var TOPIC_LEAD_DAYS = 3; // 발행 며칠 전에 주제가 채워지는지
+  var adjustMode = false;
+  var moving = null; // 조정 모드에서 "옮기기 대기 중"인 이벤트
+
+  function isReady(day) { return (day - TODAY_DAY) <= TOPIC_LEAD_DAYS; }
+  function findEvent(day, ch) {
+    for (var i = 0; i < EVENTS.length; i++) if (EVENTS[i].day === day && EVENTS[i].ch === ch) return EVENTS[i];
+    return null;
+  }
+
+  function chipLabel(ev) { return isReady(ev.day) ? ev.title : (CHANNEL[ev.ch].short + " 예정"); }
+
+  function renderCalendar() {
+    var grid = document.getElementById("cal-grid");
+    var html = "";
+    DAY_HEAD.forEach(function (d, i) {
+      var cls = i === 0 ? " is-sun" : (i === 6 ? " is-sat" : "");
+      html += '<div class="uw-cal-head' + cls + '">' + d + "</div>";
+    });
+    // 2026-07-01은 수요일 → 앞에 6/28(일)~6/30(화) 3칸의 이전달 여백
+    var LEAD = 3;
+    var DAYS_IN_MONTH = 31;
+    var PREV_MONTH_LAST = 30; // 2026-06 마지막 날
+    var TOTAL_CELLS = 35; // 5주
+
+    for (var i = 0; i < TOTAL_CELLS; i++) {
+      var dow = i % 7;
+      var dayNum = i - LEAD + 1;
+      var isOut = dayNum < 1 || dayNum > DAYS_IN_MONTH;
+      var displayNum = isOut ? (dayNum < 1 ? PREV_MONTH_LAST + dayNum : dayNum - DAYS_IN_MONTH) : dayNum;
+      var isToday = !isOut && dayNum === TODAY_DAY;
+      var numCls = dow === 0 ? " is-sun" : (dow === 6 ? " is-sat" : "");
+
+      var chips = "";
+      if (!isOut) {
+        EVENTS.filter(function (ev) { return ev.day === dayNum; }).forEach(function (ev) {
+          var c = CHANNEL[ev.ch];
+          var pendingCls = isReady(ev.day) ? "" : " is-pending";
+          var adjustCls = adjustMode ? " is-adjust" : "";
+          chips += '<span class="uw-cal-chip ' + c.cls + pendingCls + adjustCls + '" data-day="' + ev.day + '" data-ch="' + ev.ch + '">' + chipLabel(ev) +
+            (adjustMode ? '<span class="uw-cal-chip-x" data-remove data-day="' + ev.day + '" data-ch="' + ev.ch + '">×</span>' : '') + "</span>";
+        });
+      }
+
+      html += '<div class="uw-cal-cell' + (isOut ? " is-out" : "") + (isToday ? " is-today" : "") + '" data-cal-cell data-day="' + (isOut ? "" : dayNum) + '">' +
+        '<div class="uw-cal-num' + numCls + '">' + displayNum + "</div>" + chips + "</div>";
+    }
+    grid.innerHTML = html;
+  }
+
+  function openPreview(ev) {
+    var c = CHANNEL[ev.ch];
+    var ready = isReady(ev.day);
+    document.getElementById("pv-badge").textContent = c.label;
+    document.getElementById("pv-badge").style.color = c.dot;
+    document.getElementById("pv-date").textContent = "2026년 7월 " + ev.day + "일 예정";
+    document.getElementById("pv-title").textContent = ready ? ev.title : ("주제는 발행 " + TOPIC_LEAD_DAYS + "일 전에 AI가 정해요");
+    document.getElementById("pv-title").style.color = ready ? "" : "var(--ink-500)";
+    document.getElementById("pv-desc").textContent = ready
+      ? "이 글은 예정일 전날 검토함에 도착해요"
+      : ("지금은 " + c.label + " 슬롯만 정해진 상태예요. 조정하기에서 옮기거나 뺄 수 있어요");
+    document.getElementById("modal-preview").classList.add("is-open");
+  }
+
+  function setAdjustMode(on) {
+    adjustMode = on;
+    moving = null;
+    var btn = document.getElementById("btn-adjust-toggle");
+    if (btn) btn.textContent = on ? "완료" : "조정하기";
+    renderCalendar();
+    renderAgenda();
+  }
+
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "btn-adjust-toggle") { setAdjustMode(!adjustMode); return; }
+
+    var removeBtn = e.target.closest("[data-remove]");
+    if (removeBtn) {
+      var rDay = +removeBtn.getAttribute("data-day"), rCh = removeBtn.getAttribute("data-ch");
+      EVENTS = EVENTS.filter(function (ev) { return !(ev.day === rDay && ev.ch === rCh); });
+      moving = null;
+      renderCalendar(); renderAgenda();
+      window.UW.toast("일정을 뺐어요");
+      return;
+    }
+
+    var chip = e.target.closest(".uw-cal-chip, .uw-cal-chip-proxy");
+    if (chip) {
+      var ev = findEvent(+chip.getAttribute("data-day"), chip.getAttribute("data-ch"));
+      if (!ev) return;
+      if (adjustMode) {
+        moving = ev;
+        window.UW.toast("옮길 날짜 칸을 눌러주세요");
+        return;
+      }
+      openPreview(ev);
+      return;
+    }
+
+    var cell = e.target.closest("[data-cal-cell]");
+    if (cell && adjustMode && moving && cell.getAttribute("data-day")) {
+      moving.day = +cell.getAttribute("data-day");
+      moving = null;
+      renderCalendar(); renderAgenda();
+      window.UW.toast("일정을 옮겼어요");
+      return;
+    }
+
+    var a = e.target.closest("[data-action]");
+    if (!a) return;
+    var act = a.getAttribute("data-action");
+    if (act === "save-plan-rule") {
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("계획 룰을 저장했어요. 다음 달 계획부터 반영돼요.");
+    }
+  });
+
+  function renderAgenda() {
+    var el = document.getElementById("cal-agenda");
+    if (!el) return;
+    var sorted = EVENTS.slice().sort(function (a, b) { return a.day - b.day; });
+    el.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--ink-600);margin-bottom:4px">이번 달 일정 ' + EVENTS.length + '건</div>' +
+      sorted.map(function (ev) {
+        var c = CHANNEL[ev.ch];
+        var ready = isReady(ev.day);
+        return '<div class="uw-agenda-row uw-cal-chip-proxy' + (ready ? "" : " is-pending") + '" data-day="' + ev.day + '" data-ch="' + ev.ch + '">' +
+          '<span class="uw-agenda-day">7.' + ev.day + '</span>' +
+          '<span class="uw-agenda-dot" style="background:' + c.dot + '"></span>' +
+          '<span class="uw-agenda-title">' + chipLabel(ev) + '</span>' +
+          (adjustMode ? '<span class="uw-cal-chip-x" data-remove data-day="' + ev.day + '" data-ch="' + ev.ch + '" style="position:static;margin-left:auto">×</span>'
+            : '<span style="margin-left:auto;font-size:12px;color:var(--ink-400)">' + c.label + '</span>') + '</div>';
+      }).join("");
+  }
+  document.addEventListener("DOMContentLoaded", function () { renderCalendar(); renderAgenda(); });
+})();
+</script>
+</body>
+</html>

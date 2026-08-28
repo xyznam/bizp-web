@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 계정 — 비즈플래닛</title>
+<!-- UW_MY_03 · P-A · 스펙: planning/27 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_MY_03">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="01_홈.html" style="color:var(--ink-500);text-decoration:none">홈</a> › 내 계정</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔</button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-cols">
+
+        <!-- ========== 좌측 컬럼 ========== -->
+        <div class="uw-col-main">
+
+          <!-- M01 · view: 내 정보.
+               정책(2026-08-26): 이름은 수정 불가(다른 사람도 이 이름으로 나를 식별하므로 임의 변경 금지).
+               휴대폰은 초대 가입 매칭에 쓰이는 식별 키라 단순 텍스트 수정이 아니라 새 번호 인증을 거쳐야 함
+               (아래 휴대폰 행의 [변경] 버튼, modal-change-phone 참조). 그래서 헤더의 일괄 [수정] 버튼은 없앰 -->
+          <section class="uw-card" data-module="M01" style="padding:20px 24px">
+            <h3 class="uw-section-title" style="font-size:16px">내 정보</h3>
+
+            <div style="display:flex;align-items:center;gap:14px;margin-top:18px">
+              <div class="u-avatar" aria-hidden="true" data-bind="avatarInitial" style="width:52px;height:52px;font-size:18px;border-radius:var(--radius-chip);background:var(--blue-50);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">봄</div>
+              <div>
+                <!-- 이 화면 전용 실명 필드(realName). 다른 화면의 data-bind="ownerName"(매장명+역할 합성값)과는 다름.
+                     2026-08-26: 이름만 노출(부제로 매장 컨텍스트를 더 넣지 않음) — 아래 '소속' 행이 그 정보를 더 정확하게 대신함 -->
+                <div style="font-size:17px;font-weight:800;letter-spacing:-0.02em" data-bind="realName">사장님</div>
+              </div>
+            </div>
+
+            <div class="uw-rows mt-16">
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div style="font-size:12px;color:var(--ink-500)">이메일</div>
+                  <div style="font-size:14px;font-weight:700;margin-top:2px" data-bind="email">-</div>
+                </div>
+              </div>
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div style="font-size:12px;color:var(--ink-500)">휴대폰</div>
+                  <div style="font-size:14px;font-weight:700;margin-top:2px">010-****-1234</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="btn-open-phone-modal" data-action="open-modal" data-modal="modal-change-phone">변경</button>
+              </div>
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div style="font-size:12px;color:var(--ink-500)">가입일</div>
+                  <div style="font-size:14px;font-weight:700;margin-top:2px">2026.03.15</div>
+                </div>
+              </div>
+              <!-- 소속 : 회원정책(매장구조_회원정책.md)의 매장/대행사-역할 매핑을 그대로 노출.
+                   1:N 매핑이라 여러 줄일 수 있음(예: 대행사 직원이면서 동시에 다른 매장 대표) -->
+              <div class="uw-row" style="padding:11px 0;align-items:flex-start">
+                <div class="uw-row-body">
+                  <div style="font-size:12px;color:var(--ink-500)">소속</div>
+                  <div id="affiliation-list" style="margin-top:4px"></div>
+                  <!-- 프로토타입 전용 데모 스위치 (2026-08-27 신설) : L1/L2/L3 모두 본인이 어떤 매장의
+                       대표라, 회원 탈퇴가 항상 차단 상태로만 보임. 정상 탈퇴 경로(비대표 소속)를 보여주기
+                       위한 화면 전용 토글 — 실제 레벨/소속 데이터를 바꾸지 않고 이 화면 표시만 잠깐 바꿈 -->
+                  <div class="uw-lvl-switch" id="affil-demo-switch" title="프로토타입 전용 — 회원 탈퇴 데모용 소속 전환" style="margin-top:10px;display:inline-flex">
+                    <button type="button" data-affil-demo="real" class="is-on">내 소속</button>
+                    <button type="button" data-affil-demo="nonowner">비대표 예시로 보기</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- M03 · edit(전 레벨 예외): 보안 -->
+          <section class="uw-card" data-module="M03" style="margin-top:16px;padding:20px 24px">
+            <h3 class="uw-section-title" style="font-size:15px">보안</h3>
+            <div class="uw-rows mt-8">
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div style="font-size:14px;font-weight:700">비밀번호</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-change-pw">변경</button>
+              </div>
+              <div class="uw-row" style="padding:11px 0">
+                <div class="uw-row-body">
+                  <div style="font-size:14px;font-weight:700">로그인 기록</div>
+                  <div class="uw-row-desc">마지막 로그인 오늘 08:52 · 이 기기</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ========== 우측 컬럼 ========== -->
+        <aside class="uw-col-side">
+
+          <!-- M04 · view: 바로가기 -->
+          <section class="uw-card" data-module="M04">
+            <h3 class="uw-section-title" style="font-size:15px">바로가기</h3>
+            <div class="uw-rows mt-8">
+              <a class="uw-row" href="18_알림센터.html" style="padding:11px 0">
+                <div class="uw-row-chip">🔔</div>
+                <div class="uw-row-body"><div class="uw-row-title" style="font-size:14px">알림 설정</div></div>
+                <span class="uw-row-arrow">›</span>
+              </a>
+              <a class="uw-row" href="09_요금제비용.html" style="padding:11px 0">
+                <div class="uw-row-chip">💳</div>
+                <div class="uw-row-body"><div class="uw-row-title" style="font-size:14px">요금제·비용</div></div>
+                <span class="uw-row-arrow">›</span>
+              </a>
+              <a class="uw-row" href="20_함께쓰는사람.html" style="padding:11px 0">
+                <div class="uw-row-chip">👥</div>
+                <div class="uw-row-body"><div class="uw-row-title" style="font-size:14px">함께 쓰는 사람</div></div>
+                <span class="uw-row-arrow">›</span>
+              </a>
+            </div>
+          </section>
+
+          <!-- M05 · view: 로그아웃.
+               정책(2026-08-27): "서비스 해지 안내"(임시 토스트뿐이던 링크) 삭제 — 매장 해지는 이제
+               09_요금제비용 › 24_해지에서 실제로 처리됨(바로가기 카드 참조). 이 자리는 대신 회원 탈퇴
+               전용 — 매장 해지(매장 단위, 유료 구독)와 회원 탈퇴(개인 계정 단위)는 서로 다른 개념이라 분리 -->
+          <section data-module="M05" style="margin-top:16px">
+            <button class="btn btn-ghost" style="width:100%" data-action="open-modal" data-modal="modal-logout">로그아웃</button>
+            <div style="text-align:center;margin-top:12px">
+              <a href="#" id="btn-open-withdraw" style="font-size:12px;color:var(--ink-500);text-decoration:underline" data-action="open-modal" data-modal="modal-withdraw">회원 탈퇴</a>
+            </div>
+          </section>
+
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 모달: 휴대폰 번호 변경 (M02) ====================
+     정책(2026-08-26): 휴대폰은 초대 가입 매칭(이름+전화번호)에 쓰이는 식별 키라 자유 텍스트 수정이 아니라
+     ①현재 비밀번호로 본인 확인 + ②새 번호 인증번호 확인, 둘 다 거쳐야 바뀜(19 초대가입/21 회원가입의
+     본인 인증 패턴 재사용). 이름 수정은 완전히 없앰(다른 사람도 이 이름으로 나를 식별하므로) -->
+<div class="uw-modal-backdrop" id="modal-change-phone" data-module="M02">
+  <div class="uw-modal">
+    <div class="uw-modal-title">휴대폰 번호 변경</div>
+    <div class="uw-modal-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-600)">현재 비밀번호</label>
+          <input type="password" id="phone-change-pw-input" style="width:100%;margin-top:6px;height:44px;border:1px solid var(--input-border);border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px">
+          <div style="font-size:12px;color:var(--ink-500);margin-top:6px">본인 확인을 위해 비밀번호를 입력해 주세요</div>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-600)">새 휴대폰 번호</label>
+          <input type="text" id="new-phone-input" placeholder="010-0000-0000" style="width:100%;margin-top:6px;height:44px;border:1px solid var(--input-border);border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px">
+        </div>
+        <button class="btn btn-secondary btn-sm" style="width:100%" data-action="request-phone-otp">인증번호 받기</button>
+        <div id="phone-otp-row" style="display:none">
+          <label style="font-size:12px;font-weight:700;color:var(--ink-600)">인증번호</label>
+          <input type="text" id="phone-otp-input" style="width:100%;margin-top:6px;height:44px;border:1px solid var(--input-border);border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px">
+          <div style="font-size:12px;color:var(--ink-500);margin-top:6px">3분 안에 입력해 주세요</div>
+        </div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" id="btn-confirm-phone" data-action="confirm-phone-change" disabled>변경하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 모달: 비밀번호 변경 (M03) ==================== -->
+<div class="uw-modal-backdrop" id="modal-change-pw">
+  <div class="uw-modal">
+    <div class="uw-modal-title">비밀번호 변경</div>
+    <div class="uw-modal-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-600)">현재 비밀번호</label>
+          <input type="password" style="width:100%;margin-top:6px;height:44px;border:1px solid var(--input-border);border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-600)">새 비밀번호</label>
+          <input type="password" style="width:100%;margin-top:6px;height:44px;border:1px solid var(--input-border);border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink-600)">새 비밀번호 확인</label>
+          <input type="password" style="width:100%;margin-top:6px;height:44px;border:1px solid var(--input-border);border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px">
+          <div style="font-size:12px;color:var(--ink-500);margin-top:6px">8자 이상, 숫자 포함</div>
+        </div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="save-password">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 모달: 로그아웃 확인 (M05) ==================== -->
+<div class="uw-modal-backdrop" id="modal-logout">
+  <div class="uw-modal">
+    <div class="uw-modal-title">로그아웃할까요?</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-logout">로그아웃</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 모달: 회원 탈퇴 (M06, 신설 2026-08-27) ====================
+     정책: 매장 해지(24_해지, 매장 단위 유료 구독)와 회원 탈퇴(이 모달, 개인 로그인 계정)는 별개 개념.
+     A안 확정: 이 사람이 어떤 매장이든 대표(Owner)로 등록돼 있으면 탈퇴를 막는다 — 대표가 없어진 매장이
+     방치되는 걸 막기 위함. 대표 위임은 어드민에서만 처리 가능해 셀프서비스가 없으므로 11_도움말의
+     문의 남기기로 유도(신규 유형 칩 "매장 위임" 추가, ?inquiry= 딥링크로 자동 선택). -->
+<div class="uw-modal-backdrop" id="modal-withdraw" data-module="M06">
+  <div class="uw-modal">
+    <div class="uw-modal-title">회원 탈퇴</div>
+    <div class="uw-modal-body">
+      <div style="font-size:13px;color:var(--ink-500);line-height:1.7">
+        탈퇴하면 이 로그인 계정을 다시 쓸 수 없어요. 매장 자체를 그만 쓰시려는 거면
+        <a href="09_요금제비용.html" style="color:var(--blue)">요금제·비용</a>에서 해지해 주세요.
+      </div>
+      <div id="withdraw-blocked-note" style="display:none;margin-top:14px;background:var(--orange-bg);border-radius:var(--radius-tile);padding:14px 16px;font-size:13px;line-height:1.7;color:var(--ink-700)"></div>
+      <div id="withdraw-ok-note" style="display:none;margin-top:14px;font-size:13px;color:var(--ink-600);line-height:1.7">탈퇴하면 계정 정보가 사라지고, 다시 로그인할 수 없어요.</div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-secondary btn-sm" id="btn-withdraw-inquiry" data-action="withdraw-inquiry" style="display:none">문의하기</button>
+      <button class="btn btn-danger-soft btn-sm" id="btn-withdraw-confirm" data-action="confirm-withdraw" style="display:none">탈퇴하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 내 정보·비밀번호 저장, 로그아웃 이동, 소속 목록 렌더 (계약 §1: 화면 고유 표현 한정) ---- */
+(function () {
+  // 프로토타입 전용 데모 상태(위 affil-demo-switch) — 실제 mock을 바꾸지 않고 이 화면 표시만 잠깐 바꿈
+  var DEMO_NONOWNER_AFFIL = [{ name: "리사 헤어살롱 서초점", type: "store", role: "매니저" }];
+  var affilDemoMode = "real";
+
+  function effectiveAffiliations() {
+    if (affilDemoMode === "nonowner") return DEMO_NONOWNER_AFFIL;
+    var lv = document.body.getAttribute("data-level") || "L2";
+    var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+    return mock.affiliations || [];
+  }
+
+  function renderAffiliations() {
+    var el = document.getElementById("affiliation-list");
+    if (!el || !window.UW_MOCK) return;
+    var list = effectiveAffiliations();
+    el.innerHTML = list.map(function (a) {
+      var icon = a.type === "agency" ? "🤝" : "🏪";
+      return '<div style="font-size:14px;font-weight:700;margin-top:2px">' + icon + " " + a.name +
+        ' <span style="font-weight:600;color:var(--ink-500)">· ' + a.role + "</span></div>";
+    }).join("");
+  }
+  document.addEventListener("uw:levelchange", function () {
+    // 레벨을 바꾸면 데모 스위치도 "내 소속"으로 리셋(다른 레벨인데 이전 데모 상태가 남아있으면 헷갈림)
+    affilDemoMode = "real";
+    var sw = document.getElementById("affil-demo-switch");
+    if (sw) sw.querySelectorAll("[data-affil-demo]").forEach(function (b) {
+      b.classList.toggle("is-on", b.getAttribute("data-affil-demo") === "real");
+    });
+    renderAffiliations();
+  });
+  document.addEventListener("DOMContentLoaded", renderAffiliations);
+
+  /* ---- 회원 탈퇴 모달: 매장 대표(Owner)면 차단 ----
+     "대표"는 이 데이터 모델에서 매장당 1명뿐인 소유자 개념(매장구조_회원정책.md §3) — 여러 명이
+     동시에 대표일 수 없으므로 "대표로 등록돼 있으면 곧 유일한 대표"라고 봐도 된다. */
+  function renderWithdrawModal() {
+    var ownerStores = effectiveAffiliations().filter(function (a) { return a.type === "store" && a.role === "대표"; });
+    var blockedNote = document.getElementById("withdraw-blocked-note");
+    var okNote = document.getElementById("withdraw-ok-note");
+    var inquiryBtn = document.getElementById("btn-withdraw-inquiry");
+    var confirmBtn = document.getElementById("btn-withdraw-confirm");
+    if (!blockedNote || !okNote || !inquiryBtn || !confirmBtn) return;
+    if (ownerStores.length) {
+      var names = ownerStores.map(function (s) { return s.name; }).join(", ");
+      blockedNote.textContent = "🚫 " + names + "의 대표로 등록돼 있어 지금은 탈퇴할 수 없어요. 대표를 다른 분에게 넘긴 뒤 다시 시도해 주세요. 대표 위임은 상담을 통해 도와드려요.";
+      blockedNote.style.display = "block";
+      okNote.style.display = "none";
+      inquiryBtn.style.display = "";
+      confirmBtn.style.display = "none";
+    } else {
+      blockedNote.style.display = "none";
+      okNote.style.display = "block";
+      inquiryBtn.style.display = "none";
+      confirmBtn.style.display = "";
+    }
+  }
+  document.addEventListener("uw:levelchange", renderWithdrawModal);
+  document.addEventListener("DOMContentLoaded", renderWithdrawModal);
+
+  document.addEventListener("click", function (e) {
+    var demoBtn = e.target.closest("[data-affil-demo]");
+    if (demoBtn) {
+      affilDemoMode = demoBtn.getAttribute("data-affil-demo");
+      demoBtn.parentNode.querySelectorAll("[data-affil-demo]").forEach(function (b) {
+        b.classList.toggle("is-on", b === demoBtn);
+      });
+      renderAffiliations();
+      renderWithdrawModal();
+      return;
+    }
+    if (e.target.closest("#btn-open-withdraw")) renderWithdrawModal();
+    if (e.target.id === "btn-open-phone-modal") {
+      // 모달 열 때마다 이전 입력/인증 상태 초기화
+      document.getElementById("phone-change-pw-input").value = "";
+      document.getElementById("new-phone-input").value = "";
+      document.getElementById("phone-otp-input").value = "";
+      document.getElementById("phone-otp-row").style.display = "none";
+      document.getElementById("btn-confirm-phone").disabled = true;
+    }
+
+    var a = e.target.closest("[data-action]");
+    if (!a) return;
+    var act = a.getAttribute("data-action");
+    if (act === "request-phone-otp") {
+      var curPw = document.getElementById("phone-change-pw-input").value;
+      var newPhone = document.getElementById("new-phone-input").value.trim();
+      if (!curPw) { window.UW.toast("현재 비밀번호를 입력해 주세요"); return; }
+      if (!newPhone) { window.UW.toast("새 휴대폰 번호를 입력해 주세요"); return; }
+      document.getElementById("phone-otp-row").style.display = "block";
+      document.getElementById("btn-confirm-phone").disabled = false;
+      window.UW.toast("인증번호를 보냈어요");
+    }
+    if (act === "confirm-phone-change") {
+      window.UW.toast("휴대폰 번호를 변경했어요");
+      var bp = a.closest(".uw-modal-backdrop");
+      if (bp) bp.classList.remove("is-open");
+    }
+    if (act === "save-password") {
+      window.UW.toast("비밀번호를 저장했어요");
+      var b2 = a.closest(".uw-modal-backdrop");
+      if (b2) b2.classList.remove("is-open");
+    }
+    if (act === "confirm-logout") {
+      location.href = "21_로그인.html";
+    }
+    if (act === "withdraw-inquiry") {
+      location.href = "11_도움말.html?inquiry=" + encodeURIComponent("매장 위임");
+    }
+    if (act === "confirm-withdraw") {
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("탈퇴 처리됐어요. 그동안 이용해 주셔서 감사해요.");
+      setTimeout(function () { location.href = "21_로그인.html"; }, 600);
+    }
+  });
+})();
+</script>
+</body>
+</html>

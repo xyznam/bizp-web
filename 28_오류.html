@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오류 안내 — 비즈플래닛</title>
+<!-- UW_MY_06 · P-B/P-C · G12(공통 오류 템플릿) · 계약: planning/24 -->
+<!-- 이 화면은 오류·차단 상황의 착지점이라 LNB·탑바 셸이 없다 (21_로그인과 동일한 예외 화면) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* v2 반응형: 중앙 카드형 — 21_로그인과 동일한 레이아웃 패턴 */
+.err-wrap { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 40px 20px; }
+.err-card-outer { width: 100%; max-width: 440px; text-align: center; }
+@media (max-width: 767px) {
+  .err-wrap { padding: 24px 16px; align-items: flex-start; }
+}
+/* 데모용 상태 전환 칩 — uw-lvl-switch와 같은 스타일이지만 별도 클래스(레벨 스위처 자동 바인딩과 충돌 방지) */
+.err-switch { position: fixed; top: 16px; right: 16px; z-index: 80; display: flex; background: var(--inset); border-radius: 10px; padding: 3px; gap: 2px; }
+.err-switch button { border: 0; background: transparent; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink-500); padding: 5px 10px; border-radius: 8px; cursor: pointer; }
+.err-switch button.is-on { background: var(--white); color: var(--blue); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.err-state { display: none; }
+.err-state.is-on { display: block; }
+</style>
+</head>
+<body data-screen="UW_MY_06">
+
+<!-- 데모용 상태 전환 칩 (고정 우상단) -->
+<div class="err-switch" title="프로토타입 전용 — 오류 상태 전환 데모">
+  <button data-err-state="404" class="is-on">못 찾음</button>
+  <button data-err-state="perm">권한 없음</button>
+  <button data-err-state="session">로그인 만료</button>
+  <button data-err-state="maint">점검 중</button>
+</div>
+
+<div class="err-wrap">
+  <div class="err-card-outer">
+
+    <!-- 로고 -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:800;letter-spacing:-0.02em;margin-bottom:28px">
+      <span class="uw-logo-mark">✦</span> 비즈플래닛
+    </div>
+
+    <!-- M01 · view: 오류 상태 카드(404·권한 없음·세션 만료·점검) -->
+    <div class="uw-card" data-module="M01" style="padding:32px 28px">
+
+      <div class="err-state is-on" data-state="404">
+        <div style="font-size:40px">🧭</div>
+        <h1 class="uw-h1" style="margin-top:14px">페이지를 찾지 못했어요</h1>
+        <p style="font-size:14px;color:var(--ink-500);margin-top:8px;line-height:1.6">주소가 바뀌었거나 없는 페이지예요</p>
+        <a href="01_홈.html" class="btn btn-primary" style="width:100%;margin-top:22px;text-decoration:none">홈으로 가기</a>
+      </div>
+
+      <div class="err-state" data-state="perm">
+        <div style="font-size:40px">🔒</div>
+        <h1 class="uw-h1" style="margin-top:14px">볼 수 없는 화면이에요</h1>
+        <p style="font-size:14px;color:var(--ink-500);margin-top:8px;line-height:1.6">사장님 또는 대행사만 볼 수 있어요. 권한이 필요하면 사장님께 요청해 보세요</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
+          <a href="01_홈.html" class="btn btn-primary" style="width:100%;text-decoration:none">홈으로 가기</a>
+          <button class="btn btn-ghost" style="width:100%" data-action="toast" data-toast-msg="사장님에게 권한을 요청했어요. 승인되면 알림으로 알려드릴게요.">권한 요청하기</button>
+        </div>
+      </div>
+
+      <div class="err-state" data-state="session">
+        <div style="font-size:40px">⏰</div>
+        <h1 class="uw-h1" style="margin-top:14px">오래 자리를 비우셨네요</h1>
+        <p style="font-size:14px;color:var(--ink-500);margin-top:8px;line-height:1.6">안전을 위해 자동으로 로그아웃했어요. 다시 로그인해 주세요</p>
+        <a href="21_로그인.html" class="btn btn-primary" style="width:100%;margin-top:22px;text-decoration:none">다시 로그인</a>
+      </div>
+
+      <div class="err-state" data-state="maint">
+        <div style="font-size:40px">🔧</div>
+        <h1 class="uw-h1" style="margin-top:14px">잠깐 점검 중이에요</h1>
+        <p style="font-size:14px;color:var(--ink-500);margin-top:8px;line-height:1.6">오전 4시까지 서비스를 다듬고 있어요. 조금만 기다려 주세요</p>
+        <button class="btn btn-ghost" style="width:100%;margin-top:22px" onclick="location.reload()">새로고침</button>
+      </div>
+
+    </div>
+
+    <!-- 하단 캡션 -->
+    <div style="text-align:center;margin-top:18px">
+      <span style="font-size:12px;color:var(--ink-400)">계속 문제가 있으면 <a href="11_도움말.html" style="color:var(--ink-500);text-decoration:underline">도움말</a>에서 문의해 주세요</span>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 오류 상태 전환 칩 (계약 §1: 화면 고유 표현 한정) ---- */
+(function () {
+  document.querySelector(".err-switch").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-err-state]");
+    if (!b) return;
+    var state = b.getAttribute("data-err-state");
+    document.querySelectorAll(".err-switch button").forEach(function (x) {
+      x.classList.toggle("is-on", x === b);
+    });
+    document.querySelectorAll(".err-state").forEach(function (s) {
+      s.classList.toggle("is-on", s.getAttribute("data-state") === state);
+    });
+  });
+})();
+</script>
+</body>
+</html>

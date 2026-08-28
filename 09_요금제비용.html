@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>요금제·비용 — 비즈플래닛</title>
+<!-- UW_BL_01 · W2 · 스펙: planning/23 §6 (시안 슬라이드 9) · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_BL_01">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+    <section class="uw-card">
+            <div class="uw-section-caption">결제가 안 되거나 밀렸나요?</div>
+            <a class="btn btn-ghost btn-sm mt-8" href="26_결제문제.html" style="display:inline-flex;text-decoration:none">결제 문제 확인하기</a>
+          </section>
+        </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">요금제·비용</span>
+      <span class="uw-topbar-sub" data-copy="topbar.sub">언제든 바꾸거나 해지할 수 있어요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-cols">
+
+        <!-- ========== 좌측 컬럼 ========== -->
+        <div class="uw-col-main">
+
+          <!-- M01 · view: 현재 요금제 카드 (시안 9 다크 카드 — 유일하게 허용되는 비토큰 색) -->
+          <section class="uw-card" data-module="M01" style="background:#1E2A44;color:#fff;border:0;padding:24px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="uw-badge" style="background:rgba(255,255,255,.18);color:#fff" id="plan-status-badge">현재 이용 중</span>
+            </div>
+            <div style="font-size:24px;font-weight:800;letter-spacing:-0.02em;margin-top:12px" id="plan-name">Basic 요금제</div>
+            <div style="font-size:20px;font-weight:700;margin-top:6px" id="plan-price">₩39,000 / 월</div>
+            <div style="display:flex;align-items:flex-end;margin-top:16px">
+              <div style="font-size:13px;color:rgba(255,255,255,.72)" id="plan-caption">다음 결제일 2026-07-10 · 업체 통합 결제 · 대행사 경유</div>
+              <a href="24_해지.html" style="margin-left:auto;font-size:12px;color:rgba(255,255,255,.6);text-decoration:underline">언제든 해지할 수 있어요</a>
+            </div>
+          </section>
+
+          <!-- M02 · stat: 이번 달 사용량 -->
+          <section class="uw-card" data-module="M02" style="margin-top:16px">
+            <h3 class="uw-section-title" style="font-size:15px">이번 달 사용량</h3>
+            <div class="uw-section-caption mt-8">7월 1일 ~ 31일</div>
+
+            <div class="uw-rows mt-12" style="font-size:13px">
+              <div class="uw-row" style="flex-direction:column;align-items:stretch;gap:6px;padding:12px 0">
+                <div style="display:flex;align-items:center">
+                  <div style="font-size:14px;font-weight:700">비즈챗 문자</div>
+                  <div style="margin-left:auto;font-size:13px;color:var(--ink-500)">480 / 1,000건</div>
+                </div>
+                <div class="uw-bar"><i style="background:var(--green);width:48%"></i></div>
+              </div>
+              <div class="uw-row" style="flex-direction:column;align-items:stretch;gap:6px;padding:12px 0">
+                <div style="display:flex;align-items:center">
+                  <div style="font-size:14px;font-weight:700">블로그 발행</div>
+                  <div style="margin-left:auto;font-size:13px;color:var(--ink-500)">8건 · 무제한</div>
+                </div>
+                <div class="uw-bar"><i style="background:var(--blue);width:30%"></i></div>
+              </div>
+              <div class="uw-row" style="flex-direction:column;align-items:stretch;gap:6px;padding:12px 0">
+                <div style="display:flex;align-items:center">
+                  <div style="font-size:14px;font-weight:700">AI 챗봇 상담</div>
+                  <div style="margin-left:auto;font-size:13px;color:var(--ink-500)">18건 · 무제한</div>
+                </div>
+                <div class="uw-bar"><i style="background:var(--purple);width:40%"></i></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- M05 · edit · L2+ (fallback tbd-card): 요금제 변경 · 문자 충전 -->
+          <section data-module="M05" style="margin-top:16px">
+            <div style="background:var(--orange-bg);border-radius:var(--radius-card);padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <div style="flex:1;min-width:200px;font-size:13px;font-weight:700;color:var(--ink-700)">문자가 더 필요하면 100건당 8,000원으로 추가할 수 있어요</div>
+              <button class="btn btn-secondary btn-sm" data-action="toast" data-toast-msg="충전 결제 방식은 확정 후 열려요 (OD-U6)">문자 충전</button>
+              <a class="btn btn-ghost btn-sm" href="25_요금제변경.html" style="text-decoration:none">요금제 변경</a>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ========== 우측 컬럼 ========== -->
+        <aside class="uw-col-side">
+
+          <!-- M04 · edit · L2+ (fallback tbd-card): 결제 수단 -->
+          <section class="uw-card" data-module="M04">
+            <h3 class="uw-section-title" style="font-size:15px">결제 수단</h3>
+            <div class="uw-rows mt-12">
+              <div class="uw-row" style="padding:8px 0">
+                <div class="uw-row-chip">💳</div>
+                <div class="uw-row-body"><div style="font-size:14px;font-weight:700">신한카드 **** **** **** 1234</div></div>
+                <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="결제 수단 변경은 확정 후 열려요">변경</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- M03 · view: 결제 내역 -->
+          <section class="uw-card" data-module="M03" style="margin-top:16px">
+            <h3 class="uw-section-title" style="font-size:15px">결제 내역</h3>
+            <div class="uw-rows mt-8" style="font-size:13px" id="billing-history">
+              <div class="uw-row" style="padding:10px 0">
+                <div class="uw-row-body"><div style="font-size:14px;font-weight:700">2026년 6월 <span class="bh-amount">₩39,000</span></div><div class="uw-row-desc">6.15 결제</div></div>
+                <span class="uw-badge b-green">결제 완료</span>
+              </div>
+              <div class="uw-row" style="padding:10px 0">
+                <div class="uw-row-body"><div style="font-size:14px;font-weight:700">2026년 5월 <span class="bh-amount">₩39,000</span></div><div class="uw-row-desc">5.15 결제</div></div>
+                <span class="uw-badge b-green">결제 완료</span>
+              </div>
+              <div class="uw-row" style="padding:10px 0">
+                <div class="uw-row-body"><div style="font-size:14px;font-weight:700">2026년 4월 <span class="bh-amount">₩39,000</span></div><div class="uw-row-desc">4.15 결제</div></div>
+                <span class="uw-badge b-green">결제 완료</span>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm mt-12" style="width:100%" data-action="toast" data-toast-msg="영수증 목록은 W3에서 열려요">영수증 전체 보기</button>
+          </section>
+
+          <!-- M06 · bulk · L3: 다매장 청구 통합 -->
+          <section class="uw-card" data-module="M06" style="margin-top:16px">
+            <h3 class="uw-section-title" style="font-size:15px">담당 매장 청구 현황</h3>
+            <div class="uw-rows mt-8" style="font-size:13px">
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body"><div style="font-size:13px;font-weight:600">스시오마카세 강남점</div><div class="uw-row-desc">Pro</div></div>
+                <div style="font-size:13px;font-weight:700">₩89,000</div>
+              </div>
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body"><div style="font-size:13px;font-weight:600">스시오마카세 판교점</div><div class="uw-row-desc">Basic</div></div>
+                <div style="font-size:13px;font-weight:700">₩39,000</div>
+              </div>
+              <div class="uw-row" style="padding:9px 0">
+                <div class="uw-row-body"><div style="font-size:13px;font-weight:600">카페봄봄 신촌점</div><div class="uw-row-desc">Basic</div></div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="uw-badge b-orange">만료 임박</span>
+                  <span style="font-size:13px;font-weight:700">₩39,000</span>
+                </div>
+              </div>
+              <div class="uw-row" style="padding:9px 0;border-top:1px solid var(--divider);margin-top:2px">
+                <div class="uw-row-body"><div style="font-size:14px;font-weight:800">월 합계</div></div>
+                <div style="font-size:15px;font-weight:800">₩167,000</div>
+              </div>
+            </div>
+            <div class="uw-section-caption mt-8">업체 통합 결제는 청구계정 기준으로 묶여요</div>
+          </section>
+
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 레벨 전환 시 요금제 카드·결제 내역 금액 갱신 (계약 §1: 화면 고유 표현 한정) ---- */
+(function () {
+  function syncPlanCard() {
+    var lv = (document.body.getAttribute("data-level")) || "L2";
+    var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+    if (!mock.plan) return;
+
+    document.getElementById("plan-name").textContent = mock.plan + " 요금제";
+    document.getElementById("plan-price").textContent = "₩" + mock.planPrice + " / 월";
+    document.getElementById("plan-caption").textContent = "다음 결제일 " + mock.renewal + " · " + mock.billingNote;
+
+    var badge = document.getElementById("plan-status-badge");
+    if (mock.subStatus === "만료 임박") {
+      badge.className = "uw-badge b-orange";
+      badge.style.background = "";
+      badge.style.color = "";
+      badge.textContent = "만료 임박";
+    } else {
+      badge.className = "uw-badge";
+      badge.style.background = "rgba(255,255,255,.18)";
+      badge.style.color = "#fff";
+      badge.textContent = "현재 이용 중";
+    }
+
+    document.querySelectorAll(".bh-amount").forEach(function (el) {
+      el.textContent = "₩" + mock.planPrice;
+    });
+  }
+  document.addEventListener("uw:levelchange", syncPlanCard);
+  document.addEventListener("DOMContentLoaded", syncPlanCard);
+})();
+</script>
+</body>
+</html>

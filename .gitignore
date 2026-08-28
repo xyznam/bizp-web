@@ -1,0 +1,10 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings (per-machine, not shared)
+.claude/settings.local.json
+
+# html-to-figma-kit: generated build artifacts and dependencies (regenerable, not source)
+html-to-figma-kit/node_modules/
+html-to-figma-kit/output/

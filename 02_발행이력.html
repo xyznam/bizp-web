@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>발행 이력 — 비즈플래닛</title>
+<!-- UW_CR_02 · 발행 이력 (02_콘텐츠검토 "최근 처리한 콘텐츠"에서 링크)
+     구성: 상태·채널·기간 필터 + 검색 + 전체 이력 리스트. L3는 매장 필터 추가.
+     페이지를 단순하게 유지하기 위해 02의 실시간 검수 상태와는 분리된 별도 이력 데이터를 쓴다.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* ---- 필터 바 ---- */
+.hi-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hi-filters select { height: 36px; border: 1px solid var(--input-border); border-radius: var(--radius-tile); padding: 0 10px; font-family: inherit; font-size: 13px; color: var(--ink-700); background: var(--white); outline: none; }
+.hi-search { flex: 1; min-width: 160px; height: 36px; border: 1px solid var(--input-border); border-radius: var(--radius-tile); padding: 0 12px; font-family: inherit; font-size: 13px; outline: none; }
+.hi-search:focus, .hi-filters select:focus { border-color: var(--blue); }
+
+/* ---- 이력 리스트 ---- */
+.hi-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--divider); }
+.hi-row:last-child { border-bottom: 0; }
+.hi-ch-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.hi-body { flex: 1; min-width: 0; }
+.hi-title { font-size: 14px; font-weight: 700; color: var(--ink-900); }
+.hi-meta { font-size: 12px; color: var(--ink-500); margin-top: 2px; }
+.hi-empty { text-align: center; padding: 40px 0; color: var(--ink-400); font-size: 13px; }
+</style>
+</head>
+<body data-screen="UW_CR_02">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html" class="is-active">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">
+        <a href="02_콘텐츠검토.html" style="color:var(--ink-500);text-decoration:none">콘텐츠 검토</a>
+        <span style="color:var(--ink-300)"> › </span>발행 이력
+      </span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body" style="max-width:760px">
+
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+        <h1 style="font-size:20px;font-weight:800;letter-spacing:-0.02em;flex:1">발행 이력</h1>
+        <a href="02_콘텐츠검토.html" class="btn btn-ghost btn-sm" style="text-decoration:none">← 콘텐츠 검토로</a>
+      </div>
+      <div class="uw-h1-caption" style="margin-bottom:16px">지금까지 발행하거나 반려한 콘텐츠를 모아봐요</div>
+
+      <!-- 필터 -->
+      <section class="uw-card">
+        <div class="hi-filters">
+          <select id="hi-f-status">
+            <option value="all">상태 전체</option>
+            <option value="발행 완료">발행 완료</option>
+            <option value="반려">반려</option>
+          </select>
+          <select id="hi-f-channel">
+            <option value="all">채널 전체</option>
+            <option value="네이버 블로그">네이버 블로그</option>
+            <option value="당근마켓">당근마켓</option>
+          </select>
+          <select id="hi-f-period">
+            <option value="all">기간 전체</option>
+            <option value="2026-07">2026년 7월</option>
+            <option value="2026-06">2026년 6월</option>
+          </select>
+          <select id="hi-f-store" data-only-level="L3">
+            <option value="all">매장 전체</option>
+          </select>
+          <input class="hi-search" id="hi-search" type="text" placeholder="제목으로 검색">
+        </div>
+      </section>
+
+      <!-- 리스트 -->
+      <section class="uw-card mt-16" style="padding:8px 20px">
+        <div id="hi-count" style="font-size:12px;color:var(--ink-500);padding:10px 0 2px">0건</div>
+        <div id="hi-list"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var CH_COLOR = { "네이버 블로그": "var(--ch-naver)", "당근마켓": "var(--ch-daangn)" };
+
+  /* 02_콘텐츠검토와 분리된 별도 이력 목데이터 (페이지를 단순하게 유지) */
+  var HISTORY = [
+    { title: "주말 영업시간 안내", ch: "네이버 블로그", store: "스시오마카세 강남점", status: "발행 완료", date: "7.4", period: "2026-07", note: "사장님 승인 7.4" },
+    { title: "6월 단골 감사 쿠폰", ch: "당근마켓", store: "카페봄봄 신촌점", status: "발행 완료", date: "7.2", period: "2026-07", note: "사장님 승인 7.2" },
+    { title: "비 오는 날 이벤트 글", ch: "네이버 블로그", store: "스시오마카세 판교점", status: "반려", date: "7.1", period: "2026-07", note: "사유: 내용이 사실과 달라요" },
+    { title: "여름 신메뉴 출시 안내", ch: "네이버 블로그", store: "스시오마카세 강남점", status: "발행 완료", date: "6.28", period: "2026-06", note: "사장님 승인 6.28" },
+    { title: "장마철 포장 할인 소식", ch: "당근마켓", store: "카페봄봄 신촌점", status: "발행 완료", date: "6.20", period: "2026-06", note: "사장님 승인 6.20" },
+    { title: "신규 시술 이벤트 안내", ch: "네이버 블로그", store: "스시오마카세 판교점", status: "반려", date: "6.15", period: "2026-06", note: "사유: 말투가 안 맞아요" }
+  ];
+
+  function level() { return document.body.getAttribute("data-level") || "L2"; }
+
+  /* L3 매장 필터 옵션 채우기 (이력에 등장하는 매장 기준) */
+  function fillStoreOptions() {
+    var sel = document.getElementById("hi-f-store");
+    var stores = HISTORY.map(function (h) { return h.store; })
+      .filter(function (s, i, arr) { return arr.indexOf(s) === i; });
+    sel.innerHTML = '<option value="all">매장 전체</option>' +
+      stores.map(function (s) { return '<option value="' + s + '">' + s + "</option>"; }).join("");
+  }
+
+  function filtered() {
+    var status = document.getElementById("hi-f-status").value;
+    var channel = document.getElementById("hi-f-channel").value;
+    var period = document.getElementById("hi-f-period").value;
+    var store = document.getElementById("hi-f-store").value;
+    var q = document.getElementById("hi-search").value.trim();
+    var isL3 = level() === "L3";
+
+    return HISTORY.filter(function (h) {
+      if (status !== "all" && h.status !== status) return false;
+      if (channel !== "all" && h.ch !== channel) return false;
+      if (period !== "all" && h.period !== period) return false;
+      if (isL3 && store !== "all" && h.store !== store) return false;
+      if (q && h.title.indexOf(q) === -1) return false;
+      return true;
+    });
+  }
+
+  function render() {
+    var isL3 = level() === "L3";
+    var list = filtered();
+    var el = document.getElementById("hi-list");
+    document.getElementById("hi-count").textContent = list.length + "건";
+
+    if (!list.length) {
+      el.innerHTML = '<div class="hi-empty">조건에 맞는 이력이 없어요</div>';
+      return;
+    }
+    el.innerHTML = list.map(function (h) {
+      var badgeCls = h.status === "발행 완료" ? "b-green" : "b-red";
+      return '<div class="hi-row">' +
+        '<span class="hi-ch-dot" style="background:' + CH_COLOR[h.ch] + '"></span>' +
+        '<div class="hi-body">' +
+          '<div class="hi-title">' + h.title + "</div>" +
+          '<div class="hi-meta">' + h.ch + (isL3 ? " · 🏪 " + h.store : "") + " · " + h.date + " · " + h.note + "</div>" +
+        "</div>" +
+        '<span class="uw-badge ' + badgeCls + '">' + h.status + "</span>" +
+      "</div>";
+    }).join("");
+  }
+
+  ["hi-f-status", "hi-f-channel", "hi-f-period", "hi-f-store"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", render);
+  });
+  document.getElementById("hi-search").addEventListener("input", render);
+
+  fillStoreOptions();
+  document.addEventListener("uw:levelchange", render);
+  document.addEventListener("DOMContentLoaded", render);
+})();
+</script>
+</body>
+</html>

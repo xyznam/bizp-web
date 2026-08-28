@@ -1,0 +1,116 @@
+{
+  "$comment": "UID 보드 정책 템플릿. 이 파일을 작업 폴더로 복사해 board-policy.json 으로 채운다. 채우는 근거는 ADAPTATION.md 진단표, 채워진 실례는 examples/admin-v3/board-policy.json.",
+  "$fill": "TODO 로 표시된 값은 반드시 확인하고 채운다. 그대로 두면 admin-v3 값이 새 화면군에 잘못 적용된다.",
+
+  "board": {
+    "$comment": "보드 골격. 폭은 spec/board-template.md 정본. 디자인 영역 폭은 원본 화면 폭에 맞춰 정한다",
+    "width": 1920,
+    "designWidth": 1500,
+    "descriptionWidth": 420,
+    "minHeight": 1080,
+    "gap": 120,
+    "headerRowHeight": 34,
+    "fontFamily": "Pretendard, 'Pretendard Variable', sans-serif",
+    "application": "TODO — 헤더 우측 칩 문구 (예: Web Admin, User Web, Mobile Web)"
+  },
+
+  "controls": {
+    "$comment": "브라우저 네이티브 위젯의 표시 문구. DOM에 없어 추출할 수 없으므로 캡처 기준값을 여기에 둔다. OS·로케일이 바뀌면 이 값만 교체한다",
+    "fileInput": { "button": "Choose File", "empty": "No file chosen" }
+  },
+
+  "layout": {
+    "$comment": "캔버스 배치 — 화면 하나가 가로 띠(band) 하나. 띠 안에서 메인 보드는 계위 깊이만큼 오른쪽으로 밀리고, 그 화면의 부속 보드가 메인 오른쪽으로 이어진다",
+    "colGap": 160,
+    "rowGap": 240,
+    "auxPerRow": 4
+  },
+
+  "colors": {
+    "$comment": "템플릿 정본 색. 화면군이 달라도 UID 보드 템플릿 자체는 같으므로 원칙적으로 바꾸지 않는다",
+    "callout.region": "#FF5700",
+    "callout.item": "#FF9F6D",
+    "flag.confirm": "#D23838",
+    "flag.reference": "#1DB459",
+    "flag.common": "#000000",
+    "header.chapter": "#EDEDED",
+    "header.path": "#FEE500",
+    "header.app": "#FFCD9F",
+    "table.stripe": "#E6E6E6",
+    "table.line": "#808080"
+  },
+
+  "naming": {
+    "projectLabel": "TODO — 화면군 식별자 (예: userweb-v2). Figma 페이지명·컬렉션 경로에 쓰인다",
+    "page": "UID_TODO_v{version}",
+    "backupPage": "UID_TODO_backup_{stamp}",
+    "boardLayer": "{label}",
+    "auxBoardLayer": "{label}__{auxId}",
+    "variableCollection": "TODO/tokens",
+    "variablePath": "{group}/{token}",
+    "component": "TODO/{signature}",
+    "screenIdScheme": {
+      "$comment": "IA에 정식 ID 열이 있으면 그것을 쓴다. 없으면 가안 체계를 세우고 빨강 ※행에 채번 필요를 기록한다",
+      "page": "TODO-PG-{no3}",
+      "aux": "TODO-PP-{no3}-{seq2}",
+      "commonPopup": "TODO-CP-{seq3}"
+    }
+  },
+
+  "tokens": {
+    "$comment": "CSS 변수 → Figma Variables 그룹 매핑. 미기재 변수는 misc 그룹으로 간다. probe_inputs.mjs 가 뽑아준 :root 카탈로그를 보고 분류한다",
+    "groups": {
+      "color": ["TODO — 색 토큰 변수명 나열"],
+      "layout": ["TODO — 치수 토큰 변수명 나열"]
+    }
+  },
+
+  "componentPromotion": {
+    "$comment": "반복 클래스 시그니처를 Figma Component 로 승격하는 기준",
+    "minOccurrences": 3,
+    "variantClasses": ["TODO — Variant 축으로 쓸 수식 클래스 (예: btn-primary, sm, active)"],
+    "exclude": ["TODO — 승격 제외할 레이아웃 컨테이너 클래스"]
+  },
+
+  "extraction": {
+    "allowedRemoteHosts": ["cdn.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com"],
+
+    "domContract": {
+      "$comment": "화면군의 DOM 규약. adapters/extract_ir.mjs 가 이 값으로 동작한다. 값을 안 채우면 admin-v3 기본값이 적용되므로, 다른 화면군이면 반드시 확인한다",
+      "contentRoot": "TODO — 사이드바/상단바를 제외한 본문 컨테이너 (admin: .main)",
+      "overlayContainers": "TODO — 모달·드로어를 감싸는 오버레이 (admin: .modal-backdrop, .pii-backdrop, [class*=backdrop])",
+      "overlayOpenClass": "open",
+      "overlayFlexSelector": "TODO — 강제 표시 시 flex 로 되살릴 오버레이 (admin: .modal-backdrop)",
+      "overlayNamePattern": "TODO — 딤 배경 요소를 식별하는 클래스명 부분 문자열 (admin: backdrop)",
+      "primaryActionSelectors": "TODO — 모달 안 기본 확정 버튼 (admin: .btn-primary, .btn.btn-primary)",
+      "formSubmitSelectors": "TODO — 본문 폼 제출 버튼. {root} 는 contentRoot 로 치환됨",
+      "triggerGroups": ["TODO — 부속 화면을 여는 트리거 후보를 가능성 높은 순으로"],
+      "namedTriggers": [{ "match": "TODO — auxId 정규식", "selector": "TODO — 전용 트리거 셀렉터" }]
+    },
+
+    "boardStrip": {
+      "$comment": "보드에 싣지 않는 프로토타입 전용 블록. 원본 HTML은 비파괴 — 추출 시점에 DOM에서만 제거한다. 제거는 스크린샷·bbox 측정 전에 일어나야 좌표가 어긋나지 않는다",
+      "selectors": ["TODO — 프로토타입 전용 토글·설명 블록 셀렉터"]
+    },
+
+    "auxFrameSelectors": ["TODO — 부속 화면(모달·드로어)으로 추출할 셀렉터"],
+
+    "auxExclude": {
+      "$comment": "보드화 제외 — ids: 프로토타입 헬퍼·템플릿 자동 생성물. patterns: 공통 팝업 인스턴스(초록 참조로 대체). manifestOnlyPatterns: IR에는 남기되 화면별 보드는 만들지 않음",
+      "ids": [],
+      "patterns": [],
+      "manifestOnlyPatterns": []
+    },
+
+    "auxActivate": {
+      "$comment": "화면번호 → 클릭 트리거 셀렉터 배열. lazy 렌더되는 부속을 실체화해야 추출되는 경우만 기재한다"
+    },
+
+    "boardExcludeFiles": {
+      "$comment": "보드화 대상이 아닌 문서·인덱스 파일",
+      "files": []
+    },
+
+    "irMappingRateGate": 0.9
+  }
+}

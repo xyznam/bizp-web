@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>대행사 요청함 — 비즈플래닛</title>
+<!-- UW_MY_05 · P-B/P-C · G11(L1 대체 카드 "대행사에 요청하기" 도착지) · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* 화면 고유: 첨부 미리보기, 입력창 포커스 강조 (챗 버블 스타일은 인라인으로 구현 — userweb.css에 정의 없음) */
+#thread-input.is-focus-flash { animation: uw-focus-flash 1.2s ease; }
+@keyframes uw-focus-flash { 0%,100% { border-color: var(--input-border); } 30% { border-color: var(--blue); } }
+</style>
+</head>
+<body data-screen="UW_MY_05">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="01_홈.html" style="color:var(--ink-500);text-decoration:none">홈</a> › 대행사 요청함</span>
+      <span class="uw-topbar-sub">대행사 <b data-bind="agencyName">마케팅파트너스</b>와의 대화예요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔</button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- 2026-08-26 설계 변경: 요청을 여러 개의 개별 스레드로 쪼개던 방식(요청 목록 + 새 요청 모달) 폐지.
+           사장님은 대행사 하나와만 소통하므로 목록이 필요 없다고 판단 — 대화 하나로 통합.
+           "주제별로 찾고 싶은 니즈"는 카테고리 칩을 태그로 남기는 정도로 절충 가능하나 이번엔 범위 밖.
+           L2 전용 '지금은 직접 이용 중이에요' 카드는 그대로 유지(대행사 자체가 없는 레벨이므로). -->
+      <!-- L2(대행사 미계약)는 아래 모듈들이 전부 안 보이고 이 카드만 노출(캡슐화는 M01/M02 levels에서 처리) -->
+      <div class="uw-card" data-only-level="L2" style="text-align:center;padding:32px 18px;max-width:480px;margin:0 auto">
+        <div style="font-size:26px">🤝</div>
+        <div style="font-size:14px;font-weight:700;margin-top:8px">지금은 직접 이용 중이에요</div>
+        <div style="font-size:12px;color:var(--ink-500);margin-top:4px;line-height:1.5">대행사와 함께하게 되면 여기서 소통해요</div>
+      </div>
+
+      <div style="max-width:680px;margin:0 auto;display:flex;flex-direction:column;height:100%">
+
+        <!-- M01 · view: 대행사와의 대화(챗 버블). L2 제외(대행사 자체가 없으므로) -->
+        <section class="uw-card" id="agency-chat-panel" data-module="M01" style="display:flex;flex-direction:column;padding:0;overflow:hidden;flex:1">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--divider)">
+            <div style="font-size:15px;font-weight:800;letter-spacing:-0.02em">대행사 <span data-bind="agencyName">마케팅파트너스</span></div>
+            <div style="font-size:12px;color:var(--ink-500);margin-top:2px">궁금한 점이나 부탁하고 싶은 걸 편하게 물어보세요</div>
+          </div>
+          <div id="thread-messages" style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;height:480px"></div>
+        </section>
+
+        <!-- M02 · create: 메시지 보내기(사진 첨부 가능). L2 제외 -->
+        <section class="uw-card" id="agency-chat-input" data-module="M02" style="margin-top:8px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <span class="uw-kw-chip" style="cursor:pointer" data-chip="문자 보내주세요">문자 보내주세요</span>
+            <span class="uw-kw-chip" style="cursor:pointer" data-chip="글 바꿔주세요">글 바꿔주세요</span>
+            <span class="uw-kw-chip" style="cursor:pointer" data-chip="사진 바꿔주세요">사진 바꿔주세요</span>
+            <span class="uw-kw-chip" style="cursor:pointer" data-chip="설명해 주세요">설명해 주세요</span>
+          </div>
+          <div id="attach-preview" style="display:none;align-items:center;gap:8px;margin-bottom:8px;background:var(--inset);border-radius:10px;padding:6px 10px">
+            <img id="attach-preview-img" style="width:40px;height:40px;border-radius:6px;object-fit:cover" alt="첨부 미리보기">
+            <span style="font-size:12px;color:var(--ink-600);flex:1">사진 1장 첨부됨</span>
+            <button type="button" id="btn-attach-remove" class="btn btn-ghost btn-sm" style="height:28px;padding:0 10px">빼기</button>
+          </div>
+          <input type="file" id="chat-file-input" accept="image/*" style="display:none">
+          <div style="display:flex;gap:8px;align-items:flex-end">
+            <button type="button" class="btn btn-ghost" id="btn-attach" title="사진 첨부" style="height:46px;flex-shrink:0;font-size:18px">📷</button>
+            <textarea id="thread-input" placeholder="대행사에게 보낼 내용을 적어주세요" style="flex:1;height:46px;border:1px solid var(--input-border);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:13px;line-height:1.4;resize:none"></textarea>
+            <button class="btn btn-primary" data-action="send-thread-msg" style="height:46px;flex-shrink:0">메시지 보내기</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 대행사와의 대화(단일 스레드) + 사진 첨부 (계약 §1: 화면 고유 표현 한정)
+   2026-08-26 재설계: 요청을 여러 개별 스레드로 나누던 방식을 없애고 하나의 연속 대화로 통합.
+   과거 3개 요청(이벤트 문자/블로그 사진/6월 리포트)을 시간순으로 합쳐서 하나의 대화로 재구성함 ---- */
+(function () {
+  // 첨부 예시용 로컬 mock 이미지(실사진 없이 자체 SVG로 생성 — 외부 리소스 의존 없음)
+  var MOCK_PHOTO = "data:image/svg+xml;utf8," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">' +
+    '<rect width="400" height="400" fill="#F2F4F6"/>' +
+    '<rect x="0.5" y="0.5" width="399" height="399" fill="none" stroke="#E8EAEE"/>' +
+    '<g transform="translate(200,168)" fill="none" stroke="#B0B8C1" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">' +
+    '<rect x="-60" y="-38" width="120" height="86" rx="10"/><path d="M -22 -38 L -14 -52 L 14 -52 L 22 -38"/><circle cx="0" cy="6" r="26"/></g>' +
+    '<text x="200" y="266" font-family="Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#8B95A1" text-anchor="middle">신메뉴 사진</text>' +
+    '<text x="200" y="292" font-family="Noto Sans KR, sans-serif" font-size="13" font-weight="500" fill="#C5CBD3" text-anchor="middle">mock 첨부 이미지</text></svg>');
+
+  var MESSAGES = [
+    { who: "me", text: "6월 리포트에서 재방문율이 왜 떨어졌는지 설명해 주실 수 있나요?", time: "6.28 오전 9:50" },
+    { who: "agency", text: "장마철 영향이 커 보여요. 실외 좌석 이용이 줄면서 방문 빈도가 낮아진 것 같아요", time: "6.28 오전 11:10" },
+    { who: "agency", text: "7월엔 우천 시 할인 쿠폰으로 대응해볼게요!", time: "6.28 오전 11:11" },
+    { who: "me", text: "좋은 생각이에요, 부탁드려요!", time: "6.28 오후 2:30" },
+    { who: "me", text: "블로그에 있는 사진을 이번 여름 신메뉴 사진으로 바꿔주시겠어요?", time: "7.3 오전 11:20" },
+    { who: "agency", text: "네, 확인했어요! 신메뉴 사진 몇 장 받을 수 있을까요?", time: "7.3 오후 1:05" },
+    { who: "me", text: "오늘 중으로 사진 보내드릴게요", time: "7.3 오후 1:40", image: MOCK_PHOTO },
+    { who: "me", text: "여름 이벤트 문자를 하나 더 보내고 싶어요. 지난번이랑 비슷한 느낌으로 부탁드려요", time: "어제 오전 10:12" },
+    { who: "agency", text: "네 사장님! 지난번 문구 참고해서 초안 만들어볼게요", time: "어제 오전 10:40" },
+    { who: "agency", text: "초안 보내드렸어요. 비즈챗 문자함에서 확인해 주세요 :)", time: "어제 오후 2:15" },
+    { who: "me", text: "확인했어요! 좋아요, 이대로 보내주세요", time: "어제 오후 3:02" }
+  ];
+  var pendingImage = null;
+
+  function bubbleHtml(m) {
+    /* 가이드 스펙: 내 쪽 파란 버블 흰 글씨, 상대 흰 버블 — 바깥 모서리만 6px, 나머지 14px.
+       사진 첨부 시 버블 안에 이미지를 먼저 넣고 텍스트가 있으면 아래에 이어붙임 */
+    var img = m.image ? '<img src="' + m.image + '" style="width:180px;height:180px;object-fit:cover;border-radius:10px;display:block' + (m.text ? ';margin-bottom:8px' : '') + '" alt="첨부 이미지">' : "";
+    if (m.who === "me") {
+      return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">' +
+        '<div style="max-width:78%;background:var(--blue);color:#fff;font-size:13px;line-height:1.6;padding:10px 14px;border-radius:14px 14px 6px 14px">' + img + (m.text || "") + '</div>' +
+        '<span style="font-size:11px;color:var(--ink-400)">' + m.time + '</span></div>';
+    }
+    return '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:3px">' +
+      '<div style="max-width:78%;background:#fff;border:1px solid var(--card-border);color:var(--ink-900);font-size:13px;line-height:1.6;padding:10px 14px;border-radius:14px 14px 14px 6px">' + img + (m.text || "") + '</div>' +
+      '<span style="font-size:11px;color:var(--ink-400)">' + m.time + '</span></div>';
+  }
+
+  function renderThread() {
+    var wrap = document.getElementById("thread-messages");
+    wrap.innerHTML = MESSAGES.map(bubbleHtml).join("");
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function clearAttachment() {
+    pendingImage = null;
+    document.getElementById("chat-file-input").value = "";
+    document.getElementById("attach-preview").style.display = "none";
+  }
+
+  document.getElementById("btn-attach").addEventListener("click", function () {
+    document.getElementById("chat-file-input").click();
+  });
+  document.getElementById("chat-file-input").addEventListener("change", function (e) {
+    var f = e.target.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      pendingImage = ev.target.result;
+      document.getElementById("attach-preview-img").src = pendingImage;
+      document.getElementById("attach-preview").style.display = "flex";
+    };
+    reader.readAsDataURL(f);
+  });
+  document.getElementById("btn-attach-remove").addEventListener("click", clearAttachment);
+
+  document.addEventListener("click", function (e) {
+    var chip = e.target.closest("[data-chip]");
+    if (chip) {
+      var ta = document.getElementById("thread-input");
+      ta.value = ta.value ? ta.value + " " + chip.getAttribute("data-chip") : chip.getAttribute("data-chip");
+      ta.focus();
+      return;
+    }
+
+    var t = e.target.closest("[data-action]");
+    if (!t) return;
+    var act = t.getAttribute("data-action");
+
+    if (act === "send-thread-msg") {
+      var input = document.getElementById("thread-input");
+      var text = input.value.trim();
+      if (!text && !pendingImage) return;
+      var msg = { who: "me", time: "방금" };
+      if (text) msg.text = text;
+      if (pendingImage) msg.image = pendingImage;
+      MESSAGES.push(msg);
+      renderThread();
+      input.value = "";
+      clearAttachment();
+      window.UW.toast("메시지를 보냈어요. 보통 하루 안에 답을 드려요");
+    }
+  });
+
+  // ?new=1 : 전 화면 대체 카드 "대행사에 요청하기"의 도착지 — 이제 모달을 열지 않고 입력창에 바로 포커스
+  var wantsNew = new URLSearchParams(location.search).get("new") === "1";
+  document.addEventListener("DOMContentLoaded", function () {
+    renderThread();
+    if (wantsNew) {
+      var ta = document.getElementById("thread-input");
+      if (ta) { ta.focus(); ta.classList.add("is-focus-flash"); }
+    }
+  });
+})();
+</script>
+</body>
+</html>

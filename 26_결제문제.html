@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>결제 문제 안내 — 비즈플래닛</title>
+<!-- UW_BL_04 · P-B/P-C · 스펙: planning/27 · dunning_stage 산식: planning/08 부록 A 정본 · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_BL_04">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="09_요금제비용.html" style="color:var(--ink-500);text-decoration:none">요금제·비용</a> › 결제 문제 안내</span>
+      <span class="uw-topbar-sub">결제 상태를 확인하고 바로 해결할 수 있어요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-cols">
+
+        <!-- ========== 좌측 컬럼 ========== -->
+        <div class="uw-col-main">
+
+          <!-- M01 · view: 결제 실패·연체 상태 배너 -->
+          <section class="uw-card" data-module="M01">
+            <div class="uw-lvl-switch" style="margin-bottom:14px" title="프로토타입 전용 — 결제 상태 전환 데모">
+              <button data-pay-state="failed">결제 실패</button>
+              <button data-pay-state="d7">연체 D+7</button>
+              <button data-pay-state="d14">연체 D+14</button>
+            </div>
+
+            <div id="pay-banner-failed" style="background:var(--red-bg);border-radius:var(--radius-tile);padding:16px;display:flex;gap:10px;align-items:flex-start">
+              <div style="font-size:20px">⚠️</div>
+              <div style="font-size:14px;color:var(--red);font-weight:700;line-height:1.6">7월 15일 결제가 되지 않았어요 · 카드 한도나 유효기간을 확인해 주세요</div>
+            </div>
+            <div id="pay-banner-d7" style="background:var(--orange-bg);border-radius:var(--radius-tile);padding:16px;display:flex;gap:10px;align-items:flex-start">
+              <div style="font-size:20px">⏰</div>
+              <div style="font-size:14px;color:var(--orange);font-weight:700;line-height:1.6">결제가 7일째 밀려 있어요 · 문자 발송이 잠시 멈췄어요</div>
+            </div>
+            <div id="pay-banner-d14" style="background:var(--red-bg);border-radius:var(--radius-tile);padding:16px;display:flex;gap:10px;align-items:flex-start">
+              <div style="font-size:20px">🚫</div>
+              <div style="font-size:14px;color:var(--red);font-weight:700;line-height:1.6">결제가 14일째 밀려 있어요 · 서비스가 곧 중지돼요</div>
+            </div>
+          </section>
+
+          <!-- M02 · view: 연체 단계 안내 (dunning_stage 산식: 08 부록 A 정본) -->
+          <section class="uw-card mt-16" data-module="M02">
+            <h3 class="uw-section-title" style="font-size:15px">밀리면 이렇게 돼요</h3>
+            <div class="uw-rows mt-12">
+              <div class="uw-row">
+                <div class="uw-row-chip">1</div>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">D+3~6</div>
+                  <div class="uw-row-desc">문자·알림으로 결제 안내만 보내드려요</div>
+                </div>
+              </div>
+              <div class="uw-row">
+                <div class="uw-row-chip c-purple">2</div>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">D+7~13</div>
+                  <div class="uw-row-desc">비즈챗 문자 발송 등 일부 기능이 멈춰요</div>
+                </div>
+              </div>
+              <div class="uw-row">
+                <div class="uw-row-chip" style="background:var(--red-bg)">3</div>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">D+14~</div>
+                  <div class="uw-row-desc">모든 서비스 이용이 중지돼요</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- M03 · edit · L2+: 다시 결제하기 -->
+          <section class="uw-card mt-16" data-module="M03">
+            <h3 class="uw-section-title" style="font-size:15px">지금 결제할까요?</h3>
+            <div class="uw-section-caption mt-8">결제하면 서비스가 바로 다시 시작돼요</div>
+            <button class="btn btn-primary mt-12" style="width:100%" data-action="open-modal" data-modal="modal-repay">지금 다시 결제하기</button>
+          </section>
+
+        </div>
+
+        <!-- ========== 우측 컬럼 ========== -->
+        <aside class="uw-col-side">
+
+          <!-- M04 · view: 결제 수단 변경·도움 바로가기 -->
+          <section class="uw-card" data-module="M04">
+            <h3 class="uw-section-title" style="font-size:15px">바로가기</h3>
+            <div class="uw-rows mt-8">
+              <a class="uw-row" href="09_요금제비용.html">
+                <div class="uw-row-chip">💳</div>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">결제 수단 변경</div>
+                  <div class="uw-row-desc">카드를 바꾸거나 새로 등록해요</div>
+                </div>
+                <span class="uw-row-arrow">›</span>
+              </a>
+              <a class="uw-row" href="11_도움말.html">
+                <div class="uw-row-chip">❓</div>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">도움이 필요해요</div>
+                  <div class="uw-row-desc">결제 문제, 바로 물어보세요</div>
+                </div>
+                <span class="uw-row-arrow">›</span>
+              </a>
+            </div>
+          </section>
+
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 다시 결제하기 확인 모달 ==================== -->
+<div class="uw-modal-backdrop" id="modal-repay">
+  <div class="uw-modal">
+    <div class="uw-modal-title">결제할까요?</div>
+    <div class="uw-modal-body">
+      <div class="uw-preview-box">
+        <div style="font-size:14px;font-weight:700">신한카드 **** **** **** 1234</div>
+        <div style="font-size:20px;font-weight:800;margin-top:6px" id="repay-amount">₩39,000</div>
+      </div>
+      밀린 요금을 결제하면 서비스가 바로 다시 시작돼요.
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-pay">결제하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 결제 상태 데모 전환(M01) + 결제 금액 레벨 동기화 + 다시 결제 확정 ---- */
+(function () {
+  function syncAmount() {
+    var lv = document.body.getAttribute("data-level") || "L2";
+    var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+    if (!mock.planPrice) return;
+    document.getElementById("repay-amount").textContent = "₩" + mock.planPrice;
+  }
+  document.addEventListener("uw:levelchange", syncAmount);
+  document.addEventListener("DOMContentLoaded", syncAmount);
+
+  function setPayState(state) {
+    ["failed", "d7", "d14"].forEach(function (s) {
+      var el = document.getElementById("pay-banner-" + s);
+      if (el) el.style.display = s === state ? "" : "none";
+    });
+    document.querySelectorAll("[data-pay-state]").forEach(function (b) {
+      b.classList.toggle("is-on", b.getAttribute("data-pay-state") === state);
+    });
+  }
+
+  document.addEventListener("click", function (e) {
+    var sw = e.target.closest("[data-pay-state]");
+    if (sw) { setPayState(sw.getAttribute("data-pay-state")); return; }
+    var confirmBtn = e.target.closest('[data-action="confirm-pay"]');
+    if (confirmBtn) {
+      confirmBtn.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("결제가 완료됐어요. 서비스가 바로 이어져요.");
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function () { setPayState("failed"); });
+})();
+</script>
+</body>
+</html>

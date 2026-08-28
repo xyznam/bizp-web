@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>실행 결과 리포트 — 비즈플래닛</title>
+<!-- UW_RP_01 · W2 · 스펙: planning/23 §6 (시안 슬라이드 7) · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_RP_01">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html" class="is-active">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <a href="09_요금제비용.html" style="text-decoration:none;color:inherit">
+      <div class="uw-lnb-user">
+        <div class="u-avatar" aria-hidden="true">봄</div>
+        <div>
+          <div class="u-name" data-bind="ownerName">사장님</div>
+          <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+        </div>
+      </div>
+    </a>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title"><a href="01_홈.html" style="color:var(--ink-500);text-decoration:none">홈</a> › 실행 결과 리포트</span>
+      <div class="uw-topbar-right">
+        <!-- M05 · view: 월 전환 + 리포트 저장.
+             정책(2026-08-25): 이 화면은 항상 '완료된 지난달'만 다룬다 — 진행 중인 이번 달은 절대 노출하지 않는다.
+             (이번 달 KPI를 지난달 전체와 비교하면 월초일수록 왜곡되기 때문. 이번 달 진행 상황은 01_홈의
+             '이번 주 실행 결과'가 대신 맡는다.) 그래서 다음 달로 이동해도 아직 끝나지 않은 달은 열리지 않는다. -->
+        <span data-module="M05" style="display:flex;align-items:center;gap:10px">
+          <span style="display:flex;align-items:center;gap:2px">
+            <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="다른 달은 W3에서 열려요" aria-label="이전 달">‹</button>
+            <span style="font-size:13px;font-weight:700;color:var(--ink-700);padding:0 2px">2026년 6월</span>
+            <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="다른 달은 W3에서 열려요" aria-label="다음 달">›</button>
+          </span>
+          <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="리포트를 PDF로 저장할 수 있게 준비 중이에요">⬇ 저장</button>
+        </span>
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- M01 · view: AI 한 줄 해석 배너 -->
+      <section data-module="M01" style="background:var(--blue-50);border:1px solid var(--blue-border);border-radius:var(--radius-card);padding:16px 20px;font-size:14px;font-weight:600;color:var(--ink-700);line-height:1.6">
+        ✦ 지난달보다 블로그 조회수가 18% 늘었어요. 특히 '여름 신메뉴' 글의 반응이 가장 좋았고, 문자 발송 성공률도 96%로 안정적이었어요.
+      </section>
+
+      <!-- M02 · stat: KPI 4타일 -->
+      <section class="uw-section" data-module="M02">
+        <div class="uw-tiles" style="grid-template-columns:repeat(4,1fr)">
+          <div class="uw-tile">
+            <div class="uw-tile-label">📝 블로그 발행</div>
+            <div class="uw-tile-num">8 <small>건</small></div>
+            <div class="uw-tile-sub pos">지난달보다 +2건</div>
+          </div>
+          <div class="uw-tile">
+            <div class="uw-tile-label">👀 발행 콘텐츠 조회수</div>
+            <div class="uw-tile-num">1,620 <small>회</small></div>
+            <div class="uw-tile-sub pos">지난달보다 +18%</div>
+          </div>
+          <div class="uw-tile">
+            <div class="uw-tile-label">💬 문자 발송</div>
+            <div class="uw-tile-num">720 <small>건</small></div>
+            <div class="uw-tile-sub">성공률 96%</div>
+          </div>
+          <div class="uw-tile">
+            <div class="uw-tile-label">🤖 챗봇 상담</div>
+            <div class="uw-tile-num">42 <small>건</small></div>
+            <div class="uw-tile-sub">자동응답 33건(79%) · 사람에게 넘김 9건</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="uw-cols" style="margin-top:20px;align-items:stretch">
+        <div class="uw-col-main">
+
+          <!-- M03 · stat: 주차별 발행 콘텐츠 차트.
+               정책(2026-08-25): '모든 블로그 조회수'는 수집 불가(사장님 블로그 전체 트래픽을 가져올 수 없음),
+               '발행한 콘텐츠'로 범위를 한정하고 건수·조회수를 함께 보여준다. -->
+          <section class="uw-card" data-module="M03" style="height:100%">
+            <h3 class="uw-section-title" style="font-size:15px">주차별 발행 콘텐츠 <span class="uw-section-caption">발행한 글 기준</span></h3>
+            <div style="display:flex;align-items:flex-end;gap:18px;height:180px;margin-top:20px;padding:0 8px">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+                <div style="font-size:11px;color:var(--ink-500);margin-bottom:2px">발행 2건</div>
+                <div style="font-size:13px;font-weight:800;color:var(--ink-700);margin-bottom:6px">320회</div>
+                <div style="width:100%;max-width:56px;height:63%;background:var(--blue-border);border-radius:8px 8px 0 0"></div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:8px">1주차</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+                <div style="font-size:11px;color:var(--ink-500);margin-bottom:2px">발행 2건</div>
+                <div style="font-size:13px;font-weight:800;color:var(--ink-700);margin-bottom:6px">410회</div>
+                <div style="width:100%;max-width:56px;height:80%;background:var(--blue-border);border-radius:8px 8px 0 0"></div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:8px">2주차</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+                <div style="font-size:11px;color:var(--ink-500);margin-bottom:2px">발행 2건</div>
+                <div style="font-size:13px;font-weight:800;color:var(--ink-700);margin-bottom:6px">380회</div>
+                <div style="width:100%;max-width:56px;height:74%;background:var(--blue-border);border-radius:8px 8px 0 0"></div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:8px">3주차</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+                <div style="font-size:11px;color:var(--ink-500);margin-bottom:2px">발행 2건</div>
+                <div style="font-size:13px;font-weight:800;color:var(--blue)">510회</div>
+                <div style="width:100%;max-width:56px;height:100%;background:var(--blue);border-radius:8px 8px 0 0;margin-top:6px"></div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:8px">4주차</div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <aside class="uw-col-side">
+
+          <!-- M04 · view: 반응이 좋았던 콘텐츠 -->
+          <section class="uw-card" data-module="M04">
+            <h3 class="uw-section-title" style="font-size:15px">반응이 좋았던 콘텐츠</h3>
+            <div class="uw-rows mt-8">
+              <div class="uw-row">
+                <span class="uw-badge b-blue" style="border-radius:50%;width:20px;height:20px;padding:0;justify-content:center">1</span>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">여름 신메뉴 출시, 제철 재료로 만든 특별한 맛</div>
+                  <div class="uw-row-desc">네이버 블로그</div>
+                </div>
+                <span class="uw-row-meta" style="color:var(--blue);font-weight:700">510회</span>
+              </div>
+              <div class="uw-row">
+                <span class="uw-badge b-gray" style="border-radius:50%;width:20px;height:20px;padding:0;justify-content:center">2</span>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">30년 전통 이야기</div>
+                  <div class="uw-row-desc">네이버 블로그</div>
+                </div>
+                <span class="uw-row-meta" style="color:var(--blue);font-weight:700">410회</span>
+              </div>
+              <div class="uw-row">
+                <span class="uw-badge b-gray" style="border-radius:50%;width:20px;height:20px;padding:0;justify-content:center">3</span>
+                <div class="uw-row-body">
+                  <div class="uw-row-title" style="font-size:14px">사장님 추천 세트 안내</div>
+                  <div class="uw-row-desc">당근마켓</div>
+                </div>
+                <span class="uw-row-meta" style="color:var(--blue);font-weight:700">380회</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--divider);font-size:12px;color:var(--ink-500)">
+              가장 반응 좋은 문자: <b style="color:var(--ink-700)">단골 감사 쿠폰</b> · 응답 24%
+            </div>
+          </section>
+
+        </aside>
+      </div>
+
+      <!-- M06 · bulk · L3: 담당 매장 비교 -->
+      <section class="uw-card uw-section" data-module="M06">
+        <h3 class="uw-section-title" style="font-size:15px">담당 매장 비교</h3>
+        <div style="overflow-x:auto"><table style="width:100%;min-width:520px;border-collapse:collapse;margin-top:12px;font-size:13px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--divider)">
+              <th style="text-align:left;padding:8px 6px;color:var(--ink-500);font-weight:600">매장</th>
+              <th style="text-align:right;padding:8px 6px;color:var(--ink-500);font-weight:600">발행 조회수</th>
+              <th style="text-align:right;padding:8px 6px;color:var(--ink-500);font-weight:600">문자 성공률</th>
+              <th style="text-align:right;padding:8px 6px;color:var(--ink-500);font-weight:600">챗봇 상담</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--divider)">
+              <td style="padding:10px 6px;font-weight:700">스시오마카세 강남점</td>
+              <td style="padding:10px 6px;text-align:right">1,620회</td>
+              <td style="padding:10px 6px;text-align:right">96%</td>
+              <td style="padding:10px 6px;text-align:right">23건</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--divider)">
+              <td style="padding:10px 6px;font-weight:700">스시오마카세 판교점</td>
+              <td style="padding:10px 6px;text-align:right">980회</td>
+              <td style="padding:10px 6px;text-align:right">94%</td>
+              <td style="padding:10px 6px;text-align:right">11건</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 6px;font-weight:700">카페봄봄 신촌점</td>
+              <td style="padding:10px 6px;text-align:right">1,210회</td>
+              <td style="padding:10px 6px;text-align:right">97%</td>
+              <td style="padding:10px 6px;text-align:right">15건</td>
+            </tr>
+          </tbody>
+        </table></div>
+        <div style="margin-top:10px;font-size:12px;color:var(--ink-500)">숫자가 낮은 매장부터 챙겨보세요</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+</body>
+</html>

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>회원가입 — 비즈플래닛</title>
+<!-- UW_ON_05 · 회원가입 v3 (v17 정책: 이메일+비밀번호 로그인 도입, 약관동의 스텝 추가)
+     플로우:
+       역할 선택 → 사장님: Step1 본인확인(전화 중복 차단) → Step2 사업자번호 확인 → Step3 약관 동의(필수 2·선택 1) → Step4 계정 설정(이메일+비밀번호, 이메일 중복 체크만·인증코드 확인은 비차단) → Step5 완료 → 10_온보딩
+                   직원:   초대코드로만 가입 안내 → 19_초대가입으로
+     Step2 사업자번호 분기 (v20, 2026-08-24 갱신):
+       신규 번호                    → 새 COMPANY+STORE 생성, 바로 진행
+       기존, OWNER 없음, 초대장 없음 → 대행사가 매장만 선등록. 자체 가입으로 연결 안 시킴 —
+                                      초대를 기다리라고 안내만(진행 불가). 계약 대행사 아니면 CS
+       기존, OWNER 없음, 초대장 있음 → 자체 가입으로 연결 안 시킴 — 19_초대가입으로 유도(진행 불가).
+                                      계약 대행사 아니면 CS
+       기존, 다른 OWNER 있음        → 차단 + CS
+     (v19까지는 위 두 경우도 "내 매장 맞나요?" 확인 후 이 화면에서 바로 연결해 가입을 끝낼 수
+     있었으나, v20에서 제거 — 사전 등록/초대 경로는 전부 대행사·초대장 쪽 정본 플로우로 넘긴다)
+     Step3 이메일 중복이면 "로그인해 주세요"로 즉시 안내(가입 진행 막지 않고 21_로그인으로 유도).
+     이메일 인증코드는 가입을 막지 않음 — 가입 후 미인증 배너로 유도, 비밀번호 재설정 시점에 실질 검증.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+.on-wrap { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 40px 20px; }
+.on-card-outer { width: 100%; max-width: 440px; }
+
+/* 스텝퍼 */
+.su-steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.su-step { display: flex; align-items: center; gap: 6px; }
+.su-step-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+  background: var(--inset); color: var(--ink-400); border: 1px solid var(--card-border);
+}
+.su-step-label { font-size: 13px; font-weight: 700; color: var(--ink-400); }
+.su-step.is-current .su-step-num { background: var(--blue); color: #fff; border-color: var(--blue); }
+.su-step.is-current .su-step-label { color: var(--ink-900); }
+.su-step.is-done .su-step-num { background: var(--blue-50); color: var(--blue); border-color: var(--blue-border); font-size: 14px; }
+.su-step.is-done .su-step-label { color: var(--ink-500); }
+.su-step-line { flex: 1; height: 1px; background: var(--card-border); margin: 0 10px; }
+.su-step-line.is-done { background: var(--blue-border); }
+
+/* 폼 필드 */
+.su-field { margin-top: 18px; }
+.su-label { font-size: 13px; font-weight: 700; color: var(--ink-700); display: flex; align-items: center; gap: 6px; }
+.su-req { color: var(--red); }
+.su-input {
+  width: 100%; margin-top: 6px; height: 48px;
+  border: 1px solid var(--input-border); border-radius: 14px;
+  padding: 0 16px; font-family: inherit; font-size: 14px; color: var(--ink-900);
+  background: var(--white); outline: none;
+}
+.su-input::placeholder { color: var(--ink-400); }
+.su-input:focus { border-color: var(--blue); }
+.su-input.is-error { border-color: var(--red); }
+.su-help { font-size: 12px; font-weight: 500; color: var(--ink-500); margin-top: 6px; line-height: 1.6; }
+.su-help.is-error { color: var(--red); font-weight: 700; }
+.su-inline { display: flex; gap: 8px; margin-top: 6px; }
+.su-inline .su-input { margin-top: 0; }
+.su-inline .btn { flex-shrink: 0; height: 48px; border-radius: 14px; }
+
+/* 역할 선택 카드 */
+.su-role-cards { display: flex; gap: 10px; margin-top: 20px; }
+.su-role-card {
+  flex: 1; border: 1.5px solid var(--input-border); border-radius: var(--radius-card);
+  padding: 18px 14px; cursor: pointer; font-family: inherit; background: var(--white);
+  text-align: center; transition: border-color .12s;
+}
+.su-role-card:hover { border-color: var(--blue-border); }
+.su-role-card.is-on { border-color: var(--blue); background: var(--blue-50); }
+.su-role-icon { font-size: 28px; }
+.su-role-title { font-size: 15px; font-weight: 800; color: var(--ink-900); margin-top: 8px; letter-spacing: -0.01em; }
+.su-role-desc { font-size: 12px; font-weight: 500; color: var(--ink-500); margin-top: 4px; line-height: 1.5; }
+
+/* 사업자번호 결과 박스 */
+.su-biz-ok   { background: var(--blue-50); border: 1px solid var(--blue-border); color: var(--ink-700); border-radius: var(--radius-tile); padding: 12px 14px; font-size: 13px; font-weight: 500; line-height: 1.7; margin-top: 10px; }
+.su-biz-warn { background: #fff8e6; border: 1px solid #f5c842; color: var(--ink-700); border-radius: var(--radius-tile); padding: 12px 14px; font-size: 13px; font-weight: 500; line-height: 1.7; margin-top: 10px; }
+.su-biz-block{ background: var(--red-bg,#fff0f0); border: 1px solid var(--red); color: var(--ink-700); border-radius: var(--radius-tile); padding: 12px 14px; font-size: 13px; font-weight: 500; line-height: 1.7; margin-top: 10px; }
+
+/* 패널 */
+.su-pane { display: none; }
+.su-pane.is-active { display: block; }
+
+@media (max-width: 767px) {
+  .on-wrap { padding: 24px 16px; align-items: flex-start; }
+  .su-step-label { display: none; }
+  .su-step.is-current .su-step-label { display: block; }
+}
+</style>
+</head>
+<body data-screen="UW_ON_05">
+
+<div class="on-wrap">
+  <div class="on-card-outer">
+
+    <!-- 로고 -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:800;letter-spacing:-0.02em;margin-bottom:28px">
+      <span class="uw-logo-mark">✦</span> 비즈플래닛
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- 역할 선택 (스텝 전 — 스텝퍼 없음) -->
+    <!-- ======================================================= -->
+    <div class="uw-card" id="pane-role" style="padding:28px">
+      <h1 style="font-size:20px;font-weight:800;letter-spacing:-0.02em;text-align:center">어떻게 사용하실 건가요?</h1>
+      <div class="su-role-cards">
+        <button type="button" class="su-role-card" id="btn-role-owner">
+          <div class="su-role-icon">🏪</div>
+          <div class="su-role-title">사장님</div>
+          <div class="su-role-desc">내 매장을 등록하고<br>AI 마케팅을 시작해요</div>
+        </button>
+        <button type="button" class="su-role-card" id="btn-role-staff">
+          <div class="su-role-icon">👥</div>
+          <div class="su-role-title">직원·대행사</div>
+          <div class="su-role-desc">담당자에게 초대받은<br>분만 가입할 수 있어요</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 직원 안내 (역할 선택 후 노출) -->
+    <div class="uw-card" id="pane-staff" style="display:none;padding:32px 28px;text-align:center">
+      <div style="font-size:36px">✉️</div>
+      <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em;margin-top:14px">초대코드로만 가입할 수 있어요</div>
+      <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:8px;line-height:1.7">초대 문자 속 링크로만 가입할 수 있어요.<br>담당자에게 초대 문자를 요청해 주세요.</div>
+      <a href="19_초대가입.html" class="btn btn-primary" style="width:100%;margin-top:20px;text-decoration:none;display:block;text-align:center">초대가입으로 이동 →</a>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- 사장님 가입 (스텝 3단) -->
+    <!-- ======================================================= -->
+    <div id="pane-owner" style="display:none">
+      <div class="uw-card" style="padding:32px 28px">
+
+        <!-- 스텝퍼 -->
+        <div class="su-steps" aria-label="가입 단계">
+          <div class="su-step is-current" data-su-ind="1">
+            <span class="su-step-num">1</span><span class="su-step-label">본인 확인</span>
+          </div>
+          <div class="su-step-line" data-su-line="1"></div>
+          <div class="su-step" data-su-ind="2">
+            <span class="su-step-num">2</span><span class="su-step-label">사업자 확인</span>
+          </div>
+          <div class="su-step-line" data-su-line="2"></div>
+          <div class="su-step" data-su-ind="3">
+            <span class="su-step-num">3</span><span class="su-step-label">약관 동의</span>
+          </div>
+          <div class="su-step-line" data-su-line="3"></div>
+          <div class="su-step" data-su-ind="4">
+            <span class="su-step-num">4</span><span class="su-step-label">계정 설정</span>
+          </div>
+          <div class="su-step-line" data-su-line="4"></div>
+          <div class="su-step" data-su-ind="5">
+            <span class="su-step-num">5</span><span class="su-step-label">가입 완료</span>
+          </div>
+        </div>
+
+        <!-- Step 1: 본인 확인 -->
+        <section class="su-pane is-active" id="su-step-1">
+          <h1 class="uw-h1">사장님 정보를 알려주세요</h1>
+          <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">가입 후에도 수정할 수 있어요</p>
+
+          <div class="su-field">
+            <div class="su-label">이름 <span class="su-req">*</span></div>
+            <input class="su-input" id="su-name" placeholder="실명을 입력해 주세요" required>
+          </div>
+
+          <div class="su-field">
+            <div class="su-label">휴대폰 번호 <span class="su-req">*</span></div>
+            <div class="su-inline">
+              <input class="su-input" id="su-phone" type="tel" inputmode="numeric" placeholder="010-0000-0000" required>
+              <button class="btn btn-secondary" id="btn-su-code" style="padding:0 16px">인증번호 받기</button>
+            </div>
+          </div>
+
+          <div class="su-field" id="su-code-wrap" style="display:none">
+            <div class="su-label">인증번호 <span class="su-req">*</span></div>
+            <div class="su-inline">
+              <input class="su-input" id="su-code" type="text" inputmode="numeric" placeholder="6자리" required>
+              <button class="btn btn-ghost" id="btn-su-resend" style="padding:0 16px">재전송</button>
+            </div>
+            <div class="su-help" style="color:var(--blue);font-weight:700">3분 안에 입력해 주세요</div>
+          </div>
+
+          <!-- 이미 가입된 번호 차단 -->
+          <div id="su-phone-block" style="display:none;margin-top:10px">
+            <div class="su-biz-block">이미 가입된 번호예요. <a href="21_로그인.html" style="color:var(--blue);font-weight:700;text-decoration:underline">로그인</a>해 주세요.<br><span style="font-size:12px;color:var(--ink-500)">번호가 바뀌었다면 <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="고객센터에 문의를 남겼어요">고객센터에 문의</a>해 주세요.</span></div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-su-1" style="width:100%;margin-top:24px">다음</button>
+        </section>
+
+        <!-- Step 2: 사업자 확인 -->
+        <section class="su-pane" id="su-step-2">
+          <h1 class="uw-h1">매장 사업자번호를 알려주세요</h1>
+          <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">여러 매장을 운영 중이라면 대표 매장의 번호로 먼저 가입하고, 나머지는 나중에 추가할 수 있어요.</p>
+
+          <div class="su-field">
+            <div class="su-label">사업자번호 <span class="su-req">*</span></div>
+            <div class="su-inline">
+              <input class="su-input" id="su-bizno" inputmode="numeric" placeholder="숫자 10자리" maxlength="12" required>
+              <button class="btn btn-secondary" id="btn-su-bizcheck" style="padding:0 16px">확인</button>
+            </div>
+            <div class="su-help">사업자등록증의 번호를 입력해 주세요</div>
+          </div>
+
+          <!-- 사업자번호 확인 결과 -->
+          <div id="su-biz-result" style="display:none"></div>
+
+          <button class="btn btn-primary" id="btn-su-2" style="width:100%;margin-top:24px" disabled>다음</button>
+          <button class="btn btn-ghost" id="btn-su-back-1" style="width:100%;margin-top:8px">이전</button>
+        </section>
+
+        <!-- Step 3: 약관 동의 -->
+        <section class="su-pane" id="su-step-3">
+          <h1 class="uw-h1">약관에 동의해 주세요</h1>
+          <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">서비스 이용을 위해 아래 내용을 확인해 주세요</p>
+
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:2px">
+            <label style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--divider);cursor:pointer">
+              <input type="checkbox" id="su-agree-all" style="width:18px;height:18px;flex-shrink:0">
+              <span style="font-size:14px;font-weight:800">모두 동의</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--divider);cursor:pointer">
+              <input type="checkbox" class="su-agree-required" style="width:18px;height:18px;flex-shrink:0">
+              <span style="font-size:13px;color:var(--ink-700);flex:1"><b style="color:var(--blue)">[필수]</b> 이용약관 동의</span>
+              <a href="22_약관정책.html" style="font-size:12px;color:var(--ink-500);text-decoration:underline;flex-shrink:0">보기</a>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--divider);cursor:pointer">
+              <input type="checkbox" class="su-agree-required" style="width:18px;height:18px;flex-shrink:0">
+              <span style="font-size:13px;color:var(--ink-700);flex:1"><b style="color:var(--blue)">[필수]</b> 개인정보 수집·이용 동의</span>
+              <a href="22_약관정책.html" style="font-size:12px;color:var(--ink-500);text-decoration:underline;flex-shrink:0">보기</a>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;padding:12px 0;cursor:pointer">
+              <input type="checkbox" class="su-agree-optional" style="width:18px;height:18px;flex-shrink:0">
+              <span style="font-size:13px;color:var(--ink-700)"><b style="color:var(--ink-400)">[선택]</b> 혜택·소식 문자 받기</span>
+            </label>
+          </div>
+
+          <button class="btn btn-primary" id="btn-su-agree" style="width:100%;margin-top:20px" disabled>다음</button>
+          <button class="btn btn-ghost" id="btn-su-back-2" style="width:100%;margin-top:8px">이전</button>
+        </section>
+
+        <!-- Step 4: 계정 설정 -->
+        <section class="su-pane" id="su-step-4">
+          <h1 class="uw-h1">로그인에 쓸 계정을 만들어요</h1>
+          <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">이메일과 비밀번호로 로그인해요</p>
+
+          <div class="su-field">
+            <div class="su-label">이메일 <span class="su-req">*</span></div>
+            <div class="su-inline">
+              <input class="su-input" id="su-email" type="email" placeholder="example@email.com" required>
+              <button class="btn btn-secondary" id="btn-su-email-check" style="padding:0 16px">중복 확인</button>
+            </div>
+            <div class="su-help" id="su-email-help">가입 후에도 인증 없이 바로 이용할 수 있어요. 인증은 나중에 안내드려요.</div>
+          </div>
+
+          <!-- 이미 가입된 이메일 안내 -->
+          <div id="su-email-block" style="display:none;margin-top:10px">
+            <div class="su-biz-block">이미 가입된 이메일이에요. <a href="21_로그인.html" style="color:var(--blue);font-weight:700;text-decoration:underline">로그인</a>해 주세요.</div>
+          </div>
+
+          <div class="su-field">
+            <div class="su-label">비밀번호 <span class="su-req">*</span></div>
+            <input class="su-input" id="su-pw" type="password" placeholder="영문·숫자·특수문자 포함 8자 이상" required>
+          </div>
+
+          <div class="su-field">
+            <div class="su-label">비밀번호 확인 <span class="su-req">*</span></div>
+            <input class="su-input" id="su-pw-confirm" type="password" placeholder="비밀번호를 한 번 더 입력해 주세요" required>
+            <div class="su-help is-error" id="su-pw-mismatch" style="display:none">비밀번호가 서로 달라요</div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-su-4" style="width:100%;margin-top:24px" disabled>다음</button>
+          <button class="btn btn-ghost" id="btn-su-back-3" style="width:100%;margin-top:8px">이전</button>
+        </section>
+
+        <!-- Step 5: 가입 완료 -->
+        <section class="su-pane" id="su-step-5">
+          <div style="text-align:center;padding:12px 0 4px">
+            <div style="font-size:48px">🎉</div>
+            <h1 class="uw-h1" style="margin-top:16px" id="su-done-title">가입을 환영해요!</h1>
+            <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:8px;line-height:1.7" id="su-done-desc">이제 AI가 마케팅을 도와드릴 준비를 할게요.<br>가게 정보를 알려주시면 바로 시작할 수 있어요.</p>
+          </div>
+          <a href="10_온보딩.html" class="btn btn-primary" id="btn-su-done" style="width:100%;margin-top:28px;text-decoration:none;display:block;text-align:center">가게 정보 알려주기 →</a>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- 하단 링크 -->
+    <div id="pane-footer" style="text-align:center;margin-top:18px;display:flex;flex-direction:column;gap:8px">
+      <span style="font-size:13px;color:var(--ink-600)">이미 계정이 있으세요? <a href="21_로그인.html" style="color:var(--blue);font-weight:700;text-decoration:underline">로그인</a></span>
+
+      <a href="22_약관정책.html" style="font-size:12px;color:var(--ink-400);text-decoration:underline">이용약관·개인정보 처리방침</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---- 목데이터 (프로토타입) ----
+     전화번호 중복: 01099999999 → 이미 가입
+     사업자번호 분기 (우선순위: OWNER 존재 > 초대장 유무 > 이름·폰 대조):
+       1234567890 → 매장 존재, OWNER 없음, 초대장 없음         → AGENCY_PRE
+       2222222222 → 매장 존재, OWNER 없음, 초대장 있음(김영희·010-2222-3333) → INVITED_MATCH / INVITED_MISMATCH
+       9999999999 → 매장 존재, OWNER 있음                       → OTHER_OWNER
+       그 외      → 매장 없음                                   → NEW
+  */
+  var DUP_PHONES  = ["01099999999"];
+  var DUP_EMAILS  = ["owner@bizplanet.co.kr"];
+  var BIZNO_DB    = {
+    "1234567890": { hasOwner: false, invited: false },
+    "2222222222": { hasOwner: false, invited: true, invitedName: "김영희", invitedPhone: "010-2222-3333" },
+    "9999999999": { hasOwner: true }
+  };
+  var bizCase = null;
+
+  function determineBizCase(bizno) {
+    var entry = BIZNO_DB[bizno];
+    if (!entry) return "NEW";
+    if (entry.hasOwner) return "OTHER_OWNER";
+    if (!entry.invited) return "AGENCY_PRE";
+    var name  = document.getElementById("su-name").value.trim();
+    var phone = document.getElementById("su-phone").value.replace(/\D/g, "");
+    var match = name === entry.invitedName && phone === entry.invitedPhone.replace(/\D/g, "");
+    return match ? "INVITED_MATCH" : "INVITED_MISMATCH";
+  }
+
+  /* ---- 역할 선택 ---- */
+  document.getElementById("btn-role-owner").addEventListener("click", function () {
+    document.getElementById("pane-role").style.display   = "none";
+    document.getElementById("pane-owner").style.display  = "";
+    document.getElementById("pane-footer").style.display = "";
+  });
+  document.getElementById("btn-role-staff").addEventListener("click", function () {
+    document.getElementById("pane-role").style.display   = "none";
+    document.getElementById("pane-staff").style.display  = "";
+    document.getElementById("pane-footer").style.display = "none";
+  });
+
+  /* ---- 스텝 전환 ---- */
+  function setStep(n) {
+    [1, 2, 3, 4, 5].forEach(function (s) {
+      document.getElementById("su-step-" + s).classList.toggle("is-active", s === n);
+      var ind = document.querySelector('[data-su-ind="' + s + '"]');
+      ind.classList.toggle("is-current", s === n);
+      ind.classList.toggle("is-done", s < n);
+      ind.querySelector(".su-step-num").textContent = s < n ? "✓" : String(s);
+    });
+    [1, 2, 3, 4].forEach(function (l) {
+      document.querySelector('[data-su-line="' + l + '"]').classList.toggle("is-done", l < n);
+    });
+  }
+
+  /* ---- Step 1: 본인 확인 ---- */
+  document.getElementById("btn-su-code").addEventListener("click", function () {
+    var phone = document.getElementById("su-phone").value.replace(/\D/g, "");
+    if (!phone) { document.getElementById("su-phone").classList.add("is-error"); if (window.UW) window.UW.toast("휴대폰 번호를 입력해 주세요"); return; }
+    document.getElementById("su-phone").classList.remove("is-error");
+
+    /* 이미 가입된 번호 체크 */
+    if (DUP_PHONES.indexOf(phone) >= 0) {
+      document.getElementById("su-phone-block").style.display = "";
+      document.getElementById("su-code-wrap").style.display   = "none";
+      document.getElementById("btn-su-1").disabled = true;
+      return;
+    }
+    document.getElementById("su-phone-block").style.display = "none";
+    document.getElementById("su-code-wrap").style.display   = "";
+    document.getElementById("btn-su-1").disabled = false;
+    if (window.UW) window.UW.toast("인증번호를 보내드렸어요 (프로토타입)");
+  });
+  document.getElementById("btn-su-resend").addEventListener("click", function () {
+    if (window.UW) window.UW.toast("인증번호를 다시 보내드렸어요");
+  });
+  document.getElementById("btn-su-1").addEventListener("click", function () {
+    var name  = document.getElementById("su-name");
+    var phone = document.getElementById("su-phone");
+    var code  = document.getElementById("su-code");
+    var ok = true;
+    [name, phone].forEach(function (el) {
+      var empty = !el.value.trim();
+      el.classList.toggle("is-error", empty);
+      if (empty) ok = false;
+    });
+    if (!ok) { if (window.UW) window.UW.toast("빨간 칸을 채워 주세요"); return; }
+    if (document.getElementById("su-code-wrap").style.display !== "none" && !code.value.trim()) {
+      code.classList.add("is-error");
+      if (window.UW) window.UW.toast("인증번호를 입력해 주세요"); return;
+    }
+    setStep(2);
+  });
+
+  /* ---- Step 2: 사업자번호 확인 ---- */
+  function renderBizResult(c) {
+    bizCase = c;
+    var wrap = document.getElementById("su-biz-result");
+    var btn  = document.getElementById("btn-su-2");
+    wrap.style.display = "";
+    btn.disabled = true;
+
+    if (c === "NEW") {
+      wrap.innerHTML = '<div class="su-biz-ok">✅ 새로 가입하시는 사장님이시네요. 계속 진행해 주세요.</div>';
+      btn.disabled = false;
+
+    } else if (c === "AGENCY_PRE") {
+      /* v20(2026-08-24) 정책: 대행사가 매장만 사전 등록해 두고 아직 초대장은 안 보낸 상태.
+         여기서 자체 가입으로 연결시켜주지 않는다 — 대행사가 실제로 초대를 보낼 때까지 기다려야 한다.
+         [다음]은 계속 비활성 상태로 둔다(이 지점에서 진행할 방법이 없음, 순수 안내만) */
+      wrap.innerHTML =
+        '<div class="su-biz-warn">⚠ 대행사가 이미 이 매장을 등록해 뒀어요. 대행사가 보내는 초대를 기다려 주세요.<br>' +
+        '<span style="font-size:12px;color:var(--ink-500)">계약한 대행사가 아니라면 <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="고객센터에 문의를 남겼어요">고객센터에 문의</a>해 주세요.</span></div>';
+
+    } else if (c === "INVITED_MATCH") {
+      /* v20(2026-08-24) 정책: 이미 발급된 초대장과 이름/휴대폰이 일치하는 상태.
+         여기서 자체 가입으로 연결시켜주지 않는다 — 이미 초대장이 있으니 19_초대가입으로 보내
+         그 화면의 본인 인증(같은 이름/전화 매칭)으로 진행하게 한다. [다음]은 계속 비활성 상태 */
+      wrap.innerHTML =
+        '<div class="su-biz-warn">✉️ 이 사업자번호로 초대장이 이미 와 있어요. 초대 가입으로 진행해 주세요.' +
+        '<div style="margin-top:10px"><a href="19_초대가입.html?invite=owner" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block">초대가입으로 이동 →</a></div>' +
+        '<div style="font-size:12px;color:var(--ink-500);margin-top:8px">계약한 대행사가 아니라면 <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="고객센터에 문의를 남겼어요">고객센터에 문의</a>해 주세요.</div></div>';
+
+    } else if (c === "INVITED_MISMATCH") {
+      wrap.innerHTML =
+        '<div class="su-biz-block">⛔ 이 사업자번호는 이미 초대가 진행 중이에요.<br>' +
+        '입력하신 이름·휴대폰 정보가 초대장 정보와 달라서 본인 확인이 필요해요. <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="고객센터에 문의를 남겼어요">고객센터에 문의</a>해 주세요.</div>';
+
+    } else { /* OTHER_OWNER */
+      wrap.innerHTML =
+        '<div class="su-biz-block">⛔ 이미 다른 분이 사용 중인 사업자번호예요.<br>' +
+        '내 번호인데 막혔다면 <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="고객센터에 문의를 남겼어요">고객센터에 문의</a>해 주세요.</div>';
+    }
+  }
+
+  document.getElementById("btn-su-bizcheck").addEventListener("click", function () {
+    var bizno = document.getElementById("su-bizno").value.replace(/\D/g, "");
+    if (bizno.length !== 10) {
+      document.getElementById("su-bizno").classList.add("is-error");
+      if (window.UW) window.UW.toast("사업자번호 10자리를 입력해 주세요"); return;
+    }
+    document.getElementById("su-bizno").classList.remove("is-error");
+    renderBizResult(determineBizCase(bizno));
+  });
+
+  document.getElementById("btn-su-2").addEventListener("click", function () {
+    setStep(3);
+  });
+
+  document.getElementById("btn-su-back-1").addEventListener("click", function () { setStep(1); });
+
+  /* ---- Step 3: 약관 동의 ---- */
+  function checkAgreeState() {
+    var required = document.querySelectorAll(".su-agree-required");
+    var all = true;
+    required.forEach(function (c) { if (!c.checked) all = false; });
+    document.getElementById("btn-su-agree").disabled = !all;
+  }
+
+  document.getElementById("su-agree-all").addEventListener("change", function () {
+    var checked = this.checked;
+    document.querySelectorAll(".su-agree-required, .su-agree-optional").forEach(function (c) {
+      c.checked = checked;
+    });
+    checkAgreeState();
+  });
+
+  document.querySelectorAll(".su-agree-required, .su-agree-optional").forEach(function (c) {
+    c.addEventListener("change", function () {
+      var boxes = document.querySelectorAll(".su-agree-required, .su-agree-optional");
+      var allChecked = true;
+      boxes.forEach(function (b) { if (!b.checked) allChecked = false; });
+      document.getElementById("su-agree-all").checked = allChecked;
+      checkAgreeState();
+    });
+  });
+
+  document.getElementById("btn-su-agree").addEventListener("click", function () {
+    setStep(4);
+  });
+  document.getElementById("btn-su-back-2").addEventListener("click", function () { setStep(2); });
+
+  /* ---- Step 4: 계정 설정(이메일+비밀번호) ---- */
+  var emailChecked = false;
+
+  function refreshStep4Btn() {
+    var email = document.getElementById("su-email").value.trim();
+    var pw = document.getElementById("su-pw").value;
+    var pwConfirm = document.getElementById("su-pw-confirm").value;
+    document.getElementById("btn-su-4").disabled = !(emailChecked && email && pw && pwConfirm);
+  }
+
+  document.getElementById("btn-su-email-check").addEventListener("click", function () {
+    var email = document.getElementById("su-email").value.trim();
+    if (!email) { document.getElementById("su-email").classList.add("is-error"); if (window.UW) window.UW.toast("이메일을 입력해 주세요"); return; }
+    document.getElementById("su-email").classList.remove("is-error");
+
+    if (DUP_EMAILS.indexOf(email.toLowerCase()) >= 0) {
+      document.getElementById("su-email-block").style.display = "";
+      emailChecked = false;
+    } else {
+      document.getElementById("su-email-block").style.display = "none";
+      document.getElementById("su-email-help").textContent = "사용할 수 있는 이메일이에요";
+      document.getElementById("su-email-help").style.color = "var(--blue)";
+      document.getElementById("su-email-help").style.fontWeight = "700";
+      emailChecked = true;
+      if (window.UW) window.UW.toast("사용할 수 있는 이메일이에요");
+    }
+    refreshStep4Btn();
+  });
+
+  document.getElementById("su-email").addEventListener("input", function () {
+    emailChecked = false;
+    document.getElementById("su-email-block").style.display = "none";
+    document.getElementById("su-email-help").textContent = "가입 후에도 인증 없이 바로 이용할 수 있어요. 인증은 나중에 안내드려요.";
+    document.getElementById("su-email-help").style.color = "";
+    document.getElementById("su-email-help").style.fontWeight = "";
+    refreshStep4Btn();
+  });
+  document.getElementById("su-pw").addEventListener("input", refreshStep4Btn);
+  document.getElementById("su-pw-confirm").addEventListener("input", function () {
+    var mismatch = document.getElementById("su-pw").value !== this.value && this.value;
+    document.getElementById("su-pw-mismatch").style.display = mismatch ? "" : "none";
+    refreshStep4Btn();
+  });
+
+  document.getElementById("btn-su-4").addEventListener("click", function () {
+    if (!emailChecked) { if (window.UW) window.UW.toast("이메일 중복 확인을 먼저 해 주세요"); return; }
+    if (document.getElementById("su-pw").value !== document.getElementById("su-pw-confirm").value) {
+      document.getElementById("su-pw-mismatch").style.display = "";
+      if (window.UW) window.UW.toast("비밀번호가 서로 달라요"); return;
+    }
+    /* v20(2026-08-24): STORE_LINKED(사전 등록 매장과 자체 가입으로 연결) 경로 제거 —
+       AGENCY_PRE/INVITED_MATCH가 더 이상 여기서 연결을 완료시키지 않으므로 bizCase가
+       STORE_LINKED가 될 일이 없다(항상 NEW로만 Step5에 도달). 완료 문구는 기본값 고정 */
+    setStep(5);
+  });
+  document.getElementById("btn-su-back-3").addEventListener("click", function () { setStep(3); });
+
+  /* ---- 입력 시 에러 해제 + 사업자번호 재입력 시 결과 초기화 ---- */
+  document.addEventListener("input", function (e) {
+    if (e.target.classList.contains("is-error") && e.target.value.trim()) e.target.classList.remove("is-error");
+    if (e.target.id === "su-bizno") {
+      document.getElementById("su-biz-result").style.display = "none";
+      document.getElementById("btn-su-2").disabled = true;
+      bizCase = null;
+    }
+    if (e.target.id === "su-phone") {
+      document.getElementById("su-phone-block").style.display = "none";
+      document.getElementById("btn-su-1").disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

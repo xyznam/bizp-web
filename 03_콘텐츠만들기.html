@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>콘텐츠 만들기 — 비즈플래닛</title>
+<!-- UW_CT_01 · W1 · 스펙: planning/23 §6 (시안 슬라이드 5) · 계약: planning/24 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/userweb.css">
+</head>
+<body data-screen="UW_CT_01">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html" class="is-active">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">콘텐츠 만들기</span>
+      <span class="uw-topbar-sub" data-copy="topbar.sub">고르기만 하면 AI가 글을 써드려요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+      <div class="uw-split">
+
+        <!-- ========== 좌측: 위저드 ========== -->
+        <div class="uw-split-list" style="width:400px">
+
+          <!-- M01 · view: 위저드 헤딩 (전 레벨 상시 노출) -->
+          <section data-module="M01">
+            <h1 class="uw-h1" style="font-size:22px">무엇을 알릴까요?</h1>
+            <p class="uw-h1-caption">고르기만 하면 AI가 글을 써드려요</p>
+          </section>
+
+          <!-- M03 · create · L2+: 스텝① 소식 유형 (L1은 대체 카드로 전환, fallbackName이 M04~M06까지 대표) -->
+          <section class="uw-card mt-16" data-module="M03" style="padding:18px">
+            <div style="font-size:13px;font-weight:800;color:var(--ink-600)">① 어떤 소식인가요?</div>
+            <div class="mt-12" id="topic-chips" style="display:flex;flex-wrap:wrap;gap:8px">
+              <span class="uw-kw-chip is-selected" data-topic="신메뉴 출시" style="cursor:pointer">신메뉴 출시</span>
+              <span class="uw-kw-chip" data-topic="할인 이벤트" style="cursor:pointer">할인 이벤트</span>
+              <span class="uw-kw-chip" data-topic="매장 이야기" style="cursor:pointer">매장 이야기</span>
+              <span class="uw-kw-chip" data-topic="계절 인사" style="cursor:pointer">계절 인사</span>
+            </div>
+          </section>
+
+          <!-- M04 · create · L2+: 스텝② 한 줄 입력 (L1 자동 숨김 — 대체 카드는 M03에 통합) -->
+          <section class="uw-card mt-8" data-module="M04" style="padding:18px">
+            <div style="font-size:13px;font-weight:800;color:var(--ink-600)">② 한 줄로 알려주세요</div>
+            <textarea id="ct-oneline" class="mt-12" style="width:100%;height:64px;border:1px solid var(--input-border);border-radius:14px;padding:12px;font-family:inherit;font-size:14px;resize:none">제철 재료로 만든 여름 한정 메뉴가 새로 나왔어요</textarea>
+          </section>
+
+          <!-- M05 · create · L2+: 스텝③ 채널 선택 + 생성 버튼 (L1 자동 숨김) -->
+          <section class="uw-card mt-8" data-module="M05" style="padding:18px">
+            <div style="font-size:13px;font-weight:800;color:var(--ink-600)">③ 어디에 올릴까요?</div>
+            <div class="mt-12" id="channel-cards" style="display:flex;gap:8px">
+              <div class="uw-doc-card is-selected" data-channel="네이버 블로그" style="flex:1;margin-bottom:0;padding:12px 14px;text-align:center">
+                <div style="font-size:13px;font-weight:700">네이버 블로그</div>
+              </div>
+              <div class="uw-doc-card" data-channel="당근마켓" style="flex:1;margin-bottom:0;padding:12px 14px;text-align:center">
+                <div style="font-size:13px;font-weight:700">당근마켓</div>
+              </div>
+            </div>
+            <button class="btn btn-primary mt-16" style="width:100%" id="btn-generate">✨ AI로 글 만들기</button>
+          </section>
+
+          <!-- M07 · bulk · L3 전용: 여러 매장 동시 생성 -->
+          <section class="uw-card mt-8" data-module="M07" style="padding:18px">
+            <div style="font-size:13px;font-weight:800;color:var(--ink-600)">여러 매장에 같은 소식 알리기</div>
+            <div class="mt-12" style="display:flex;flex-wrap:wrap;gap:8px">
+              <span class="uw-store-chip is-selected" data-store="스시오마카세 강남점" style="cursor:pointer;background:var(--blue-50);color:var(--blue)">스시오마카세 강남점</span>
+              <span class="uw-store-chip" data-store="스시오마카세 판교점" style="cursor:pointer">스시오마카세 판교점</span>
+              <span class="uw-store-chip" data-store="카페봄봄 신촌점" style="cursor:pointer">카페봄봄 신촌점</span>
+            </div>
+            <div class="uw-h1-caption mt-8">매장을 고르면 각 매장 말투로 따로 써드려요</div>
+          </section>
+
+        </div>
+
+        <!-- ========== 우측: AI 초안 미리보기 ========== -->
+        <div class="uw-split-detail">
+          <button class="uw-back" data-action="back-to-wizard">‹ 다시 고르기</button>
+          <div class="uw-card" style="padding:24px">
+
+            <!-- M02 · preview: AI 초안 미리보기 (전 레벨 상시 노출) -->
+            <section data-module="M02">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-size:14px;font-weight:800">AI 초안 미리보기</div>
+                <!-- M08 · advanced · L3: 생성 옵션 -->
+                <button class="btn btn-ghost btn-sm" data-module="M08" data-action="open-modal" data-modal="modal-gen-option" style="margin-left:auto">⚙ 생성 옵션</button>
+              </div>
+              <div class="mt-12" style="display:flex;align-items:center;gap:8px">
+                <span class="uw-badge b-purple" id="ct-gen-badge">약 8초 전 생성</span>
+                <span class="d-ch" style="font-size:12px;font-weight:700;color:var(--ink-600)" id="ct-channel-label">네이버 블로그</span>
+              </div>
+              <h2 class="uw-h1" style="font-size:22px;margin-top:14px" id="ct-title">여름엔 역시 시원한 신메뉴! 제철 재료 가득 여름 한정 메뉴 출시</h2>
+              <div style="font-size:14px;line-height:1.8;color:var(--ink-700);margin-top:14px" id="ct-body">
+                무더운 여름을 시원하게 즐길 수 있는 새로운 메뉴를 준비했어요. 제철을 맞은 신선한 재료를 듬뿍 담아 맛과 건강을 함께 챙겼습니다. 오래 지켜온 정성스러운 조리법에 여름철 재료의 산뜻함을 더해 더욱 특별한 한 그릇을 완성했어요. 무더위에 지친 입맛을 살려줄 여름 한정 메뉴, 지금 바로 만나보세요.
+              </div>
+              <div class="mt-12" style="display:flex;gap:6px;flex-wrap:wrap" id="ct-hashtags">
+                <span class="uw-kw-chip">#여름신메뉴</span>
+                <span class="uw-kw-chip">#제철재료</span>
+                <span class="uw-kw-chip">#여름한정메뉴</span>
+                <span class="uw-kw-chip">#맛집추천</span>
+              </div>
+            </section>
+
+            <!-- M06 · create · L2+: 검토 요청 / 다시 쓰기 / 직접 수정 (L1 자동 숨김) -->
+            <section class="uw-actionbar" data-module="M06">
+              <button class="btn btn-primary" data-action="submit-content" data-copy="submit.btn">🚀 이대로 검토 요청</button>
+              <button class="btn btn-ghost" data-action="rewrite-content">↻ 다시 쓰기</button>
+              <button class="btn btn-ghost" data-action="edit-content">✏️ 직접 수정</button>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 생성 옵션 모달 (M08 · L3) ==================== -->
+<div class="uw-modal-backdrop" id="modal-gen-option">
+  <div class="uw-modal">
+    <div class="uw-modal-title">생성 옵션</div>
+    <div class="uw-modal-body">
+      AI가 글을 쓸 때 반영할 옵션을 정해요.
+      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;font-weight:700;color:var(--ink-600)">말투</div>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-tone" checked> 친근하게</label>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-tone"> 정중하게</label>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-tone"> 발랄하게</label>
+      </div>
+      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;font-weight:700;color:var(--ink-600)">글 길이</div>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-length"> 짧게</label>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-length" checked> 보통</label>
+        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-length"> 길게</label>
+      </div>
+      <div class="uw-preview-box">
+        <div style="font-size:13px;font-weight:700;color:var(--ink-600)">꼭 넣을 키워드</div>
+        <input type="text" placeholder="예: 제철 재료, 여름 한정" style="width:100%;margin-top:8px;border:1px solid var(--input-border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px">
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="save-gen-option">저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직: 위저드 칩 선택·채널 선택·매장 선택·생성/제출 흉내 (계약 §1: 화면 고유 표현 한정) ---- */
+(function () {
+  document.addEventListener("click", function (e) {
+    // 스텝① 소식 유형 칩 — 단일 선택 토글
+    var topic = e.target.closest("[data-topic]");
+    if (topic) {
+      document.querySelectorAll("#topic-chips [data-topic]").forEach(function (c) { c.classList.remove("is-selected"); });
+      topic.classList.add("is-selected");
+      return;
+    }
+    // 스텝③ 채널 카드 — 단일 선택 토글
+    var channel = e.target.closest("[data-channel]");
+    if (channel) {
+      document.querySelectorAll("#channel-cards [data-channel]").forEach(function (c) { c.classList.remove("is-selected"); });
+      channel.classList.add("is-selected");
+      document.getElementById("ct-channel-label").textContent = channel.getAttribute("data-channel");
+      return;
+    }
+    // M07 매장 칩 — 다중 선택 토글
+    var storeChip = e.target.closest("[data-store]");
+    if (storeChip) {
+      storeChip.classList.toggle("is-selected");
+      storeChip.style.background = storeChip.classList.contains("is-selected") ? "var(--blue-50)" : "";
+      storeChip.style.color = storeChip.classList.contains("is-selected") ? "var(--blue)" : "";
+      return;
+    }
+    // M05 · AI로 글 만들기 (+모바일 2단계 내비: 생성 시 미리보기로 전환 — 26 ISS-3)
+    if (e.target.closest("#btn-generate")) {
+      window.UW.toast("AI가 글을 쓰고 있어요. 약 8초 걸려요.");
+      var badge = document.getElementById("ct-gen-badge");
+      badge.textContent = "생성 중…";
+      setTimeout(function () {
+        badge.textContent = "약 8초 전 생성";
+      }, 1200);
+      return;
+    }
+    // M06 · 검토 요청 (레벨별 분기 카피)
+    if (e.target.closest("[data-action='submit-content']")) {
+      var lv = document.body.getAttribute("data-level");
+      var copies = (window.UW_COPY["UW_CT_01"] || {})["submit.toast"] || {};
+      var msg = copies[lv] || copies.L2 || copies.L1 || copies.L3 || "검토함에 담았어요.";
+      window.UW.toast(msg);
+      return;
+    }
+    // M06 · 다시 쓰기
+    if (e.target.closest("[data-action='rewrite-content']")) {
+      window.UW.toast("AI가 다시 쓰고 있어요. 잠시만요.");
+      return;
+    }
+    // M06 · 직접 수정
+    if (e.target.closest("[data-action='edit-content']")) {
+      window.UW.toast("본문을 눌러 바로 고칠 수 있어요");
+      return;
+    }
+    // M08 · 생성 옵션 저장
+    if (e.target.closest("[data-action='save-gen-option']")) {
+      e.target.closest(".uw-modal-backdrop").classList.remove("is-open");
+      window.UW.toast("생성 옵션을 저장했어요.");
+      return;
+    }
+  });
+})();
+</script>
+<script>
+/* v2 반응형 보조: 모바일에서 생성 → 미리보기 전환 / 뒤로 (26 ISS-3) */
+document.addEventListener("click", function (e) {
+  if (e.target.closest("#btn-generate") && window.matchMedia("(max-width:767px)").matches)
+    setTimeout(function(){ document.body.classList.add("uw-show-detail"); }, 400);
+  if (e.target.closest("[data-action='back-to-wizard']"))
+    document.body.classList.remove("uw-show-detail");
+});
+</script>
+</body>
+</html>
