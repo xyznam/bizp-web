@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>매장 자료 관리 — 비즈플래닛</title>
 <!-- UW_ST_09 · 매장 자료 관리
-     섹션: 사진(그리드+더보기) / 메뉴판 / 소개 문서 / 기타 자료
+     섹션: 사진(그리드+더보기) / 메뉴판 / 소개 문서
      플레이스 수집 사진과 직접 업로드 사진 구분 표시
-     파일 목록(메뉴판·소개문서·기타): 파일명·크기·등록일·삭제
+     파일 목록(메뉴판·소개문서): 파일명·크기·등록일·삭제
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -210,23 +210,6 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         </div>
       </section>
 
-      <!-- ======================================================= -->
-      <!-- 기타 자료 섹션 -->
-      <!-- ======================================================= -->
-      <section class="uw-card dm-section" id="sec-etc">
-        <div class="dm-section-head">
-          <div class="dm-section-title">📎 기타 자료</div>
-          <div class="dm-section-count" id="etc-count">0개</div>
-        </div>
-        <div class="dm-file-list" id="etc-list">
-          <div class="dm-empty">아직 추가한 자료가 없어요</div>
-        </div>
-        <div class="dm-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
-          <div class="dm-drop-title">+ 기타 자료 추가</div>
-          <div class="dm-drop-desc">JPG · PNG · PDF · DOCX, 20MB까지</div>
-        </div>
-      </section>
-
     </main>
   </div>
 </div>
@@ -269,8 +252,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     ],
     docs: [
       { id: "d1", icon: "📄", name: "카페봄봄_소개서.pdf",  size: "4.8MB", date: "2026.01.20" },
-    ],
-    etc: []
+    ]
   };
 
   var PAGE_SIZE = 4;
@@ -373,7 +355,6 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   renderPhotos();
   renderFiles("menu");
   renderFiles("docs");
-  renderFiles("etc");
 })();
 </script>
 </body>

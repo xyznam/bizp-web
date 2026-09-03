@@ -227,7 +227,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 
         <!-- 플레이스 경로 전용: 수집 완료 배너 + 함께 가져온 정보 요약 -->
         <div data-only-loaded style="display:none">
-          <div class="reg-collect">
+          <div class="reg-collect" id="reg-collect-summary">
             <div class="reg-collect-title">✦ 플레이스에서 매장 정보를 가져왔어요</div>
             <div class="reg-collect-list">
               <div>기본 정보와 운영시간을 아래에 채워 뒀어요. <b>사업자번호와 주차 정보</b>는 플레이스에 없어서 직접 입력이 필요해요.</div>
@@ -239,7 +239,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         <div class="uw-card" style="margin-top:16px;padding:8px 28px 28px">
           <h3 class="uw-section-title" style="font-size:15px;padding-top:20px">기본 정보</h3>
 
-          <div class="reg-grid2">
+          <div class="reg-grid2" id="f-basic">
             <div class="reg-field">
               <div class="reg-label">업종 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
               <select class="reg-select" data-f="category" required>
@@ -271,7 +271,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             </div>
           </div>
 
-          <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">운영시간</h3>
+          <h3 class="uw-section-title" style="font-size:15px;margin-top:28px" id="f-hours">운영시간</h3>
 
           <div class="reg-grid2">
             <div class="reg-field">
@@ -310,19 +310,26 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="reg-help" data-only-loaded style="display:none">플레이스에는 없는 정보예요. 손님 안내 글에 활용돼요.</div>
           </div>
 
-          <!-- 업종별 프리셋에 따라 노출 항목이 달라질 예정(미정, 추후 지정) — 지금은 대표 메뉴 하나만 고정 노출 -->
-          <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">대표 메뉴 <span style="font-weight:500;color:var(--ink-400);font-size:13px">(선택)</span></h3>
-          <div class="reg-field" style="margin-top:10px">
+          <!-- 대표 품목 — 업종 프리셋에 따라 이름과 입력 힌트가 달라진다(ITEM_PRESET).
+               음식점은 "대표 메뉴", 피부과는 "대표 시술"처럼 업종마다 부르는 말이 다르기 때문.
+               프리셋 전체 매핑은 아직 없어(콘텐츠만들기_정책 §3 미해결) 대표 업종 몇 개만 넣어 뒀다. -->
+          <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">
+            <span id="item-section-title">대표 메뉴</span>
+            <span style="font-weight:500;color:var(--ink-400);font-size:13px">(선택)</span>
+            <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span>
+          </h3>
+          <div class="reg-field" id="f-items" style="margin-top:10px">
             <div class="reg-menu-chips" id="menu-chips"></div>
+            <div class="reg-help" id="menu-empty-help">아직 등록된 항목이 없어요. 아래에서 추가해 주세요.</div>
             <div class="reg-menu-add">
               <input class="reg-input" id="menu-name-input" placeholder="메뉴 이름" style="flex:1">
-              <input class="reg-input" id="menu-price-input" placeholder="가격" style="width:120px" inputmode="numeric">
+              <input class="reg-input" id="menu-price-input" placeholder="가격 (선택)" style="width:130px" inputmode="numeric">
               <button class="btn btn-secondary" type="button" id="btn-menu-add">추가</button>
             </div>
           </div>
 
           <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">매장 소개 <span style="font-weight:500;color:var(--ink-400);font-size:13px">(선택)</span></h3>
-          <div class="reg-field" style="margin-top:10px">
+          <div class="reg-field" id="f-intro" style="margin-top:10px">
             <textarea class="reg-textarea" data-f="intro" placeholder="우리 매장의 특징이나 강점을 편하게 적어 주세요. AI가 글을 쓸 때 참고해요."></textarea>
           </div>
         </div>
@@ -390,7 +397,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
           <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:4px;line-height:1.6">지금 올리지 않아도 괜찮아요. 등록이 끝난 뒤 <b style="color:var(--ink-700)">우리 매장 정보 › 매장 자료 관리</b>에서 언제든 추가할 수 있어요.</div>
 
           <div class="reg-field" style="margin-top:22px">
-            <div class="reg-label">매장 사진 <span data-only-loaded style="display:none" class="uw-badge b-green">플레이스에서 4장 가져옴</span></div>
+            <div class="reg-label" id="f-up-photo">매장 사진 <span data-only-loaded style="display:none" class="uw-badge b-green">플레이스에서 4장 가져옴</span></div>
             <div data-only-loaded style="display:none">
               <div class="reg-photos" id="place-photos">
                 <div class="reg-photo" data-photo title="누르면 뺄 수 있어요"><img src="https://ldb-phinf.pstatic.net/20230727_121/169045881818019jJh_JPEG/P1224594.jpg" alt="플레이스 사진 1" onerror="this.remove()"><div class="off-mark">뺐어요<br>눌러서 되돌리기</div></div>
@@ -407,7 +414,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
           </div>
 
           <div class="reg-field">
-            <div class="reg-label">메뉴판</div>
+            <div class="reg-label" id="f-up-menu">메뉴판</div>
             <div class="reg-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
               <div class="reg-drop-title">메뉴판 사진이나 파일 올리기</div>
               <div class="reg-drop-desc">JPG · PNG · PDF, 10MB까지</div>
@@ -415,20 +422,13 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
           </div>
 
           <div class="reg-field">
-            <div class="reg-label">매장 소개 문서</div>
+            <div class="reg-label" id="f-up-doc">매장 소개 문서</div>
             <div class="reg-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
               <div class="reg-drop-title">소개서·브로슈어 올리기</div>
               <div class="reg-drop-desc">PDF · DOCX · PPTX, 20MB까지 — AI 챗봇이 손님 질문에 답할 때 참고해요</div>
             </div>
           </div>
 
-          <div class="reg-field">
-            <div class="reg-label">기타 자료</div>
-            <div class="reg-drop" data-action="toast" data-toast-msg="파일 업로드는 프로토타입에서 준비 중이에요">
-              <div class="reg-drop-title">참고할 자료 올리기</div>
-              <div class="reg-drop-desc">JPG · PNG · PDF · DOCX, 20MB까지</div>
-            </div>
-          </div>
         </div>
 
         <div class="reg-actions">
@@ -485,7 +485,13 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     closed: ["수", "일"],
     intro: "대표원장 직접상담으로 차별화된 토탈솔루션을 제공하는 광화문 프라이빗 피부과, 테라스의원입니다. 상담실장 없이 대표원장이 직접 상담하며, 모든 공간이 프라이빗한 1인실로 구성되어 있습니다.",
     lastorder: "18:30",
-    menus: ["울쎄라 600샷", "슈링크 유니버스", "FX 인모드", "흑자 제거"],
+    /* 플레이스에서 딸려 오는 대표 품목. 가격은 플레이스에 없는 경우가 많아 이름만 온다 */
+    menus: [
+      { name: "울쎄라 600샷", price: "" },
+      { name: "슈링크 유니버스", price: "" },
+      { name: "FX 인모드", price: "" },
+      { name: "흑자 제거", price: "" }
+    ],
     dayHours: {
       "월": { s: "10:00", e: "19:00", off: false },
       "화": { s: "10:00", e: "19:00", off: false },
@@ -562,7 +568,13 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     /* 가입 시 프리필은 경로 무관 공통 적용 */
     var fn = document.querySelector('[data-f="name"]');
     if (fn && !fn.value) fn.value = "테라스의원";
-    if (!on) { dayHours = null; return; }
+    if (!on) {
+      dayHours = null;
+      menuItems = [];
+      renderMenuChips();
+      applyItemPreset();
+      return;
+    }
     /* 폼 채우기 */
     var f = function (k) { return document.querySelector('[data-f="' + k + '"]'); };
     dayHours = JSON.parse(JSON.stringify(PLACE.dayHours));
@@ -577,6 +589,10 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     document.querySelectorAll(".reg-day").forEach(function (d) {
       d.classList.toggle("is-on", PLACE.closed.indexOf(d.getAttribute("data-day")) >= 0);
     });
+    /* 대표 품목 — 업종이 정해진 뒤라야 부르는 말을 정할 수 있어 순서가 여기다 */
+    menuItems = PLACE.menus.map(function (m) { return { name: m.name, price: m.price }; });
+    applyItemPreset();
+    renderMenuChips();
   }
 
   /* ---- Step 1 → 2 ---- */
@@ -648,24 +664,56 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     r.classList.add("is-on");
   });
 
-  /* ---- 대표 메뉴 칩 입력 ---- */
+  /* ---- 대표 품목 칩 입력 ----
+     업종마다 부르는 말이 달라(음식점=메뉴, 피부과=시술) 라벨과 입력 힌트를 업종 프리셋에서 가져온다.
+     가격은 선택이다 — 플레이스에서 온 항목은 이름만 있는 경우가 많다. */
+  var ITEM_PRESET = {
+    "음식점·카페":                    { title: "대표 메뉴", name: "메뉴 이름", word: "메뉴" },
+    "의료/건강 › 병원/클리닉 › 피부과": { title: "대표 시술", name: "시술 이름", word: "시술" },
+    "미용·뷰티":                      { title: "대표 시술", name: "시술 이름", word: "시술" },
+    "학원·교육":                      { title: "대표 과정", name: "과정 이름", word: "과정" },
+    "소매·판매":                      { title: "대표 상품", name: "상품 이름", word: "상품" }
+  };
+  var ITEM_DEFAULT = { title: "대표 메뉴", name: "메뉴 이름", word: "항목" };
+  function itemPreset() {
+    var sel = document.querySelector('[data-f="category"]');
+    return (sel && ITEM_PRESET[sel.value]) || ITEM_DEFAULT;
+  }
+  function applyItemPreset() {
+    var p = itemPreset();
+    document.getElementById("item-section-title").textContent = p.title;
+    document.getElementById("menu-name-input").placeholder = p.name;
+    document.getElementById("menu-empty-help").textContent =
+      "아직 등록된 " + p.word + "이 없어요. 아래에서 추가해 주세요.";
+  }
+
   var menuItems = [];
   function renderMenuChips() {
+    var p = itemPreset();
     document.getElementById("menu-chips").innerHTML = menuItems.map(function (m, i) {
-      return '<span class="reg-menu-chip">' + m.name + ' · ' + m.price + '<button type="button" data-menu-remove="' + i + '" aria-label="삭제">×</button></span>';
+      return '<span class="reg-menu-chip">' + m.name +
+        (m.price ? ' · ' + m.price : ' <em style="font-style:normal;font-weight:500;color:var(--ink-400)">가격 미입력</em>') +
+        '<button type="button" data-menu-remove="' + i + '" aria-label="삭제">×</button></span>';
     }).join("");
+    document.getElementById("menu-empty-help").style.display = menuItems.length ? "none" : "";
+    document.getElementById("menu-empty-help").textContent =
+      "아직 등록된 " + p.word + "이 없어요. 아래에서 추가해 주세요.";
   }
   document.getElementById("btn-menu-add").addEventListener("click", function () {
     var nameInput = document.getElementById("menu-name-input");
     var priceInput = document.getElementById("menu-price-input");
     var name = nameInput.value.trim();
     var price = priceInput.value.trim();
-    if (!name || !price) { if (window.UW) window.UW.toast("메뉴 이름과 가격을 입력해 주세요"); return; }
-    if (!/원$/.test(price)) price += "원";
+    if (!name) { if (window.UW) window.UW.toast(itemPreset().name + "을 입력해 주세요"); return; }
+    if (price && !/원$/.test(price)) price += "원";
     menuItems.push({ name: name, price: price });
     nameInput.value = ""; priceInput.value = "";
     nameInput.focus();
     renderMenuChips();
+  });
+  /* 업종을 바꾸면 부르는 말도 따라 바뀐다 */
+  document.querySelector('[data-f="category"]').addEventListener("change", function () {
+    applyItemPreset(); renderMenuChips();
   });
   document.getElementById("menu-chips").addEventListener("click", function (e) {
     var btn = e.target.closest("[data-menu-remove]");
@@ -723,6 +771,10 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       e.target.classList.remove("is-error");
     }
   });
+
+  /* ---- 초기 상태 ---- 직접 입력 경로로 들어와도 라벨·안내가 맞게 뜨도록 */
+  applyItemPreset();
+  renderMenuChips();
 })();
 </script>
 </body>
