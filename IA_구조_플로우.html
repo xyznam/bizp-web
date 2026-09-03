@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사용자웹 IA 지도 — 비즈플래닛</title>
+<!-- 자동 생성 — 고칠 곳은 tools/build-ia-map.cjs (트리 소속·플로우는 그 안의 TREE·FLOW 상수).
+     다시 만들기: node tools/build-ia-map.cjs -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; background: var(--bg); }
+.ia-wrap { max-width: 1280px; margin: 0 auto; padding: 40px 28px 90px; }
+.ia-h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink-900); }
+.ia-sub { font-size: 13px; font-weight: 500; color: var(--ink-500); margin-top: 8px; line-height: 1.75; }
+.ia-board { background: var(--white); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 26px 28px; margin-top: 26px; }
+.ia-board-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink-900); }
+.ia-board-desc { font-size: 12.5px; font-weight: 500; color: var(--ink-500); margin-top: 6px; line-height: 1.75; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: var(--ink-400); }
+
+/* ---- 레벨 뱃지 ---- */
+.lv { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: var(--radius-badge); margin-left: 6px; letter-spacing: -0.01em; }
+.lv-L1 { background: var(--purple-bg); color: var(--purple); }
+.lv-L2 { background: var(--green-bg); color: var(--green); }
+.lv-L3 { background: var(--blue-50); color: var(--blue); }
+.lv-all { background: var(--inset); color: var(--ink-500); }
+.lv-none { background: var(--inset); color: var(--ink-300); }
+
+/* ================= L0 트리 ================= */
+.t-cols { columns: 2; column-gap: 34px; margin-top: 18px; }
+.t-group { break-inside: avoid; margin-bottom: 26px; }
+.t-group-head { display: flex; align-items: baseline; gap: 8px; padding-bottom: 8px; border-bottom: 2px solid var(--ink-900); }
+.t-group-name { font-size: 14px; font-weight: 800; color: var(--ink-900); letter-spacing: -0.02em; }
+.t-group-note { font-size: 11px; font-weight: 600; color: var(--ink-400); }
+
+ul.t-root, ul.t-kids { list-style: none; margin: 0; padding: 0; }
+ul.t-root { margin-top: 4px; }
+ul.t-kids { margin-left: 11px; padding-left: 13px; border-left: 1px solid var(--card-border); }
+li.t-node { position: relative; }
+ul.t-kids > li.t-node::before {
+  content: ""; position: absolute; left: -13px; top: 15px;
+  width: 9px; height: 1px; background: var(--card-border);
+}
+.t-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 4px; padding: 5px 0; }
+.t-title { font-size: 13px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.01em; }
+.t-file { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; color: var(--ink-400); margin-left: 6px; }
+.t-note { font-size: 11px; font-weight: 500; color: var(--ink-500); margin-left: 6px; }
+li.t-ext > .t-row .t-title { color: var(--blue); }
+li.t-miss > .t-row .t-title { color: var(--red); }
+
+/* ================= 콘텐츠 플로우 ================= */
+.fx-stage { margin-top: 22px; }
+.fx-stage-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.fx-stage-no { width: 22px; height: 22px; border-radius: 50%; background: var(--ink-900); color: #fff; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.fx-stage-title { font-size: 14px; font-weight: 800; color: var(--ink-900); letter-spacing: -0.02em; }
+.fx-stage-desc { font-size: 11.5px; font-weight: 500; color: var(--ink-500); }
+
+.fx-row { display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap; }
+.fx-card { flex: 1; min-width: 260px; border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 16px 18px; background: var(--white); }
+.fx-origin { border-color: var(--blue-border); background: var(--blue-50); }
+.fx-card-title { font-size: 13.5px; font-weight: 800; color: var(--ink-900); }
+.fx-card-screen { font-size: 12px; color: var(--ink-600); margin-top: 5px; }
+.fx-steps { margin: 10px 0 0; padding-left: 16px; font-size: 12px; color: var(--ink-700); line-height: 1.8; }
+.fx-card-note { font-size: 11.5px; color: var(--ink-500); margin-top: 9px; line-height: 1.65; padding-top: 8px; border-top: 1px dashed var(--card-border); }
+.fx-or { align-self: center; font-size: 11px; font-weight: 700; color: var(--ink-400); padding: 0 2px; }
+
+.fx-feed { display: flex; align-items: center; gap: 10px; margin-top: 12px; background: var(--inset); border-radius: var(--radius-tile); padding: 11px 16px; font-size: 12px; color: var(--ink-600); }
+.fx-feed b { color: var(--ink-900); }
+
+.fx-rv { display: flex; align-items: baseline; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--divider); font-size: 12.5px; }
+.fx-rv:last-child { border-bottom: 0; }
+.fx-rv-cond { font-weight: 800; color: var(--ink-900); min-width: 92px; }
+.fx-rv-arrow { color: var(--ink-300); }
+.fx-rv-who { font-weight: 700; color: var(--blue); min-width: 84px; }
+.fx-rv-why { font-size: 11.5px; color: var(--ink-500); }
+
+.fx-track { border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 15px 18px; margin-top: 10px; border-left-width: 4px; }
+.fx-track.fx-L1 { border-left-color: var(--purple); }
+.fx-track.fx-L2 { border-left-color: var(--green); }
+.fx-track.fx-L3 { border-left-color: var(--blue); }
+.fx-track-head { display: flex; align-items: center; gap: 4px; }
+.fx-track-head .lv { margin-left: 0; }
+.fx-track-label { font-size: 13px; font-weight: 800; color: var(--ink-900); margin-left: 4px; }
+.fx-chain { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+.fx-arrow { color: var(--ink-300); font-size: 13px; }
+.fx-n { display: inline-flex; flex-direction: column; font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 10px; background: var(--inset); color: var(--ink-700); line-height: 1.4; }
+.fx-n em { font-style: normal; font-size: 10.5px; font-weight: 500; color: var(--ink-500); margin-top: 2px; }
+.fx-n.fx-state { background: var(--white); border: 1px dashed var(--input-border); color: var(--ink-600); }
+.fx-n.fx-act { background: var(--blue-50); color: var(--blue); }
+.fx-n.fx-end { background: var(--green-bg); color: var(--green); }
+.fx-n.fx-neg-n { background: var(--red-bg); color: var(--red); }
+.fx-neg { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 11px; padding-top: 10px; border-top: 1px dashed var(--card-border); }
+.fx-neg-tag { font-size: 10.5px; font-weight: 800; color: var(--ink-400); }
+.fx-neg-note { font-size: 11.5px; color: var(--ink-500); line-height: 1.6; }
+
+.fx-loops { margin-top: 12px; background: var(--orange-bg); border-radius: var(--radius-tile); padding: 12px 16px; }
+.fx-loop { font-size: 12px; color: var(--ink-700); padding: 3px 0; }
+.fx-loop b { color: var(--orange); }
+.fx-loop span { color: var(--ink-400); font-size: 11px; margin-left: 6px; }
+
+.fx-after { display: flex; gap: 10px; flex-wrap: wrap; }
+.fx-after-card { flex: 1; min-width: 220px; border: 1px solid var(--card-border); border-radius: var(--radius-tile); padding: 13px 16px; font-size: 12.5px; color: var(--ink-700); }
+
+.ia-warn { background: var(--red-bg); color: var(--red); border-radius: var(--radius-tile); padding: 12px 16px; font-size: 12px; margin-top: 16px; line-height: 1.7; }
+</style>
+</head>
+<body data-screen="UW_IA_02">
+<div class="ia-wrap">
+
+  <h1 class="ia-h1">사용자웹 IA 지도</h1>
+  <p class="ia-sub">
+    하이라키와 flow는 축이 달라 한 장에 겹치면 둘 다 안 읽힌다. 그래서 층을 나눈다 —
+    <b>L0 트리</b>는 소속만(화살표 없음), <b>플로우</b>는 흐름만(레벨 분기를 색으로).<br>
+    화면 목록·모듈 표는 <a href="IA_사용자웹.html" style="color:var(--blue)">IA_사용자웹.html</a> 참조. 생성일 2026-09-03.
+  </p>
+
+
+  <!-- ============ L0 사이트맵 트리 ============ -->
+  <section class="ia-board">
+    <div class="ia-board-title">L0 · 사이트맵 트리</div>
+    <div class="ia-board-desc">
+      화면 39개의 소속. 부모는 각 화면의 브레드크럼(상단바 “A › B”)을 기준으로 정했다 —
+      링크 그래프로 자동 추론하면 알림 센터가 전 화면과 이어져 읽히지 않는다.<br>
+      뱃지는 그 화면이 열리는 레벨. <span class="lv lv-all">전 레벨</span> 은 L1·L2·L3 모두, <span class="lv lv-none">—</span> 은 모듈이 등재되지 않아 판정이 없는 화면.
+    </div>
+    <div class="t-cols">
+<section class="t-group"><div class="t-group-head"><span class="t-group-name">로그인 전</span><span class="t-group-note">서비스에 들어오기까지</span></div><ul class="t-root"><li class="t-node"><div class="t-row"><span class="t-title">로그인</span><span class="lv lv-all">전 레벨</span><span class="t-file">21_로그인</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">회원가입</span><span class="lv lv-all">전 레벨</span><span class="t-file">21_회원가입</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">약관·정책</span><span class="lv lv-all">전 레벨</span><span class="t-file">22_약관정책</span></div></li></ul></li><li class="t-node"><div class="t-row"><span class="t-title">초대 가입</span><span class="lv lv-all">전 레벨</span><span class="t-file">19_초대가입</span><span class="t-note">초대 문자 링크로만</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">온보딩</span><span class="lv lv-all">전 레벨</span><span class="t-file">10_온보딩</span><span class="t-note">가입 직후 자동</span></div></li></ul></section>
+<section class="t-group"><div class="t-group-head"><span class="t-group-name">메인 메뉴</span><span class="t-group-note">LNB 1군</span></div><ul class="t-root"><li class="t-node"><div class="t-row"><span class="t-title">홈</span><span class="lv lv-all">전 레벨</span><span class="t-file">01_홈</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">홈 (미결제)</span><span class="lv lv-none" title="모듈 미등재">—</span><span class="t-file">01_홈_미결제</span><span class="t-note">미결제 상태 변형</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">마케팅 계획</span><span class="lv lv-all">전 레벨</span><span class="t-file">07_마케팅계획</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">실행 결과 리포트</span><span class="lv lv-all">전 레벨</span><span class="t-file">08_실행결과리포트</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">대행사 요청함</span><span class="lv lv-L1">L1</span><span class="lv lv-L3">L3</span><span class="t-file">27_대행사요청함</span></div></li></ul></li><li class="t-node"><div class="t-row"><span class="t-title">콘텐츠 검토</span><span class="lv lv-all">전 레벨</span><span class="t-file">02_콘텐츠검토</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">발행 이력</span><span class="lv lv-all">전 레벨</span><span class="t-file">02_발행이력</span></div></li></ul></li><li class="t-node"><div class="t-row"><span class="t-title">콘텐츠 만들기</span><span class="lv lv-all">전 레벨</span><span class="t-file">03_콘텐츠만들기</span><span class="t-note">메뉴는 L2·L3에만</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">비즈챗 문자</span><span class="lv lv-all">전 레벨</span><span class="t-file">04_비즈챗문자</span></div></li><li class="t-node t-ext"><div class="t-row"><span class="t-title">AI 챗봇 ↗</span><span class="t-note">메뉴 자리가 외부 데모로 연결됨</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">AI 챗봇</span><span class="lv lv-all">전 레벨</span><span class="t-file">05_AI챗봇</span><span class="t-note">기존 화면 — URL 직접</span></div></li></ul></li></ul></section>
+<section class="t-group"><div class="t-group-head"><span class="t-group-name">매장·도움말</span><span class="t-group-note">LNB 2군</span></div><ul class="t-root"><li class="t-node"><div class="t-row"><span class="t-title">우리 매장 정보</span><span class="lv lv-all">전 레벨</span><span class="t-file">06_우리매장정보</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">매장 정보 설정</span><span class="lv lv-L2">L2</span><span class="lv lv-L3">L3</span><span class="t-file">98_매장설정</span><span class="t-note">온보딩 직후·신규 등록 시</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">매장 정보 수정</span><span class="lv lv-none" title="모듈 미등재">—</span><span class="t-file">06_우리매장정보_수정</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">마케팅 전략 상세</span><span class="lv lv-L3">L3</span><span class="t-file">16_마케팅전략상세</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">유사업체 비교</span><span class="lv lv-L3">L3</span><span class="t-file">16_유사업체비교</span></div></li></ul></li><li class="t-node"><div class="t-row"><span class="t-title">AI 학습현황</span><span class="lv lv-all">전 레벨</span><span class="t-file">15_AI학습현황</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">매장 자료 관리</span><span class="lv lv-L2">L2</span><span class="lv lv-L3">L3</span><span class="t-file">99_매장자료관리</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">함께 쓰는 사람</span><span class="lv lv-all">전 레벨</span><span class="t-file">20_함께쓰는사람</span></div></li></ul></li><li class="t-node"><div class="t-row"><span class="t-title">도움말</span><span class="lv lv-all">전 레벨</span><span class="t-file">11_도움말</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">자주 묻는 질문</span><span class="lv lv-all">전 레벨</span><span class="t-file">11_자주묻는질문</span></div></li></ul></li></ul></section>
+<section class="t-group"><div class="t-group-head"><span class="t-group-name">대행사 메뉴</span><span class="t-group-note">LNB 3군 · L3 전용</span></div><ul class="t-root"><li class="t-node"><div class="t-row"><span class="t-title">대행사 홈</span><span class="lv lv-L3">L3</span><span class="t-file">17_대행사홈</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">매장 목록</span><span class="lv lv-L3">L3</span><span class="t-file">12_매장목록</span><span class="t-note">신규 등록 → 매장 정보 설정</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">요청 관리</span><span class="lv lv-L3">L3</span><span class="t-file">17_요청관리</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">직원 관리</span><span class="lv lv-L3">L3</span><span class="t-file">17_직원관리</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">담당 매장 구독·청구</span><span class="lv lv-L3">L3</span><span class="t-file">09_담당매장청구</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">청구 그룹 상세</span><span class="lv lv-L3">L3</span><span class="t-file">09_청구그룹상세</span></div></li></ul></li><li class="t-node"><div class="t-row"><span class="t-title">정산·수수료</span><span class="lv lv-L3">L3</span><span class="t-file">09_대행사정산</span></div></li></ul></section>
+<section class="t-group"><div class="t-group-head"><span class="t-group-name">공통 셸</span><span class="t-group-note">메뉴가 아니라 상단바·LNB 하단에서</span></div><ul class="t-root"><li class="t-node"><div class="t-row"><span class="t-title">알림 센터</span><span class="lv lv-all">전 레벨</span><span class="t-file">18_알림센터</span><span class="t-note">상단 🔔</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">내 계정</span><span class="lv lv-all">전 레벨</span><span class="t-file">23_내계정</span><span class="t-note">LNB 하단 계정 블록</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">요금제·비용</span><span class="lv lv-all">전 레벨</span><span class="t-file">09_요금제비용</span><span class="t-note">L1·L2 청구 정본</span></div><ul class="t-kids"><li class="t-node"><div class="t-row"><span class="t-title">요금제 변경</span><span class="lv lv-all">전 레벨</span><span class="t-file">25_요금제변경</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">구독 취소</span><span class="lv lv-all">전 레벨</span><span class="t-file">24_해지</span></div></li><li class="t-node"><div class="t-row"><span class="t-title">결제 문제 안내</span><span class="lv lv-all">전 레벨</span><span class="t-file">26_결제문제</span></div></li></ul></li></ul></li></ul></section>
+<section class="t-group"><div class="t-group-head"><span class="t-group-name">시스템</span><span class="t-group-note">사용자가 찾아가지 않는 화면</span></div><ul class="t-root"><li class="t-node"><div class="t-row"><span class="t-title">오류·안내</span><span class="lv lv-all">전 레벨</span><span class="t-file">28_오류</span><span class="t-note">오류·차단 시 자동</span></div></li></ul></section>
+    </div>
+  </section>
+
+  <!-- ============ 콘텐츠 플로우 ============ -->
+  <section class="ia-board">
+    <div class="ia-board-title">플로우 · 콘텐츠</div>
+    <div class="ia-board-desc">
+      글 한 건이 만들어져 발행되기까지. 공통 골격을 먼저 그리고, <b>레벨에서 갈리는 지점만</b> 색으로 나눴다.
+    </div>
+
+    <div class="fx-stage">
+      <div class="fx-stage-head"><span class="fx-stage-no">1</span>
+        <span class="fx-stage-title">만들어지는 경로는 둘</span>
+        <span class="fx-stage-desc">시작점이 다르면 검수 흐름도 달라진다</span></div>
+      <div class="fx-row"><div class="fx-card fx-origin"><div class="fx-card-title">스케줄 자동 생성</div><div class="fx-card-screen"><b>마케팅 계획</b> <span class="mono">07_마케팅계획</span></div><ul class="fx-steps"><li>제안 주기 설정</li><li>발행 며칠 전 AI가 알아서 생성</li></ul><div class="fx-card-note">사람이 보지 않은 채 쌓이므로 검수 큐가 반드시 필요하다</div></div><div class="fx-or">또는</div><div class="fx-card fx-origin"><div class="fx-card-title">즉석 생성</div><div class="fx-card-screen"><b>콘텐츠 만들기</b> <span class="mono">03_콘텐츠만들기</span></div><ul class="fx-steps"><li>① 소식 유형 · ② 한 줄 입력 · ③ 채널</li><li>생성 옵션(이번 글만 다르게)</li></ul><div class="fx-card-note">승인권자가 본인이면 큐를 건너뛴다</div></div></div>
+      <div class="fx-feed">두 경로 모두 말투·길이·소재를 <b>마케팅 전략 상세</b>에서 가져온다 — 말투 · 글 길이 · 소재 키워드 · 이미지 스타일</div>
+    </div>
+
+    <div class="fx-stage">
+      <div class="fx-stage-head"><span class="fx-stage-no">2</span>
+        <span class="fx-stage-title">승인권자는 누구인가</span>
+        <span class="fx-stage-desc">레벨 + 검수 모드로 정해진다. 이후 흐름이 여기서 갈린다</span></div>
+      <div style="border:1px solid var(--card-border);border-radius:var(--radius-card);padding:6px 18px"><div class="fx-rv"><span class="fx-rv-cond">L2</span><span class="fx-rv-arrow">→</span><span class="fx-rv-who">사장님 본인</span><span class="fx-rv-why">대행사가 없어 항상 모드 A</span></div><div class="fx-rv"><span class="fx-rv-cond">L1</span><span class="fx-rv-arrow">→</span><span class="fx-rv-who">사장님</span><span class="fx-rv-why">제작은 대행사, 승인은 사장님</span></div><div class="fx-rv"><span class="fx-rv-cond">L3 · 모드 A</span><span class="fx-rv-arrow">→</span><span class="fx-rv-who">사장님</span><span class="fx-rv-why">사장님 검수형</span></div><div class="fx-rv"><span class="fx-rv-cond">L3 · 모드 B</span><span class="fx-rv-arrow">→</span><span class="fx-rv-who">대행사</span><span class="fx-rv-why">대행사 위임형</span></div></div>
+    </div>
+
+    <div class="fx-stage">
+      <div class="fx-stage-head"><span class="fx-stage-no">3</span>
+        <span class="fx-stage-title">검수 이후 — 레벨별 트랙</span>
+        <span class="fx-stage-desc">승인이 곧 발행이 아니다. 채널 등록은 어느 레벨에서도 사람이 한다</span></div>
+<div class="fx-track fx-L2"><div class="fx-track-head"><span class="lv lv-L2">L2</span><span class="fx-track-label">L2 셀프</span></div><div class="fx-chain"><span class="fx-n fx-state">검수 대기</span><span class="fx-arrow">→</span><span class="fx-n fx-act">승인</span><span class="fx-arrow">→</span><span class="fx-n fx-end" title="종착 — 사장님이 직접 채널에 올림. 발행으로 간주">승인 완료<em>종착 — 사장님이 직접 채널에 올림. 발행으로 간주</em></span></div><div class="fx-neg"><span class="fx-neg-tag">부정 액션</span><span class="fx-n fx-neg-n">삭제</span><span class="fx-neg-note">넘길 상대가 없어 상태를 남기지 않고 지운다</span></div></div><div class="fx-track fx-L1"><div class="fx-track-head"><span class="lv lv-L1">L1</span><span class="fx-track-label">L1 위탁</span></div><div class="fx-chain"><span class="fx-n fx-state">검수 대기</span><span class="fx-arrow">→</span><span class="fx-n fx-act">승인</span><span class="fx-arrow">→</span><span class="fx-n fx-state">등록 대기</span><span class="fx-arrow">→</span><span class="fx-n fx-act">대행사가 채널 등록</span><span class="fx-arrow">→</span><span class="fx-n fx-act" title="블로그는 필수">URL 입력<em>블로그는 필수</em></span><span class="fx-arrow">→</span><span class="fx-n fx-end">발행 완료</span></div><div class="fx-neg"><span class="fx-neg-tag">부정 액션</span><span class="fx-n fx-neg-n">반려 → 수정 요청</span><span class="fx-neg-note">사유를 대행사에 전달 → 대행사가 재작업 → 다시 검수 대기</span></div></div><div class="fx-track fx-L3"><div class="fx-track-head"><span class="lv lv-L3">L3</span><span class="fx-track-label">L3 대행사 · 모드 B</span></div><div class="fx-chain"><span class="fx-n fx-state">검수 대기</span><span class="fx-arrow">→</span><span class="fx-n fx-act">검수 완료 · 발행 등록</span><span class="fx-arrow">→</span><span class="fx-n fx-state">등록 대기</span><span class="fx-arrow">→</span><span class="fx-n fx-act">채널 등록</span><span class="fx-arrow">→</span><span class="fx-n fx-act">URL 입력</span><span class="fx-arrow">→</span><span class="fx-n fx-end">발행 완료</span></div><div class="fx-neg"><span class="fx-neg-tag">부정 액션</span><span class="fx-neg-note">대행사에는 반려권이 없다 (모드 A면 사장님께 승인 요청으로 넘어간다)</span></div></div>
+      <div class="fx-loops">
+        <div class="fx-loop">↩ <b>AI 다시 쓰기</b> → 다시 쓰는 중 → 검수 대기<span>전 레벨 공통 · 02·03 모두</span></div>
+        <div class="fx-loop">↩ <b>L1 반려</b> → 대행사 재작업 → 검수 대기<span>L1만</span></div>
+      </div>
+    </div>
+
+    <div class="fx-stage">
+      <div class="fx-stage-head"><span class="fx-stage-no">4</span>
+        <span class="fx-stage-title">결과 확인</span>
+        <span class="fx-stage-desc">발행 이후</span></div>
+      <div class="fx-after">
+        <div class="fx-after-card"><b>발행 이력</b> <span class="mono">02_발행이력</span><br>발행·반려 전체 이력</div>
+        <div class="fx-after-card"><b>실행 결과 리포트</b> <span class="mono">08_실행결과리포트</span><br>조회수·성과 집계</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
