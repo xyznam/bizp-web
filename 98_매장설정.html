@@ -130,7 +130,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 }
 </style>
 </head>
-<body data-screen="UW_TEST_REG">
+<body data-screen="UW_ST_08">
 
 <div class="uw-frame">
 
@@ -147,6 +147,14 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <nav class="uw-menu">
       <a href="06_우리매장정보.html" class="is-active">🏪 우리 매장 정보</a>
       <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_요청관리.html">📨 요청 관리</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
+      <a href="09_담당매장청구.html">💳 구독·청구</a>
+      <a href="09_대행사정산.html">🧾 정산·수수료</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">홍</div>
@@ -195,7 +203,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       <!-- ================================================== -->
       <!-- Step 1 · 플레이스 불러오기 -->
       <!-- ================================================== -->
-      <section class="reg-pane is-active" id="step-1">
+      <section class="reg-pane is-active" id="step-1" data-module="M01">
         <div class="uw-card" style="margin-top:16px;padding:28px 28px 24px">
           <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em">네이버 플레이스 주소를 넣어 주세요</div>
           <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">매장 이름·주소·연락처·운영시간을 자동으로 채워 드려요. 가져온 내용은 다음 단계에서 고칠 수 있어요.</div>
@@ -215,7 +223,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       <!-- ================================================== -->
       <!-- Step 2 · 정보 확인·입력 (플레이스/직접 두 경로 합류) -->
       <!-- ================================================== -->
-      <section class="reg-pane" id="step-2">
+      <section class="reg-pane" id="step-2" data-module="M02">
 
         <!-- 플레이스 경로 전용: 수집 완료 배너 + 함께 가져온 정보 요약 -->
         <div data-only-loaded style="display:none">
@@ -329,7 +337,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       <!-- ================================================== -->
       <!-- Step 3 · 채널 연결 -->
       <!-- ================================================== -->
-      <section class="reg-pane" id="step-3">
+      <section class="reg-pane" id="step-3" data-module="M03">
         <div class="uw-card" style="margin-top:16px;padding:24px 28px 28px">
           <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em">채널을 연결하면 AI가 더 잘 배워요</div>
           <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:4px;line-height:1.6">기존 블로그·플레이스 리뷰에서 우리 매장을 배워요. 지금 연결하지 않아도 나중에 할 수 있어요.</div>
@@ -375,7 +383,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       <!-- ================================================== -->
       <!-- Step 4 · 자료 올리기 (전부 선택) -->
       <!-- ================================================== -->
-      <section class="reg-pane" id="step-4">
+      <section class="reg-pane" id="step-4" data-module="M04">
 
         <div class="uw-card" style="margin-top:16px;padding:24px 28px 28px">
           <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em">자료를 올리면 AI가 더 잘 배워요</div>

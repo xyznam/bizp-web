@@ -67,7 +67,11 @@ html, body {
   border-right: 1px solid var(--card-border);
   display: flex; flex-direction: column;
   position: sticky; top: 0; height: 100vh;
+  /* L3 메뉴 그룹이 길어지면(구독·청구/정산·수수료 추가, 2026-08-29) 100vh 를 넘겨
+     하단 '내 계정' 블록이 잘렸다. 넘칠 때만 스크롤한다 — 여유가 있으면 margin-top:auto 가 그대로 아래로 민다. */
+  overflow-y: auto; overscroll-behavior: contain;
 }
+.uw-lnb > * { flex-shrink: 0; }
 .uw-logo { display: flex; align-items: center; gap: 8px; padding: 18px 16px 14px; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
 .uw-logo-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .uw-menu { padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }

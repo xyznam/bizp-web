@@ -1,0 +1,76 @@
+<!DOCTYPE html><meta charset="utf-8"><title>런타임 검사 — bizp-web</title>
+<!-- 39화면 x 3레벨 = 117조합 런타임 검사기.
+     2026-09-03 : 사용자웹 개편으로 생긴 06_우리매장정보_수정 · 11_자주묻는질문 추가.
+     서버를 띄우고 /tools/runtime-check.html 을 열면 자동으로 돈다 (약 90초).
+     보는 것 : 콘솔 경고/오류 · 미포착 예외 · data-screen 매트릭스 등재 · 레벨 적용 일치
+              · 괄호 조사("은(는)") 잔존 · LNB 하단 잘림 · set-level 오염
+     화면 HTML 을 fetch 해서 iframe 에 직접 써 넣는다 — 그래야 오류 훅이 화면 스크립트보다 먼저 걸린다.
+     src 로 로드하면 파싱 중 터진 미포착 예외를 부모가 잡을 수 없다 (2026-08-31 교훈). -->
+<pre id="out">running…</pre>
+<script>
+/* 화면 HTML 을 fetch 해서 iframe 에 직접 써 넣는다.
+   그래야 오류 훅 스크립트를 화면 스크립트보다 **먼저** 실행시킬 수 있다.
+   (src 로 로드하면 파싱 중 터진 미포착 예외를 부모가 잡을 방법이 없다) */
+const SCREENS=["01_홈.html","01_홈_미결제.html","02_발행이력.html","02_콘텐츠검토.html","03_콘텐츠만들기.html","04_비즈챗문자.html","05_AI챗봇.html","06_우리매장정보.html","06_우리매장정보_수정.html","07_마케팅계획.html","08_실행결과리포트.html","09_담당매장청구.html","09_대행사정산.html","09_요금제비용.html","09_청구그룹상세.html","10_온보딩.html","11_도움말.html","11_자주묻는질문.html","12_매장목록.html","15_AI학습현황.html","16_마케팅전략상세.html","16_유사업체비교.html","17_대행사홈.html","17_요청관리.html","17_직원관리.html","18_알림센터.html","19_초대가입.html","20_함께쓰는사람.html","21_로그인.html","21_회원가입.html","22_약관정책.html","23_내계정.html","24_해지.html","25_요금제변경.html","26_결제문제.html","27_대행사요청함.html","28_오류.html","98_매장설정.html","99_매장자료관리.html"], LEVELS=["L1","L2","L3"], results=[];
+const cache={};
+async function srcOf(f){ if(!cache[f]) cache[f]=await (await fetch('../'+f,{cache:'no-store'})).text(); return cache[f]; }
+
+function runOne(file,lv,html){return new Promise(res=>{
+  localStorage.setItem("uw_level",lv); try{sessionStorage.removeItem("uw_billing_v1")}catch(e){}
+  const fr=document.createElement("iframe");
+  fr.style.cssText="width:1440px;height:900px;position:absolute;left:-9999px";
+  document.body.appendChild(fr);
+  const d=fr.contentDocument, w=fr.contentWindow;
+  const warns=[];
+  w.__warns=warns;
+  const hook='<base href="'+location.origin+'/"><script>'+
+    'window.addEventListener("error",e=>__warns.push("UNCAUGHT "+(e.message||e.error)));'+
+    'window.addEventListener("unhandledrejection",e=>__warns.push("REJECT "+e.reason));'+
+    'var _w=console.warn,_e=console.error;'+
+    'console.warn=function(){__warns.push("WARN "+[].join.call(arguments," "));_w.apply(console,arguments)};'+
+    'console.error=function(){__warns.push("ERR "+[].join.call(arguments," "));_e.apply(console,arguments)};'+
+    '<\/script>';
+  d.open(); d.write(hook+html); d.close();
+  setTimeout(()=>{
+    /* 클릭 패스 — 로드만 보면 클릭 시점 ReferenceError 를 못 잡는다.
+       (2026-08-31 : Object.keys(PLANS) 하나가 남아 [바꾸기] 가 조용히 죽어 있었다)
+       구조 수집을 먼저 끝낸 뒤, 레벨 전환기를 뺀 모든 버튼을 한 번씩 눌러 본다. */
+    try{
+      const lnb=d.querySelector(".uw-lnb"), user=d.querySelector(".uw-lnb-user");
+      results.push({file,lv,sid:d.body.getAttribute("data-screen"),applied:d.body.getAttribute("data-level"),
+        vis:[...d.querySelectorAll("[data-module]")].filter(e=>e.getAttribute("data-hidden")==="false").map(e=>e.getAttribute("data-module")).join("+"),
+        fb:d.querySelectorAll(".uw-fallback[data-fallback-for]").length,
+        paren:/은\(는\)|이\(가\)|을\(를\)/.test(d.body.innerText)?1:0,
+        stray:[...d.querySelectorAll(".uw-lvl-switch button:not([data-level-btn])")].filter(b=>b.getAttribute("data-action")==="set-level").length,
+        userClipped: !!(lnb&&user&&user.getBoundingClientRect().bottom>lnb.getBoundingClientRect().bottom+1&&lnb.scrollHeight<=lnb.clientHeight),
+        warns:warns.slice()});
+    }catch(e){results.push({file,lv,err:String(e),warns:warns.slice()})}
+
+    var r = results[results.length-1];
+    try{
+      d.querySelectorAll("button").forEach(function(b){
+        if (b.hasAttribute("data-level-btn")) return;          // 레벨 전환은 별도 조합에서 본다
+        if (b.disabled) return;
+        /* 화면에 안 보이는 버튼은 사용자가 누를 수 없다 — 누르면 오탐이 된다.
+           (숨은 패널·닫힌 모달 안의 버튼이 그 상태를 전제로 짜여 있는 건 정상이다) */
+        if (!b.offsetParent && d.defaultView.getComputedStyle(b).position !== "fixed") return;
+        /* 화면을 옮기는 버튼은 누르지 않는다 — 문서가 갈려서 이후 결과가 뒤섞인다 */
+        if (/location|history\.|open\(/.test(b.getAttribute("onclick") || "")) return;
+        try { b.click(); } catch(e) { warns.push("CLICK "+e); }
+      });
+    }catch(e){ warns.push("CLICKPASS "+e); }
+
+    setTimeout(function(){
+      if (r) r.warns = warns.slice();
+      fr.remove(); res();
+    },140);
+  },260);})}
+
+(async()=>{
+ for(const f of SCREENS){const html=await srcOf(f); for(const lv of LEVELS) await runOne(f,lv,html);}
+ const bad=results.filter(r=>r.err||(r.warns&&r.warns.length)||!r.sid||r.applied!==r.lv||r.stray>0||r.userClipped||r.paren);
+ const show=results.filter(r=>r.file.indexOf("09_")===0).map(r=>r.file.replace(".html","")+" "+r.lv+": "+(r.vis||"-")+(r.fb?" +fb"+r.fb:""));
+ document.getElementById("out").textContent="총 "+results.length+"회 (화면 "+SCREENS.length+" x 레벨 3)\n"+show.join("\n")+"\n\n"+
+   (bad.length?"문제 "+bad.length+"건\n"+bad.slice(0,20).map(b=>JSON.stringify(b)).join("\n")
+    :"OK 콘솔 경고/오류 0 · 미포착 예외 0 · 전건 등재 · 레벨 적용 일치 · 괄호조사 0 · LNB 잘림 0 · 전 버튼 클릭 무오류");})();
+</script>

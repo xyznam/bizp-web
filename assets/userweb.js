@@ -23,6 +23,7 @@
     return LEVELS.indexOf(v) >= 0 ? v : "L2";
   }
   function setLevel(lv) {
+    if (LEVELS.indexOf(lv) < 0) return;   /* 레벨 아닌 값이 들어오면 무시 (청구 전달분 2026-08-29) */
     try { localStorage.setItem(LS_KEY, lv); } catch (e) {}
     render();
   }
@@ -268,8 +269,9 @@
       el.innerHTML = s;
     });
 
-    // 레벨 스위처 상태
-    document.querySelectorAll(".uw-lvl-switch button").forEach(function (b) {
+    /* 레벨 스위처 상태 — .uw-lvl-switch 는 세그먼트 컨트롤 공용 스타일로도 쓰인다
+       (약관 탭·학습 상태 데모 등). data-level-btn 이 붙은 버튼만 건드린다. 청구 전달분 2026-08-29 */
+    document.querySelectorAll(".uw-lvl-switch button[data-level-btn]").forEach(function (b) {
       b.classList.toggle("is-on", b.getAttribute("data-level-btn") === lv);
     });
 
@@ -349,7 +351,10 @@
 
   /* ---------- 레벨 스위처 버튼 바인딩 ---------- */
   function initSwitcher() {
-    document.querySelectorAll(".uw-lvl-switch button").forEach(function (b) {
+    /* 같은 이유로 data-level-btn 버튼에만 set-level 을 심는다.
+       예전에는 .uw-lvl-switch 안의 모든 버튼에 심어서, 약관 탭을 누르면
+       setLevel(null) 이 돌아 uw_level 이 "null" 로 덮이고 레벨이 L2 로 튕겼다. 청구 전달분 2026-08-29 */
+    document.querySelectorAll(".uw-lvl-switch button[data-level-btn]").forEach(function (b) {
       b.setAttribute("data-action", "set-level");
     });
   }

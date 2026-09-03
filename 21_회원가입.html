@@ -107,7 +107,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <!-- ======================================================= -->
     <!-- 역할 선택 (스텝 전 — 스텝퍼 없음) -->
     <!-- ======================================================= -->
-    <div class="uw-card" id="pane-role" style="padding:28px">
+    <div class="uw-card" id="pane-role" data-module="M01" style="padding:28px">
       <h1 style="font-size:20px;font-weight:800;letter-spacing:-0.02em;text-align:center">어떻게 사용하실 건가요?</h1>
       <div class="su-role-cards">
         <button type="button" class="su-role-card" id="btn-role-owner">
@@ -124,7 +124,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     </div>
 
     <!-- 직원 안내 (역할 선택 후 노출) -->
-    <div class="uw-card" id="pane-staff" style="display:none;padding:32px 28px;text-align:center">
+    <div class="uw-card" id="pane-staff" data-module="M07" style="display:none;padding:32px 28px;text-align:center">
       <div style="font-size:36px">✉️</div>
       <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em;margin-top:14px">초대코드로만 가입할 수 있어요</div>
       <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:8px;line-height:1.7">초대 문자 속 링크로만 가입할 수 있어요.<br>담당자에게 초대 문자를 요청해 주세요.</div>
@@ -161,7 +161,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         </div>
 
         <!-- Step 1: 본인 확인 -->
-        <section class="su-pane is-active" id="su-step-1">
+        <section class="su-pane is-active" id="su-step-1" data-module="M02">
           <h1 class="uw-h1">사장님 정보를 알려주세요</h1>
           <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">가입 후에도 수정할 수 있어요</p>
 
@@ -196,7 +196,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         </section>
 
         <!-- Step 2: 사업자 확인 -->
-        <section class="su-pane" id="su-step-2">
+        <section class="su-pane" id="su-step-2" data-module="M03">
           <h1 class="uw-h1">매장 사업자번호를 알려주세요</h1>
           <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">여러 매장을 운영 중이라면 대표 매장의 번호로 먼저 가입하고, 나머지는 나중에 추가할 수 있어요.</p>
 
@@ -217,7 +217,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         </section>
 
         <!-- Step 3: 약관 동의 -->
-        <section class="su-pane" id="su-step-3">
+        <section class="su-pane" id="su-step-3" data-module="M04">
           <h1 class="uw-h1">약관에 동의해 주세요</h1>
           <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">서비스 이용을 위해 아래 내용을 확인해 주세요</p>
 
@@ -247,7 +247,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         </section>
 
         <!-- Step 4: 계정 설정 -->
-        <section class="su-pane" id="su-step-4">
+        <section class="su-pane" id="su-step-4" data-module="M05">
           <h1 class="uw-h1">로그인에 쓸 계정을 만들어요</h1>
           <p style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">이메일과 비밀번호로 로그인해요</p>
 
@@ -281,7 +281,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         </section>
 
         <!-- Step 5: 가입 완료 -->
-        <section class="su-pane" id="su-step-5">
+        <section class="su-pane" id="su-step-5" data-module="M06">
           <div style="text-align:center;padding:12px 0 4px">
             <div style="font-size:48px">🎉</div>
             <h1 class="uw-h1" style="margin-top:16px" id="su-done-title">가입을 환영해요!</h1>

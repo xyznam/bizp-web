@@ -27,6 +27,49 @@ window.UW_MATRIX = {
 
 
 
+  /* ---- 갭 축 C (청구 전달분 2026-08-29) : 어드민 19 구독 현황 · 68 청구 계정 관리 ----
+     L3 대행사가 담당 매장 전체의 구독을 청구 그룹(=대행사 명의 BA) 단위로 관리하는 화면.
+     단일 매장 청구의 정본은 09_요금제비용(UW_BL_01)이고, 이 화면은 다매장 전용이다. */
+  "UW_BL_05": { file: "09_담당매장청구.html", title: "담당 매장 구독·청구",
+    modules: {
+      M01: { name: "구독 KPI 4종(구독 중·만료 임박·연체·미개시)", type: "stat", levels: ["L3"] },
+      M02: { name: "조회조건(요금제·청구 주체·갱신일·검색)", type: "view", levels: ["L3"] },
+      M03: { name: "매장별 구독 목록(갱신일·상태·청구 그룹)", type: "view", levels: ["L3"] },
+      M04: { name: "청구 그룹 관리(생성·선택 — 그룹 1개 = 청구서 1장)", type: "edit", levels: ["L3"] },
+      M05: { name: "그룹별 합산 청구서 미리보기", type: "view", levels: ["L3"] },
+      M06: { name: "세금계산서 발행 현황", type: "view", levels: ["L3"] },
+      M07: { name: "요금제 변경·청구 그룹 이동(대행사 직접 실행)", type: "edit", levels: ["L3"] }
+    } },
+
+  /* 청구 그룹 상세. UW_BL_05 그룹 카드의 [상세]에서 ?g=BA-xxxx 로 들어온다.
+     데이터는 assets/billing-store.js 를 UW_BL_05 와 공유한다(두 화면이 다른 답을 주지 않게). */
+  "UW_BL_07": { file: "09_청구그룹상세.html", title: "청구 그룹 상세",
+    modules: {
+      M01: { name: "그룹 요약(매장 수·요금제 구성·월 합산) + 그룹 정보 수정", type: "view", levels: ["L3"] },
+      M02: { name: "청구 정보(사업자·결제 방식·담당자 — 마스킹 G-08)", type: "view", levels: ["L3"] },
+      M03: { name: "청구 그룹 매장 목록(요금제·시작일·갱신일·월 금액)", type: "view", levels: ["L3"] },
+      M04: { name: "매장 일괄 옮기기(다른 청구 그룹으로)", type: "bulk", levels: ["L3"] },
+      M05: { name: "이번 달 합산 청구서 미리보기", type: "view", levels: ["L3"] },
+      M06: { name: "청구·세금계산서 이력", type: "view", levels: ["L3"] },
+      M07: { name: "그룹 없애기(매장 0곳일 때만)", type: "edit", levels: ["L3"] }
+    } },
+
+  /* ---- 갭 축 D (청구 전달분 2026-08-29) : 어드민 54 수동 정산 원장 대응 ----
+     대행사가 자기 수수료 명세를 받아보는 화면. **조회 전용**이다.
+     수수료 산정·확정·지급은 전부 어드민 54의 운영자 수동 처리이고(자동 산정 도입 금지),
+     확정된 귀속월은 재수정하지 않는다(회계 불변성). 이의는 차월 조정 라인으로만 반영되므로
+     M07 도 '수정 요청'이 아니라 '문의'다. */
+  "UW_BL_06": { file: "09_대행사정산.html", title: "정산·수수료",
+    modules: {
+      M01: { name: "귀속월 선택·귀속월 상태", type: "view", levels: ["L3"] },
+      M02: { name: "정산 요약(순거래액·수수료·조정·정산금)", type: "stat", levels: ["L3"] },
+      M03: { name: "산정 근거 메모(어드민 입력값 조회)", type: "view", levels: ["L3"] },
+      M04: { name: "조정·반제 라인(6종·증빙·사유)", type: "view", levels: ["L3"] },
+      M05: { name: "매장별 순거래액 내역(원장 스냅샷 분해)", type: "view", levels: ["L3"] },
+      M06: { name: "지급 이력(지급일·이체 참조번호)", type: "view", levels: ["L3"] },
+      M07: { name: "정산 문의(차월 조정으로 반영)", type: "create", levels: ["L3"] }
+    } },
+
   /* ---- P-B·P-C 신규 화면 (27 문서 G8~G12, 잠정: U13 기간만료 해지 · U11 수신거부=BC 모듈) ---- */
   "UW_BL_02": { file: "25_요금제변경.html", title: "요금제 변경", ownerOnly: true,
     modules: {
@@ -73,6 +116,28 @@ window.UW_MATRIX = {
       M01: { name: "로그인 폼(휴대폰 인증·카카오·네이버)", type: "view", levels: ["L1","L2","L3"] },
       M02: { name: "비밀번호 재설정·계정 찾기", type: "view", levels: ["L1","L2","L3"] },
       M03: { name: "초대 가입 안내", type: "view", levels: ["L1","L2","L3"] }
+    } },
+  /* 청구 전달분 2026-08-29 정합 교정: HTML(21_회원가입.html · UW_ON_05)만 있고 매트릭스에 없어
+     render()가 조기 반환 → 레벨 전환·data-bind·data-only-level 이 전부 죽어 있었다. */
+  "UW_ON_05": { file: "21_회원가입.html", title: "회원가입",
+    modules: {
+      M01: { name: "역할 선택(사장님 / 직원·대행사)", type: "view", levels: ["L1","L2","L3"], exception: "가입 전 화면 — 전 레벨" },
+      M02: { name: "본인 확인(이름·휴대폰 SMS·중복 차단)", type: "create", levels: ["L1","L2","L3"], exception: "가입 전 화면 — 전 레벨" },
+      M03: { name: "사업자번호 확인·기존 매장 분기(v20)", type: "create", levels: ["L1","L2","L3"], exception: "가입 전 화면 — 전 레벨" },
+      M04: { name: "약관 동의(필수 2·선택 1)", type: "view", levels: ["L1","L2","L3"] },
+      M05: { name: "계정 설정(이메일·비밀번호)", type: "create", levels: ["L1","L2","L3"], exception: "가입 전 화면 — 전 레벨" },
+      M06: { name: "가입 완료·온보딩 안내", type: "view", levels: ["L1","L2","L3"] },
+      M07: { name: "직원·대행사 초대코드 안내(19로 유도)", type: "view", levels: ["L1","L2","L3"] }
+    } },
+  /* 청구 전달분 2026-08-29 정합 교정: HTML 은 있었으나 body data-screen 이 임시 ID(UW_TEST_REG)라
+     매트릭스와 물리지 않았다. 파일 머리말이 선언한 UW_ST_08 로 정정하고 등재. */
+  "UW_ST_08": { file: "98_매장설정.html", title: "매장 정보 설정",
+    modules: {
+      M01: { name: "스텝1 네이버 플레이스 불러오기", type: "create", levels: ["L2","L3"], fallback: "agency-card",
+             fallbackName: "매장 정보 설정" },
+      M02: { name: "스텝2 기본 정보·운영시간·매장 소개 확인", type: "create", levels: ["L2","L3"] },
+      M03: { name: "스텝3 채널 연결", type: "create", levels: ["L2","L3"] },
+      M04: { name: "스텝4 자료 올리기(선택)", type: "create", levels: ["L2","L3"] }
     } },
   "UW_ON_03": { file: "19_초대가입.html", title: "초대 가입",
     modules: {
@@ -223,17 +288,22 @@ window.UW_MATRIX = {
       M06: { name: "다매장 비교 리포트", type: "bulk", levels: ["L3"] },
       M07: { name: "원지표 상세", type: "advanced", levels: ["L3"] }
     } },
+  /* 청구 전달분 2026-08-29 : L1·L2 의 청구 정본은 이 화면이다.
+     UW_BL_05(담당 매장 구독·청구)는 L3 다매장 전용으로 두고, 단일 매장 청구는 여기로 모았다.
+     진입 경로가 이미 6곳(23 내계정·07·08·24·25·26)이라 새로 뚫지 않아도 사장님이 도달한다. */
   "UW_BL_01": { file: "09_요금제비용.html",   title: "요금제·비용",   planned: "W2",
     modules: {
       M01: { name: "현재 요금제 카드", type: "view", levels: ["L1","L2","L3"] },
-      M02: { name: "이번 달 사용량", type: "stat", levels: ["L1","L2","L3"] },
-      M03: { name: "결제 내역·영수증", type: "view", levels: ["L1","L2","L3"] },
-      M04: { name: "결제 수단 변경", type: "edit", levels: ["L2","L3"], fallback: "tbd-card",
-             fallbackName: "결제 수단",
-             note: "OD-U2 결정(2026-07-07): L1은 화면 노출하되 '대행사별 상이한 요금제·결제 방식에 따라 제공 (TBD)' 표시" },
-      M05: { name: "요금제 변경·문자 충전", type: "edit", levels: ["L2","L3"], fallback: "tbd-card",
-             fallbackName: "요금제 변경·문자 충전" },
-      M06: { name: "다매장 청구 통합", type: "bulk", levels: ["L3"] }
+      M07: { name: "다음 청구 예정일·금액", type: "view", levels: ["L1","L2","L3"] },
+      M02: { name: "이번 주기 사용량(G-12 표 6 — 캘린더 월 아닌 청구 주기)", type: "stat", levels: ["L1","L2","L3"] },
+      M03: { name: "결제·영수 내역(영수일·금액·수단·영수증)", type: "view", levels: ["L1","L2","L3"] },
+      M04: { name: "결제 수단 변경", type: "edit", levels: ["L2","L3"],
+             note: "L1 위탁은 대행사가 대납해 바꿀 결제 수단이 없다. 2026-08-29 tbd-card 제거 — 안내는 M05 대체 카드 한 장으로 모음(24 §3 인접 통합)" },
+      M05: { name: "요금제 변경·문자 충전", type: "edit", levels: ["L2","L3"], fallback: "agency-card",
+             fallbackName: "요금제 조정",
+             note: "OD-U2(2026-07-07)의 tbd-card 를 2026-08-29 agency-card 로 교체. L1 은 대행사에 요금제 조정을 요청하는 것이 실제 동선이고, TBD 배지는 사장님 화면에 노출할 문구가 아니다" },
+      M08: { name: "이용 해지 안내(24 해지로 연결)", type: "edit", levels: ["L2"] },
+      M06: { name: "다매장 청구 통합(UW_BL_05 진입)", type: "bulk", levels: ["L3"] }
     } },
   "UW_ON_01": { file: "10_온보딩.html",       title: "온보딩",        planned: "W2",
     modules: {
@@ -396,7 +466,7 @@ window.UW_COPY = {
   },
   "UW_BL_01": {
     "topbar.sub": {
-      L1: "요금과 결제는 담당 대행사를 통해 관리돼요",
+      L1: "대행사가 어떤 요금제로 얼마를 내고 있는지 확인하세요",
       L2: "언제든 바꾸거나 해지할 수 있어요",
       L3: "이 매장의 요금·사용량 현황이에요" }
   },
@@ -467,7 +537,7 @@ window.UW_MOCK = {
       plan: "Basic",                        // STR-0008.plan
       planPrice: "39,000",                  // mock-entities plans.Basic (정본 — OD-U8 결정: 시안 99,000 아님)
       subStatus: "만료 임박",                // STR-0008.sub_status
-      renewal: "2026-07-10",                // STR-0008.renewal
+      renewal: "2026-09-02",                // STR-0008.renewal (청구 전달분 2026-08-29 기준 정본화. UW_BL_05 L3 목록의 카페봄봄 신촌점과 같은 날짜)
       billingNote: "업체 통합 결제 · 대행사 경유", // CO-0088.billing_type
       agencyName: "마케팅파트너스",          // CO-0088.agency (AGN-002)
       stores: ["카페봄봄 신촌점"]
@@ -483,7 +553,7 @@ window.UW_MOCK = {
       plan: "Pro",                          // STR-0044.plan
       planPrice: "89,000",                  // plans.Pro (정본)
       subStatus: "정상",
-      renewal: "2026-08-02",
+      renewal: "2026-09-12",                // 청구 전달분 2026-08-29 기준 정본화
       billingNote: "매장 개별 결제",
       agencyName: null,
       stores: ["피자나라 홍대점"]
@@ -503,7 +573,7 @@ window.UW_MOCK = {
       plan: "Pro",                          // STR-0001.plan
       planPrice: "89,000",                  // plans.Pro (정본)
       subStatus: "정상",                     // STR-0001.sub_status
-      renewal: "2026-07-20",                // STR-0001.renewal
+      renewal: "2026-09-20",                // STR-0001.renewal (청구 전달분 2026-08-29 기준 정본화. UW_BL_05 L3 목록의 스시오마카세 강남점과 같은 날짜)
       billingNote: "업체 통합 결제 (BA-0102-01)", // CO-0102.billing_type
       agencyName: "마케팅파트너스",          // AGN-002
       stores: ["스시오마카세 강남점", "스시오마카세 판교점", "카페봄봄 신촌점"], // AGN-002 산하 (CO-0102, CO-0088)
