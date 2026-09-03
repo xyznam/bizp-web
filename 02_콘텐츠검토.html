@@ -158,10 +158,11 @@
               </div>
             </section>
 
-            <!-- M03 · approve: 승인 / 반려
+            <!-- M03 · approve: 승인 / 반려·삭제
                  버튼 라벨·노출은 화면 스크립트가 레벨+검수모드로 결정한다.
                  · 승인 라벨: L2="승인", L1(모드A)="승인", L3(모드B)="검수 완료·발행 등록"
-                 · 반려: 승인권자(사장님=L1·L2)에게만. 대행사(L3)에는 없음.
+                 · 부정 액션: 승인권자(사장님=L1·L2)에게만. 대행사(L3)에는 없음.
+                   L1 은 "반려"(대행사에 수정을 요청), L2 는 "삭제"(넘길 상대가 없어 그냥 지운다).
                  · "예약/자동 발행" 표현 없음 — 승인·검수 통과분은 등록 대기로 이동. -->
             <section class="uw-actionbar" data-module="M03">
               <button class="btn btn-primary" id="btn-approve" data-action="approve-doc">승인</button>
@@ -184,7 +185,9 @@
   </div>
 </div>
 
-<!-- ==================== 반려 모달 ==================== -->
+<!-- ==================== 반려 모달 (L1 전용) ====================
+     L2 는 삭제 모달로 갈라져 나갔고 L3 는 반려권이 없어, 이 모달을 보는 건 L1 뿐이다.
+     확정 버튼이 "수정 요청"인 이유: L1 은 대행사에 다시 써 달라고 넘기는 것이지 글을 버리는 게 아니다. -->
 <div class="uw-modal-backdrop" id="modal-reject">
   <div class="uw-modal">
     <div class="uw-modal-title">이 글을 반려할까요?</div>
@@ -199,7 +202,25 @@
     </div>
     <div class="uw-modal-actions">
       <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
-      <button class="btn btn-primary btn-sm" data-action="reject-doc">반려하기</button>
+      <button class="btn btn-primary btn-sm" data-action="reject-doc">수정 요청</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 삭제 모달 (L2 전용) ====================
+     2026-09-03 신설: L2 셀프는 반려할 상대가 없다. 대행사가 없으니 "반려"가 사실상 다시쓰기 트리거로만
+     쓰이고 있었는데, 다시쓰기는 이미 M06 에 따로 있다. 사장님이 원하는 건 이 글을 없애는 것이므로
+     상태를 남기지 않고 목록에서 지운다. -->
+<div class="uw-modal-backdrop" id="modal-delete">
+  <div class="uw-modal">
+    <div class="uw-modal-title">이 글을 삭제할까요?</div>
+    <div class="uw-modal-body">
+      목록에서 지워지고 되돌릴 수 없어요.<br>
+      내용만 고쳐서 쓰고 싶다면 삭제 대신 <b>↻ AI 다시 쓰기</b>를 눌러주세요.
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="delete-doc">삭제</button>
     </div>
   </div>
 </div>
@@ -349,16 +370,19 @@
   /* 이 레벨에서 존재할 수 있는 상태인가.
      "등록 대기"는 등록 실무자가 대행사인 경우(L1 위탁·L3 대행사)에만 생기는 상태다.
      L2 셀프는 승인 완료가 종착점이라 이 상태 자체가 나올 수 없어 목록에서도 제외한다
-     (목데이터는 세 레벨이 공유하는데, 레벨마다 사실 다른 매장·다른 상황을 나타냄). */
+     (목데이터는 세 레벨이 공유하는데, 레벨마다 사실 다른 매장·다른 상황을 나타냄).
+     "반려"도 같은 이유로 L2에서 제외한다 — 2026-09-03부터 L2의 부정 액션은 삭제라 반려 상태가 생기지 않는다. */
   function visibleAt(doc, lv) {
-    return !(lv === "L2" && doc.status === "등록 대기");
+    if (lv !== "L2") return true;
+    return doc.status !== "등록 대기" && doc.status !== "반려";
   }
 
   function renderList() {
     var el = document.getElementById("doc-list");
     var lv = level(), isL3 = lv === "L3";
     /* 현재 선택된 글이 이 레벨에서 안 보이는 상태면 첫 번째로 보이는 글로 옮긴다 */
-    if (!visibleAt(DOCS[current], lv)) {
+    if (!DOCS[current] || !visibleAt(DOCS[current], lv)) {
+      current = -1;
       for (var k = 0; k < DOCS.length; k++) { if (visibleAt(DOCS[k], lv)) { current = k; break; } }
     }
     el.innerHTML = DOCS.map(function (d, i) {
@@ -373,7 +397,12 @@
   }
 
   function renderDetail() {
-    var d = DOCS[current], sv = statusView(d);
+    var d = DOCS[current];
+    var pane = document.querySelector(".uw-split-detail");
+    /* 이 레벨에서 볼 글이 하나도 없을 때(전부 삭제 등) — 상세를 비운다 */
+    if (pane) pane.style.display = d ? "" : "none";
+    if (!d) return;
+    var sv = statusView(d);
     document.getElementById("dt-ch").textContent = d.ch;
     var b = document.getElementById("dt-badge");
     b.className = "uw-badge " + sv.cls;
@@ -420,9 +449,16 @@
         approve.textContent = (mode === "B") ? "✓ 검수 완료 · 발행 등록" : "✓ 확인 · 사장님께 승인 요청";
         reject.style.display = "none"; /* 대행사는 반려권 없음 */
       } else {
-        /* 사장님 차례 */
+        /* 사장님 차례 — L1은 대행사에 넘기는 반려, L2는 넘길 상대가 없어 삭제 */
         approve.textContent = "✓ 승인";
         reject.style.display = "";
+        if (lv === "L2") {
+          reject.textContent = "삭제";
+          reject.setAttribute("data-modal", "modal-delete");
+        } else {
+          reject.textContent = "반려";
+          reject.setAttribute("data-modal", "modal-reject");
+        }
       }
       return;
     }
@@ -598,18 +634,21 @@
       refresh();
       return;
     }
+    /* 반려 = L1 전용. 대행사가 사유를 받아 재작업한다 (L2는 delete-doc으로 갈라짐) */
     if (act === "reject-doc") {
-      var lvr = level(), dr = DOCS[current];
+      var dr = DOCS[current];
       a.closest(".uw-modal-backdrop").classList.remove("is-open");
-      if (lvr === "L1") {
-        dr.status = "반려"; /* 대행사가 이어받아 재작업 */
-        window.UW.toast("반려했어요. 반려 사유를 대행사에 전달했어요.");
-      } else {
-        /* L2 셀프: 반려 = 즉시 다시쓰기 → 3초 뒤 새 초안 */
-        dr.status = "다시 쓰는 중"; dr._reworkAt = "L2";
-        window.UW.toast("반려했어요. 알려주신 내용으로 AI가 다시 써요.");
-        scheduleRework(dr);
-      }
+      dr.status = "반려";
+      window.UW.toast("수정을 요청했어요. 알려주신 내용을 대행사에 전달했어요.");
+      refresh();
+      return;
+    }
+    /* 삭제 = L2 전용. 상태를 남기지 않고 목록에서 지운다 */
+    if (act === "delete-doc") {
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      DOCS.splice(current, 1);
+      if (current >= DOCS.length) current = DOCS.length - 1;
+      window.UW.toast("삭제했어요.");
       refresh();
       return;
     }
