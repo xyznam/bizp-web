@@ -8,6 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* 발행 URL 모달의 완료 버튼 잠금 — userweb.css에 공통 disabled 스타일이 없어 이 화면에서 정의 */
+.btn[disabled] { opacity: .45; pointer-events: none; cursor: default; }
+</style>
 </head>
 <body data-screen="UW_CR_01">
 
@@ -19,7 +23,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html" class="is-active">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -30,6 +34,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -83,21 +88,16 @@
             <div id="doc-list"></div>
           </section>
 
-          <!-- M09 · bulk · L2·L3: 등록·발행 완료 처리
-               발행 API가 없어 승인/검수 통과분을 채널에 직접 등록한 뒤 완료 처리한다.
-               L2 셀프는 사장님 본인이, L3는 대행사가 등록 실무자. -->
+          <!-- M09 · bulk · L3: 등록·발행 완료 처리
+               발행 API가 없어 검수 통과분을 채널에 직접 등록한 뒤 완료 처리한다. 등록 실무자는 대행사.
+               2026-09-03: L2에서 제외 — 사장님 셀프는 승인 완료가 곧 종착점이고 발행으로 간주한다
+               (자기가 올릴 글을 자기 할 일 목록에서 다시 확인하는 왕복을 없앰). L1 사장님이 승인한 건은
+               대행사가 등록해야 하므로 여기(L3 화면)에 계속 뜬다.
+               목록은 DOCS의 "등록 대기" 항목에서 렌더한다(예전엔 정적 1건이라 승인해도 목록에 안 잡혔음). -->
           <section class="uw-card" data-module="M09" style="margin-top:16px;padding:14px 16px;border-color:var(--blue-border)">
-            <div style="font-size:13px;font-weight:700;color:var(--ink-600)">등록 대기 <span class="uw-badge b-orange">1건</span></div>
+            <div style="font-size:13px;font-weight:700;color:var(--ink-600)">등록 대기 <span class="uw-badge b-orange" id="m09-count">0건</span></div>
             <div class="uw-section-caption" style="margin-top:2px" id="m09-caption">검수를 통과한 글이에요. 채널에 직접 올린 뒤 완료 처리하세요.</div>
-            <div class="uw-rows mt-8">
-              <div class="uw-row" style="padding:9px 0">
-                <div class="uw-row-body">
-                  <div style="font-size:13px;font-weight:600">주말 영업시간 안내 — 네이버 블로그</div>
-                  <div class="uw-row-desc">검수 통과 7.4 · 채널에 직접 등록한 뒤 완료 처리하세요</div>
-                </div>
-              </div>
-            </div>
-            <button class="btn btn-secondary btn-sm" style="width:100%" data-action="toast" data-toast-msg="발행 완료로 처리했어요. 실행 결과 리포트에 반영돼요.">등록 확인했어요 · 발행 완료 처리</button>
+            <div class="uw-rows mt-8" id="m09-list"></div>
           </section>
 
           <!-- M04 · view: 처리 이력 -->
@@ -170,7 +170,7 @@
 
             <!-- M05 · edit + M06 · create (L2+) — L1은 M05 자리에 통합 대체 카드 -->
             <section id="cr-edit-actions" style="display:flex;gap:8px;margin-top:10px">
-              <button class="btn btn-ghost" style="flex:1" data-module="M05" data-action="toast" data-toast-msg="문구 편집기는 다음 웨이브에서 열려요. 지금은 채널에 붙여넣은 뒤 미세 수정하셔도 돼요.">✏️ 문구 수정</button>
+              <button class="btn btn-ghost" style="flex:1" data-module="M05" data-action="toast" data-toast-msg="직접 편집기는 다음 웨이브에서 열려요. 지금은 채널에 붙여넣은 뒤 미세 수정하셔도 돼요.">✏️ 직접 편집</button>
               <button class="btn btn-ghost" style="flex:1" data-module="M06" data-action="open-modal" data-modal="modal-rewrite">↻ AI 다시 쓰기</button>
             </section>
 
@@ -197,6 +197,33 @@
     <div class="uw-modal-actions">
       <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
       <button class="btn btn-primary btn-sm" data-action="reject-doc">반려하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 발행 완료 처리 모달 (M09 · L3) ====================
+     2026-09-03 신설: 등록 대기 → 발행 완료로 넘길 때 발행한 글 주소를 받는다.
+     블로그는 URL 필수(입력 전까지 완료 버튼 비활성), 당근마켓은 글 URL 개념이 달라 입력란 자체를 숨기고
+     바로 완료 처리한다. URL은 08_실행결과리포트에서 조회수를 글 단위로 매칭하는 데 쓸 값. -->
+<div class="uw-modal-backdrop" id="modal-publish-url">
+  <div class="uw-modal">
+    <div class="uw-modal-title">발행한 글 주소를 알려주세요</div>
+    <div class="uw-modal-body">
+      <div style="font-size:13px;font-weight:700;color:var(--ink-700)" id="pu-title"></div>
+      <div style="font-size:12px;color:var(--ink-500);margin-top:4px" id="pu-ch"></div>
+
+      <div id="pu-url-row" style="margin-top:14px">
+        <input id="pu-url" type="url" placeholder="https://blog.naver.com/..." style="width:100%;border:1px solid var(--input-border);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:14px;outline:none">
+        <div class="uw-section-caption" style="margin-top:6px">발행한 글 주소를 넣어야 완료 처리돼요. 리포트에서 이 글의 조회수를 따로 볼 수 있게 쓰여요.</div>
+      </div>
+
+      <div id="pu-nourl-note" class="uw-preview-box" style="display:none;margin-top:14px;font-size:13px;font-weight:600;color:var(--ink-600)">
+        당근마켓은 글 주소를 따로 받지 않아요. 올리셨으면 바로 완료 처리하시면 돼요.
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" id="pu-confirm" data-action="confirm-publish">발행 완료 처리</button>
     </div>
   </div>
 </div>
@@ -262,9 +289,22 @@
       title: "이번 주 신메뉴 미리 안내",
       time: "오늘 07:50 생성 · 사장님 반려 09:12", store: "스시오마카세 강남점",
       score: 68, kw: ["신메뉴", "여름"],
-      body: "이번 주 새롭게 선보이는 신메뉴를 미리 알려드려요. 신선한 제철 재료로 준비한 여름 한정 메뉴, 곧 만나보실 수 있습니다. 자세한 출시 일정은 매장에 문의해 주세요." }
+      body: "이번 주 새롭게 선보이는 신메뉴를 미리 알려드려요. 신선한 제철 재료로 준비한 여름 한정 메뉴, 곧 만나보실 수 있습니다. 자세한 출시 일정은 매장에 문의해 주세요." },
+    /* 검수를 통과해 대행사가 채널에 올려야 하는 건 — M09 등록 대기 목록에 뜬다.
+       URL 필수 여부가 채널마다 달라(블로그=필수, 당근=없음) 두 채널을 각각 하나씩 둠 */
+    { ch: "네이버 블로그", chColor: "var(--ch-naver)", status: "등록 대기",
+      title: "주말 영업시간 안내",
+      time: "7.4 검수 통과", store: "스시오마카세 강남점",
+      score: 79, kw: ["영업시간", "주말"],
+      body: "이번 주말 영업시간을 안내해 드려요. 토요일은 오전 11시부터 밤 9시까지, 일요일은 오전 11시부터 저녁 8시까지 문을 엽니다. 재료 소진 시 조금 일찍 마감할 수 있는 점 양해 부탁드려요." },
+    { ch: "당근마켓", chColor: "var(--ch-daangn)", status: "등록 대기",
+      title: "동네 이웃분들께 드리는 여름 인사",
+      time: "7.4 검수 통과", store: "카페봄봄 신촌점",
+      score: 76, kw: ["동네 인사", "여름"],
+      body: "더운 여름 잘 보내고 계신가요? 지나다 목마르실 때 편하게 들러 시원한 음료 한 잔 하고 가세요. 늘 이웃분들 덕분에 즐겁게 가게 문을 열고 있습니다." }
   ];
   var current = 0;
+  var publishIdx = -1; /* 발행 URL 모달이 다루는 DOCS 인덱스 */
 
   function level() { return document.body.getAttribute("data-level") || "L2"; }
   /* 실효 검수모드: 셀프(L2)는 대행사가 없어 항상 A */
@@ -295,15 +335,31 @@
       case "반려":        return { text: "반려", cls: "b-red" };
       case "다시 쓰는 중": return { text: "다시 쓰는 중", cls: "b-orange" };
       case "등록 대기":    return { text: "등록 대기", cls: "b-orange" };
+      /* L2 셀프의 종착 상태. 사장님이 직접 올리므로 등록 대기 단계를 두지 않고 여기서 끝나며,
+         통계(발행이력·실행결과리포트)에서는 발행된 것으로 간주한다 */
+      case "승인 완료":    return { text: "승인 완료", cls: "b-green" };
       case "발행 완료":    return { text: "발행 완료", cls: "b-green" };
       default:            return { text: doc.status, cls: "b-gray" };
     }
   }
 
+  /* 이 레벨에서 존재할 수 있는 상태인가.
+     "등록 대기"는 등록 실무자가 대행사인 경우(L1 위탁·L3 대행사)에만 생기는 상태다.
+     L2 셀프는 승인 완료가 종착점이라 이 상태 자체가 나올 수 없어 목록에서도 제외한다
+     (목데이터는 세 레벨이 공유하는데, 레벨마다 사실 다른 매장·다른 상황을 나타냄). */
+  function visibleAt(doc, lv) {
+    return !(lv === "L2" && doc.status === "등록 대기");
+  }
+
   function renderList() {
     var el = document.getElementById("doc-list");
-    var isL3 = level() === "L3";
+    var lv = level(), isL3 = lv === "L3";
+    /* 현재 선택된 글이 이 레벨에서 안 보이는 상태면 첫 번째로 보이는 글로 옮긴다 */
+    if (!visibleAt(DOCS[current], lv)) {
+      for (var k = 0; k < DOCS.length; k++) { if (visibleAt(DOCS[k], lv)) { current = k; break; } }
+    }
     el.innerHTML = DOCS.map(function (d, i) {
+      if (!visibleAt(d, lv)) return "";
       var sv = statusView(d);
       return '<div class="uw-doc-card' + (i === current ? " is-selected" : "") + '" data-doc="' + i + '" style="--ch:' + d.chColor + '">' +
         '<div class="d-top"><span class="d-ch">' + d.ch + '</span><span class="uw-badge ' + sv.cls + '">' + sv.text + "</span></div>" +
@@ -391,10 +447,22 @@
       return;
     }
 
-    /* ---- 등록 대기 ---- */
+    /* ---- 승인 완료 ---- L2 셀프의 종착 상태(등록 대기를 거치지 않음) */
+    if (st === "승인 완료") {
+      note.style.display = "block";
+      note.innerHTML = "✅ <b>승인 완료</b>. <b>" + doc.ch + "</b>에 올려주세요. 따로 완료 처리는 안 해도 돼요 — 검토는 여기서 끝나요.";
+      return;
+    }
+
+    /* ---- 등록 대기 ---- 대행사가 채널에 올린 뒤 완료 처리해야 하는 상태.
+       등록 실무자는 대행사뿐이므로(M09가 L3 전용) 사장님(L1)에게는 기다리라고 안내한다.
+       2026-09-03 이전엔 레벨 구분 없이 "왼쪽 등록 대기에서 완료 처리하세요"만 떠서,
+       그 카드가 보이지도 않는 L1에게 틀린 안내가 나가고 있었음 */
     if (st === "등록 대기") {
       note.style.display = "block";
-      note.innerHTML = "✅ 승인됐어요. <b>" + doc.ch + "</b>에 직접 등록한 뒤 왼쪽 <b>등록 대기</b>에서 완료 처리하세요.";
+      note.innerHTML = (lv === "L1")
+        ? "✅ 승인했어요. 대행사가 <b>" + doc.ch + "</b>에 올린 뒤 발행 완료로 바꿔드려요."
+        : "✅ 승인됐어요. <b>" + doc.ch + "</b>에 직접 등록한 뒤 왼쪽 <b>등록 대기</b>에서 완료 처리하세요.";
       return;
     }
 
@@ -421,7 +489,27 @@
     if (m07) m07.style.display = (lv === "L3" && mode === "B") ? "" : "none";
   }
 
-  function refresh() { renderChrome(); renderList(); renderDetail(); }
+  /* M09 등록 대기 목록 — DOCS의 "등록 대기" 건을 그대로 렌더한다.
+     각 행의 [발행 완료 처리]는 발행 URL 모달(modal-publish-url)을 연다. */
+  function renderPublishQueue() {
+    var list = document.getElementById("m09-list");
+    var cnt = document.getElementById("m09-count");
+    if (!list) return;
+    var items = [];
+    DOCS.forEach(function (d, i) { if (d.status === "등록 대기") items.push({ d: d, i: i }); });
+    if (cnt) cnt.textContent = items.length + "건";
+    list.innerHTML = items.length ? items.map(function (it) {
+      return '<div class="uw-row" style="padding:9px 0">' +
+        '<div class="uw-row-body">' +
+          '<div style="font-size:13px;font-weight:600">' + it.d.title + " — " + it.d.ch + "</div>" +
+          '<div class="uw-row-desc">' + it.d.time + " · 채널에 직접 등록한 뒤 완료 처리하세요</div>" +
+        "</div>" +
+        '<button class="btn btn-secondary btn-sm" style="flex-shrink:0" data-action="open-publish-url" data-doc-idx="' + it.i + '">발행 완료 처리</button>' +
+        "</div>";
+    }).join("") : '<div class="uw-row-desc" style="padding:6px 0">등록 대기 중인 글이 없어요.</div>';
+  }
+
+  function refresh() { renderChrome(); renderList(); renderDetail(); renderPublishQueue(); }
 
   /* 다시 쓰는 중 → (약 3초) 새 초안 도착 → 검수 대기로 복귀.
      재작업 지시 레벨에 따라 다음 검수 주체 결정:
@@ -457,6 +545,33 @@
       w.style.display = w.style.display === "none" ? "block" : "none";
       return;
     }
+    /* M09 · 발행 완료 처리 → URL 모달. 채널에 따라 URL 필수 여부가 갈린다 */
+    if (act === "open-publish-url") {
+      publishIdx = +a.getAttribute("data-doc-idx");
+      var pd = DOCS[publishIdx];
+      document.getElementById("pu-title").textContent = pd.title;
+      document.getElementById("pu-ch").textContent = pd.ch + " · " + pd.store;
+      var needsUrl = pd.ch === "네이버 블로그"; /* 당근마켓은 글 URL 개념이 달라 받지 않음 */
+      document.getElementById("pu-url-row").style.display = needsUrl ? "" : "none";
+      document.getElementById("pu-nourl-note").style.display = needsUrl ? "none" : "";
+      var input = document.getElementById("pu-url");
+      input.value = "";
+      document.getElementById("pu-confirm").disabled = needsUrl; /* 블로그는 URL 입력 전까지 잠금 */
+      document.getElementById("modal-publish-url").classList.add("is-open");
+      return;
+    }
+    if (act === "confirm-publish") {
+      var doc2 = DOCS[publishIdx];
+      if (!doc2) return;
+      doc2.status = "발행 완료";
+      var url = document.getElementById("pu-url").value.trim();
+      if (url) doc2.publishUrl = url; /* 08 실행결과리포트에서 글 단위 조회수 매칭에 쓸 값 */
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      publishIdx = -1;
+      refresh();
+      window.UW.toast("발행 완료로 처리했어요. 실행 결과 리포트에 반영돼요.");
+      return;
+    }
     if (act === "approve-doc") {
       var lv = level(), mode = effMode(), d = DOCS[current], rv = reviewerOf(d);
       if (rv === "agency" && mode === "A") {
@@ -467,11 +582,15 @@
         /* 모드 B: 대행사 검수 완료 → 바로 등록 대기 */
         d.status = "등록 대기";
         window.UW.toast("검수 완료. " + d.ch + "에 직접 등록한 뒤 완료 처리하세요.");
+      } else if (lv === "L2") {
+        /* L2 셀프: 승인 완료가 종착점. 등록 대기를 거치지 않고 검토 플로우가 끝나며,
+           통계에서는 발행된 것으로 간주한다(사장님이 직접 올릴 글이라 완료 확인 왕복을 없앰) */
+        d.status = "승인 완료";
+        window.UW.toast("승인했어요. " + d.ch + "에 올려주세요. 검토는 여기서 끝나요.");
       } else {
-        /* 사장님 승인 */
+        /* L1 사장님 승인 → 등록은 대행사 몫이라 등록 대기로 넘긴다 */
         d.status = "등록 대기";
-        if (lv === "L1") window.UW.toast("승인했어요. 대행사가 확인 후 " + d.ch + "에 올려드려요.");
-        else            window.UW.toast("승인했어요. " + d.ch + "에 직접 등록한 뒤 완료 처리하세요.");
+        window.UW.toast("승인했어요. 대행사가 확인 후 " + d.ch + "에 올려드려요.");
       }
       refresh();
       return;
@@ -500,6 +619,12 @@
       scheduleRework(dw);
       return;
     }
+  });
+
+  /* 블로그 URL을 입력해야 완료 버튼이 열린다(당근마켓은 애초에 잠그지 않음) */
+  document.addEventListener("input", function (e) {
+    if (e.target.id !== "pu-url") return;
+    document.getElementById("pu-confirm").disabled = !e.target.value.trim();
   });
 
   document.addEventListener("uw:levelchange", refresh);

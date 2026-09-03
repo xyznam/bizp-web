@@ -39,6 +39,16 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 .sl-store-name { font-weight: 700; color: var(--ink-900); }
 .sl-owner { font-size: 12px; color: var(--ink-600); font-weight: 500; }
 
+/* ---- 페이지네이션 ---- */
+.sl-page-btn {
+  min-width: 28px; height: 28px; padding: 0 6px; border: 1px solid var(--input-border);
+  border-radius: 8px; background: var(--white); color: var(--ink-600);
+  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.sl-page-btn:hover:not(:disabled) { background: var(--inset); }
+.sl-page-btn:disabled { color: var(--ink-300); cursor: default; }
+.sl-page-btn.is-on { background: var(--blue); border-color: var(--blue); color: #fff; }
+
 /* ---- 상세 팝업 ---- */
 .sl-popup-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,.28);
@@ -103,7 +113,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -114,6 +124,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html" class="is-active">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -212,7 +223,10 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
           </thead>
           <tbody id="store-tbody" data-module="M03"></tbody>
         </table>
-        <div style="padding:10px 14px;font-size:12px;color:var(--ink-400);border-top:1px solid var(--divider)" id="store-caption"></div>
+        <div style="padding:10px 14px;border-top:1px solid var(--divider);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--ink-400)" id="store-caption"></div>
+          <div id="store-pagination" style="display:flex;align-items:center;gap:4px"></div>
+        </div>
       </section>
 
       <!-- M04 · 일괄 액션바 (상시 노출, 미선택 시 버튼 비활성) -->
@@ -220,7 +234,6 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         <span id="bulk-hint" style="font-size:13px;font-weight:600;color:var(--ink-400)">매장을 선택하면 일괄 작업을 할 수 있어요</span>
         <span style="font-size:13px;font-weight:700;color:var(--ink-700);display:none" id="bulk-count-wrap">선택한 <b id="bulk-count" style="color:var(--blue)">0</b>개 매장:</span>
         <button class="btn btn-secondary btn-sm is-disabled" data-bulk-btn data-action="toast" data-toast-msg="선택한 매장의 학습을 시작했어요">다시 학습</button>
-        <a class="btn btn-ghost btn-sm is-disabled" data-bulk-btn href="02_콘텐츠검토.html">검토 큐 열기</a>
       </div>
 
     </main>
@@ -237,22 +250,29 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       <button class="sl-popup-close" id="btn-popup-close">✕</button>
     </div>
     <div class="sl-popup-body">
+      <div id="popup-deactivate-memo-row" style="display:none;background:var(--red-bg,#fff0f0);border:1px solid var(--red);border-radius:var(--radius-tile);padding:10px 12px;font-size:13px;font-weight:700;color:var(--red)">비활성화 사유 : <span id="popup-deactivate-memo"></span></div>
       <div class="sl-info-row"><span class="sl-info-label">업종</span><span class="sl-info-value" id="popup-cat">—</span></div>
       <div class="sl-info-row"><span class="sl-info-label">브랜드</span><span class="sl-info-value" id="popup-brand">—</span></div>
       <div class="sl-info-row"><span class="sl-info-label">사업자번호</span><span class="sl-info-value" id="popup-bizno">—</span></div>
-      <div class="sl-info-row" id="popup-owner-row"><span class="sl-info-label">사장님</span><span class="sl-info-value" id="popup-owner">—</span></div>
+      <div class="sl-info-row" id="popup-owner-row"><span class="sl-info-label" id="popup-owner-label">사장님</span><span class="sl-info-value" id="popup-owner">—</span></div>
       <div class="sl-info-row" id="popup-phone-row"><span class="sl-info-label">휴대폰</span><span class="sl-info-value" id="popup-phone">—</span></div>
+      <div id="popup-manager-note" style="display:none;font-size:12px;font-weight:600;color:var(--ink-500);background:var(--inset);border-radius:8px;padding:8px 10px">대표는 아직 가입하지 않았어요. 지금은 매니저만 있는 매장이에요.</div>
       <div class="sl-info-row"><span class="sl-info-label">요금제</span><span class="sl-info-value" id="popup-plan">—</span></div>
       <div style="border-top:1px solid var(--divider);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <div><div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-bottom:5px">운영상태</div><span id="popup-ops-badge">—</span></div>
+        <div><div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-bottom:5px">매장상태</div><span id="popup-status-badge">—</span></div>
+        <div style="margin-left:16px"><div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-bottom:5px">운영상태</div><span id="popup-ops-badge">—</span></div>
         <div style="margin-left:16px"><div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-bottom:5px">초대상태</div><span id="popup-inv-badge">—</span></div>
       </div>
     </div>
     <div class="sl-popup-footer">
+      <button class="btn btn-ghost btn-sm" id="btn-popup-delete" style="display:none;color:var(--red);margin-right:auto">매장 삭제</button>
+      <span id="popup-delete-cs-hint" style="display:none;margin-right:auto;font-size:12px;font-weight:600;color:var(--ink-400)">삭제하려면 고객센터에 문의해 주세요</span>
       <button class="btn btn-ghost btn-sm" id="btn-popup-close2">닫기</button>
       <button class="btn btn-secondary btn-sm" id="btn-popup-setup" style="display:none">매장설정</button>
       <button class="btn btn-secondary btn-sm" id="btn-popup-invite-info" style="display:none" data-action="open-modal" data-modal="modal-invite">초대정보</button>
-      <button class="btn btn-secondary btn-sm" id="btn-popup-edit">수정</button>
+      <!-- 2026-09-02: 요금제·사장님/휴대폰 필드가 다른 곳(초대정보, 요금제변경)과 중복·비검증이라 잠정 비활성화.
+           남는 게 매장 이름 하나뿐이라 모달을 어떻게 다시 만들지는 아직 미정(함께쓰는사람_정책.md류 정책 문서 없음, 논의 예정) -->
+      <button class="btn btn-secondary btn-sm" id="btn-popup-edit" style="display:none">수정</button>
       <button class="btn btn-primary btn-sm" id="btn-popup-invite" style="display:none" data-action="open-modal" data-modal="modal-invite">초대 보내기</button>
     </div>
   </div>
@@ -375,9 +395,22 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   <div class="uw-modal" style="max-width:420px">
     <div class="uw-modal-title">초대 보내기</div>
     <div class="uw-modal-body" style="display:flex;flex-direction:column;gap:0">
-      <div style="font-size:13px;font-weight:500;color:var(--ink-600);line-height:1.7;margin-bottom:4px">사장님 정보를 입력하면 초대 문자를 보내드려요. 이미 가입된 사장님이라면 자동으로 계정을 연결해요.</div>
+      <div style="font-size:13px;font-weight:500;color:var(--ink-600);line-height:1.7;margin-bottom:4px">정보를 입력하면 초대 문자를 보내드려요. 이미 가입된 번호는 초대할 수 없어요.</div>
+      <div class="cm-field" style="margin-top:0">
+        <div class="cm-label">역할 <span class="cm-req">*</span></div>
+        <div class="cm-brand-cards" id="inv-role-cards">
+          <button type="button" class="cm-brand-card is-on" data-role="대표">
+            <div class="cm-brand-card-title">사장님</div>
+            <div class="cm-brand-card-desc">매장 대표로 초대해요</div>
+          </button>
+          <button type="button" class="cm-brand-card" data-role="매니저">
+            <div class="cm-brand-card-title">매니저</div>
+            <div class="cm-brand-card-desc">직원으로 초대해요</div>
+          </button>
+        </div>
+      </div>
       <div class="cm-field">
-        <div class="cm-label">사장님 이름 <span class="cm-req">*</span></div>
+        <div class="cm-label">이름 <span class="cm-req">*</span></div>
         <input class="cm-input" id="inv-name" placeholder="실명" required>
       </div>
       <div class="cm-field">
@@ -406,12 +439,28 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       </div>
       <div class="cm-field" style="margin-top:12px">
         <div class="cm-label">사유 메모 <span style="font-weight:500;color:var(--ink-400)">(선택)</span></div>
-        <input class="cm-input" placeholder="내부 메모용이에요. 사장님에게는 보이지 않아요">
+        <input class="cm-input" id="deactivate-memo" placeholder="내부 메모용이에요. 사장님에게는 보이지 않아요">
       </div>
     </div>
     <div class="uw-modal-actions">
       <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
       <button class="btn btn-sm" id="btn-deactivate-confirm" style="background:var(--red);color:#fff;border:0;border-radius:var(--radius-btn);padding:0 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">비활성화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 매장 삭제(설정전 매장 전용) ========== -->
+<div class="uw-modal-backdrop" id="modal-delete-store">
+  <div class="uw-modal">
+    <div class="uw-modal-title"><span id="delete-target-name">이 매장</span>을 삭제할까요?</div>
+    <div class="uw-modal-body">
+      <div style="background:var(--red-bg,#fff0f0);border:1px solid var(--red);border-radius:var(--radius-tile);padding:10px 12px;font-size:13px;font-weight:600;color:var(--red)">
+        ⚠ 아직 설정을 시작하지 않은 매장이에요. 삭제하면 되돌릴 수 없어요.
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-sm" id="btn-delete-store-confirm" style="background:var(--red);color:#fff;border:0;border-radius:var(--radius-btn);padding:0 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">삭제</button>
     </div>
   </div>
 </div>
@@ -431,20 +480,45 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   };
 
   var STORES = [
-    { name: "스시오마카세 강남점", cat: "음식점·카페",  owner: "홍길동",  phone: "010-****-5678", bizno: "8708700393", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 5, warn: null,                              brandStatus: "official", brand: "스시오마카세", active: true },
-    { name: "스시오마카세 판교점", cat: "음식점·카페",  owner: "홍길동",  phone: "010-****-5678", bizno: "9876543210", plan: "Basic", ops: "운영중", inv: "초대 전",   todo: 3, warn: null,                              brandStatus: "official", brand: "스시오마카세", active: true },
-    { name: "카페봄봄 신촌점",     cat: "음식점·카페",  owner: "김영희",  phone: "010-****-2345", bizno: "1111111111", plan: "Basic", ops: "학습전", inv: "초대 대기", todo: 4, warn: { label: "수집 실패", cls: "b-red" }, brandStatus: "none",     brand: null,            active: false },
-    { name: "테라스의원",           cat: "의료/건강",    owner: "박민준",  phone: "010-****-9012", bizno: "2222222222", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 2, warn: null,                              brandStatus: "none",     brand: null,            active: true },
-    { name: "민준헤어",             cat: "미용·뷰티",   owner: "이수진",  phone: "010-****-3456", bizno: "3333333333", plan: "Basic", ops: "설정전", inv: "가입 완료", todo: 0, warn: null,                              brandStatus: "pending",  brand: "민준헤어",      active: true }
+    { name: "스시오마카세 강남점", cat: "음식점·카페",  owner: "홍길동",  phone: "010-****-5678", bizno: "8708700393", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 5, warn: null,                              brandStatus: "official", brand: "스시오마카세", active: true,  role: "대표" },
+    { name: "스시오마카세 판교점", cat: "음식점·카페",  owner: "홍길동",  phone: "010-****-5678", bizno: "9876543210", plan: "Basic", ops: "운영중", inv: "초대 전",   todo: 3, warn: null,                              brandStatus: "official", brand: "스시오마카세", active: true,  role: "대표" },
+    { name: "카페봄봄 신촌점",     cat: "음식점·카페",  owner: "김영희",  phone: "010-****-2345", bizno: "1111111111", plan: "Basic", ops: "학습전", inv: "초대 대기", todo: 4, warn: { label: "수집 실패", cls: "b-red" }, brandStatus: "none",     brand: null,            active: false, role: "대표" },
+    { name: "테라스의원",           cat: "의료/건강",    owner: "박민준",  phone: "010-****-9012", bizno: "2222222222", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 2, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "매니저" },
+    { name: "민준헤어",             cat: "미용·뷰티",   owner: "이수진",  phone: "010-****-3456", bizno: "3333333333", plan: "Basic", ops: "설정전", inv: "가입 완료", todo: 0, warn: null,                              brandStatus: "pending",  brand: "민준헤어",      active: true,  role: "대표" },
+    /* 페이지네이션 시연용 추가 20곳(표본 총 25곳) */
+    { name: "스타커피 홍대점",     cat: "음식점·카페",  owner: "오세훈",  phone: "010-****-1111", bizno: "4000000001", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 1, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "스타커피 강남점",     cat: "음식점·카페",  owner: "오세훈",  phone: "010-****-1111", bizno: "4000000002", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 6, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "든든약국 잠실점",     cat: "의료/건강",    owner: "최지우",  phone: "010-****-2222", bizno: "4000000003", plan: "Basic", ops: "학습전", inv: "초대 대기", todo: 2, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "스마일치과 수원점",   cat: "의료/건강",    owner: "한도윤",  phone: "010-****-3333", bizno: "4000000004", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 4, warn: { label: "수집 실패", cls: "b-red" }, brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "헤어라운지 성수점",   cat: "미용·뷰티",   owner: "정하은",  phone: "010-****-4444", bizno: "4000000005", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 3, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "매니저" },
+    { name: "네일가든 이태원점",   cat: "미용·뷰티",   owner: "",        phone: "",               bizno: "4000000006", plan: "Basic", ops: "설정전", inv: "초대 전",   todo: 0, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "코딩스쿨 분당점",     cat: "학원·교육",    owner: "장서준",  phone: "010-****-6666", bizno: "4000000007", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 5, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "코딩스쿨 일산점",     cat: "학원·교육",    owner: "장서준",  phone: "010-****-6666", bizno: "4000000008", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 0, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "그린마트 화정점",     cat: "소매·판매",    owner: "윤아름",  phone: "010-****-7777", bizno: "4000000009", plan: "Basic", ops: "학습전", inv: "초대 대기", todo: 1, warn: { label: "수집 실패", cls: "b-red" }, brandStatus: "none",     brand: null,            active: false, role: "대표" },
+    { name: "북적문구점 인천점",   cat: "소매·판매",    owner: "송민재",  phone: "010-****-8888", bizno: "4000000010", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 2, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "우리동네세탁소 광명점", cat: "기타",        owner: "임하율",  phone: "010-****-9999", bizno: "4000000011", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 0, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "펫그루밍 안양점",     cat: "기타",         owner: "배지호",  phone: "010-****-1212", bizno: "4000000012", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 3, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "달콤베이커리 부천점", cat: "음식점·카페",  owner: "신유진",  phone: "010-****-1313", bizno: "4000000013", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 4, warn: null,                              brandStatus: "official", brand: "달콤베이커리",  active: true,  role: "대표" },
+    { name: "달콤베이커리 안산점", cat: "음식점·카페",  owner: "신유진",  phone: "010-****-1313", bizno: "4000000014", plan: "Basic", ops: "설정전", inv: "가입 완료", todo: 0, warn: null,                              brandStatus: "official", brand: "달콤베이커리",  active: true,  role: "대표" },
+    { name: "튼튼정형외과 동탄점", cat: "의료/건강",    owner: "고은서",  phone: "010-****-1414", bizno: "4000000015", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 7, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "매니저" },
+    { name: "샤인네일 여의도점",   cat: "미용·뷰티",   owner: "",        phone: "",               bizno: "4000000016", plan: "Basic", ops: "설정전", inv: "초대 전",   todo: 0, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "청년공인중개사 판교점", cat: "기타",       owner: "문지후",  phone: "010-****-1717", bizno: "4000000017", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 1, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "잉글리시허브 목동점", cat: "학원·교육",    owner: "노아윤",  phone: "010-****-1818", bizno: "4000000018", plan: "Pro",   ops: "운영중", inv: "가입 완료", todo: 2, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "청춘분식 신림점",     cat: "음식점·카페",  owner: "권시우",  phone: "010-****-1919", bizno: "4000000019", plan: "Basic", ops: "학습전", inv: "초대 대기", todo: 3, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" },
+    { name: "리틀팜 유아용품점",   cat: "소매·판매",    owner: "황서연",  phone: "010-****-2020", bizno: "4000000020", plan: "Basic", ops: "운영중", inv: "가입 완료", todo: 0, warn: null,                              brandStatus: "none",     brand: null,            active: true,  role: "대표" }
   ];
 
   var selected = {};
   var currentStore = null;
+  var PAGE_SIZE = 10;
+  var currentPage = 1;
 
   /* ---- 뱃지 헬퍼 ---- */
   function opsBadge(v) { return v ? '<span class="uw-badge ' + (OPS_BADGE[v] || "b-gray") + '">' + v + '</span>' : '—'; }
   function invBadge(v) { return v ? '<span class="uw-badge ' + (INV_BADGE[v] || "b-gray") + '">' + v + '</span>' : '—'; }
   function warnBadge(w) { return w ? '<span class="uw-badge ' + w.cls + '">' + w.label + '</span>' : '<span style="color:var(--ink-300)">—</span>'; }
+  /* 매장구조_회원정책.md §4 : 활성 토글이 조작하는 건 이용중/이용 중지 두 상태뿐(나머지 5가지는 미반영) */
+  function storeStatusBadge(active) { return active ? '<span class="uw-badge b-green">이용중</span>' : '<span class="uw-badge b-red">이용 중지</span>'; }
 
   /* ---- 필터·정렬 ---- */
   function getFiltered() {
@@ -465,21 +539,33 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     });
   }
 
+  /* 현재 페이지에 보이는 매장만 반환(선택 시 currentPage를 유효 범위로 보정) */
+  function getPageList() {
+    var list = getFiltered();
+    var totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    return list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  }
+
   /* ---- 테이블 렌더 ---- */
   function renderTable() {
     var list  = getFiltered();
     var tbody = document.getElementById("store-tbody");
 
-    if (!list.length) {
+    var totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    var pageList = getPageList();
+
+    if (!pageList.length) {
       tbody.innerHTML = '<tr><td colspan="10" style="padding:28px;text-align:center;color:var(--ink-400)">조건에 맞는 매장이 없어요</td></tr>';
     } else {
-      tbody.innerHTML = list.map(function (s) {
+      tbody.innerHTML = pageList.map(function (s) {
         var chk = selected[s.name] ? "checked" : "";
         return '<tr class="store-row" data-store="' + s.name + '">' +
           '<td style="text-align:center" data-role="checkbox-cell"><input type="checkbox" class="store-row-check" data-store-check="' + s.name + '" ' + chk + '></td>' +
           '<td><div class="sl-store-name">' + s.name + (s.brandStatus === "official" ? ' <span class="uw-badge b-purple" style="font-size:10px;vertical-align:middle">' + s.brand + '</span>' : s.brandStatus === "pending" ? ' <span class="uw-badge" style="font-size:10px;vertical-align:middle;background:var(--inset);color:var(--ink-500)">' + s.brand + ' · 검증대기</span>' : '') + '</div></td>' +
           '<td style="color:var(--ink-500);font-size:12px">' + s.cat + '</td>' +
-          '<td><div class="sl-owner">' + (s.inv === "초대 전" ? '<span style="color:var(--ink-300)">-</span>' : s.owner) + '</div></td>' +
+          '<td><div class="sl-owner">' + (s.inv === "초대 전" ? '<span style="color:var(--ink-300)">-</span>' : s.owner + (s.role === "매니저" ? ' <span class="uw-badge" style="font-size:10px;vertical-align:middle;background:var(--inset);color:var(--ink-500)">매니저</span>' : '')) + '</div></td>' +
           '<td>' + opsBadge(s.ops) + '</td>' +
           '<td style="text-align:center" data-role="toggle-cell"><label class="sl-toggle"><input type="checkbox" class="store-active-toggle" data-store-toggle="' + s.name + '" ' + (s.active ? "checked" : "") + '><span class="sl-toggle-track"></span></label></td>' +
           '<td>' + invBadge(s.inv) + '</td>' +
@@ -490,11 +576,34 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       }).join("");
     }
 
+    var rangeStart = list.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
+    var rangeEnd   = Math.min(currentPage * PAGE_SIZE, list.length);
     document.getElementById("store-caption").textContent =
-      "표본 " + STORES.length + "곳 중 " + list.length + "곳 표시 · 전체 78곳은 검색으로 찾아요";
-    syncSelectAll(list);
+      "표본 " + STORES.length + "곳 중 " + rangeStart + "-" + rangeEnd + "곳 표시(전체 " + list.length + "곳) · 실제 담당 매장은 78곳";
+    renderPagination(totalPages);
+    syncSelectAll(pageList);
     renderBulkBar();
   }
+
+  /* ---- 페이지네이션 렌더 ---- */
+  function renderPagination(totalPages) {
+    var wrap = document.getElementById("store-pagination");
+    if (totalPages <= 1) { wrap.innerHTML = ""; return; }
+
+    var html = '<button type="button" class="sl-page-btn" data-page="' + (currentPage - 1) + '" ' + (currentPage === 1 ? "disabled" : "") + '>‹</button>';
+    for (var i = 1; i <= totalPages; i++) {
+      html += '<button type="button" class="sl-page-btn' + (i === currentPage ? " is-on" : "") + '" data-page="' + i + '">' + i + '</button>';
+    }
+    html += '<button type="button" class="sl-page-btn" data-page="' + (currentPage + 1) + '" ' + (currentPage === totalPages ? "disabled" : "") + '>›</button>';
+    wrap.innerHTML = html;
+  }
+
+  document.getElementById("store-pagination").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-page]");
+    if (!btn || btn.disabled) return;
+    currentPage = parseInt(btn.getAttribute("data-page"), 10);
+    renderTable();
+  });
 
   /* ---- 상세 팝업 ---- */
   function openDetail(name) {
@@ -512,10 +621,22 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     document.getElementById("popup-owner-row").style.display = hasOwnerInfo ? "" : "none";
     document.getElementById("popup-phone-row").style.display = hasOwnerInfo ? "" : "none";
     if (hasOwnerInfo) {
+      document.getElementById("popup-owner-label").textContent = s.role === "매니저" ? "매니저" : "사장님";
       document.getElementById("popup-owner").textContent = s.owner;
       document.getElementById("popup-phone").textContent = s.phone;
     }
+    /* 매니저만 있고 대표는 아직 없는 매장 안내 */
+    document.getElementById("popup-manager-note").style.display = (hasOwnerInfo && s.role === "매니저") ? "" : "none";
+    /* 비활성화 사유 메모: 비활성 매장 + 메모가 있을 때만 */
+    var deactivateMemoRow = document.getElementById("popup-deactivate-memo-row");
+    if (!s.active && s.deactivateMemo) {
+      document.getElementById("popup-deactivate-memo").textContent = s.deactivateMemo;
+      deactivateMemoRow.style.display = "";
+    } else {
+      deactivateMemoRow.style.display = "none";
+    }
     document.getElementById("popup-plan").textContent       = s.plan;
+    document.getElementById("popup-status-badge").innerHTML = storeStatusBadge(s.active);
     document.getElementById("popup-ops-badge").innerHTML    = opsBadge(s.ops);
     document.getElementById("popup-inv-badge").innerHTML    = invBadge(s.inv);
     /* 초대 보내기 버튼: 초대 전 매장에만 노출 */
@@ -524,6 +645,9 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     document.getElementById("btn-popup-invite-info").style.display = s.inv === "초대 대기" ? "" : "none";
     /* 매장설정 버튼: 운영상태가 설정전인 매장에만 노출 */
     document.getElementById("btn-popup-setup").style.display = s.ops === "설정전" ? "" : "none";
+    /* 매장 삭제: 설정전 매장만 직접 삭제 가능, 설정 후엔 고객센터 문의 안내로 대체 */
+    document.getElementById("btn-popup-delete").style.display = s.ops === "설정전" ? "" : "none";
+    document.getElementById("popup-delete-cs-hint").style.display = s.ops === "설정전" ? "none" : "";
     document.getElementById("popup-detail").classList.add("is-open");
   }
 
@@ -537,6 +661,26 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   /* ---- 매장설정 이동 (설정전 매장) ---- */
   document.getElementById("btn-popup-setup").addEventListener("click", function () {
     location.href = "98_매장설정.html";
+  });
+
+  /* ---- 매장 삭제 (설정전 매장만 가능) ---- */
+  var pendingDelete = null;
+  document.getElementById("btn-popup-delete").addEventListener("click", function () {
+    if (!currentStore) return;
+    pendingDelete = currentStore.name;
+    document.getElementById("delete-target-name").textContent = currentStore.name;
+    document.getElementById("modal-delete-store").classList.add("is-open");
+  });
+  document.getElementById("btn-delete-store-confirm").addEventListener("click", function () {
+    if (pendingDelete) {
+      var idx = STORES.findIndex(function (x) { return x.name === pendingDelete; });
+      if (idx !== -1) STORES.splice(idx, 1);
+      document.getElementById("modal-delete-store").classList.remove("is-open");
+      closeDetail();
+      renderTable();
+      if (window.UW) window.UW.toast(pendingDelete + window.UW.josa(pendingDelete, "을", "를") + " 삭제했어요");
+      pendingDelete = null;
+    }
   });
 
   /* ---- 수정 모달 ---- */
@@ -582,6 +726,16 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     if (window.UW) window.UW.toast("매장 정보를 수정했어요");
   });
 
+  /* ---- 초대 보내기 (새 초대) ---- */
+  document.getElementById("btn-popup-invite").addEventListener("click", function () {
+    document.getElementById("inv-name").value  = "";
+    document.getElementById("inv-phone").value = "";
+    document.getElementById("inv-result").style.display = "none";
+    document.getElementById("btn-inv-submit").disabled = true;
+    setInviteRole("대표");
+    invCase = null;
+  });
+
   /* ---- 초대정보 (초대 대기 매장 재확인·재발송) ---- */
   document.getElementById("btn-popup-invite-info").addEventListener("click", function (e) {
     if (!currentStore) return;
@@ -589,6 +743,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     document.getElementById("inv-phone").value = currentStore.phone;
     document.getElementById("inv-result").style.display = "none";
     document.getElementById("btn-inv-submit").disabled = true;
+    setInviteRole(currentStore.role === "매니저" ? "매니저" : "대표");
     invCase = null;
   });
   document.getElementById("popup-detail").addEventListener("click", function (e) {
@@ -634,13 +789,13 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   var pendingDeactivate = null;
 
   document.addEventListener("change", function (e) {
-    if (["flt-warn-only","flt-ops","flt-inv","flt-sort"].includes(e.target.id)) { renderTable(); return; }
+    if (["flt-warn-only","flt-ops","flt-inv","flt-sort"].includes(e.target.id)) { currentPage = 1; renderTable(); return; }
     if (e.target.id === "store-select-all") {
-      getFiltered().forEach(function (s) { selected[s.name] = e.target.checked; });
+      getPageList().forEach(function (s) { selected[s.name] = e.target.checked; });
       renderTable(); return;
     }
     var sc = e.target.getAttribute && e.target.getAttribute("data-store-check");
-    if (sc) { selected[sc] = e.target.checked; syncSelectAll(getFiltered()); renderBulkBar(); return; }
+    if (sc) { selected[sc] = e.target.checked; syncSelectAll(getPageList()); renderBulkBar(); return; }
 
     var tg = e.target.getAttribute && e.target.getAttribute("data-store-toggle");
     if (tg) {
@@ -649,7 +804,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       if (e.target.checked) {
         /* 재활성화는 확인 없이 즉시 반영 */
         s.active = true;
-        if (window.UW) window.UW.toast(tg + "을(를) 다시 활성화했어요");
+        if (window.UW) window.UW.toast(tg + window.UW.josa(tg, "을", "를") + " 다시 활성화했어요");
       } else {
         /* 비활성화는 확인 모달을 거침 — 확정 전까지 스위치는 켜진 채로 되돌림 */
         e.target.checked = true;
@@ -659,12 +814,11 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       }
     }
   });
-  document.getElementById("flt-search").addEventListener("input", renderTable);
+  document.getElementById("flt-search").addEventListener("input", function () { currentPage = 1; renderTable(); });
 
   /* ---- 신규 매장 등록 모달 ---- */
-  var BIZ_CASES = { "1111111111": "EXISTING_SAME", "2222222222": "EXISTING_OTHER", "3333333333": "EXISTING_SELF" };
+  var BIZ_CASES = { "1111111111": "EXISTING_SAME", "2222222222": "EXISTING_OTHER", "3333333333": "EXISTING_OTHER" };
   var regBizCase = null;
-  var regMatchedOwner = null; /* EXISTING_SAME일 때 자동 연결할 기존 사장님 정보 */
 
   /* 브랜드 선택 (브랜드없음/공식브랜드검색/신규등록) */
   var brandType = "none"; /* none | search | new */
@@ -743,7 +897,6 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   function renderRegBizResult(bizno) {
     var c = BIZ_CASES[bizno] || "NEW";
     regBizCase = c;
-    regMatchedOwner = null;
     var wrap = document.getElementById("reg-biz-result");
     var extra = document.getElementById("reg-extra");
     var btn = document.getElementById("btn-reg-submit");
@@ -751,18 +904,12 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 
     if (c === "EXISTING_SAME") {
       var matched = STORES.find(function (s) { return s.bizno === bizno; });
-      if (matched) {
-        regMatchedOwner = { owner: matched.owner, phone: matched.phone };
-        wrap.innerHTML = '<div class="cm-match-ok">✅ 이미 담당 중인 <b>' + matched.owner + '</b> 사장님의 사업자번호예요 (' + matched.name + ').<br>같은 사장님 계정으로 자동 연결해서 새 지점으로 등록할게요.</div>';
-      } else {
-        wrap.innerHTML = '<div class="cm-match-ok">✅ 이미 담당 중인 사장님의 사업자번호예요. 같은 사장님 계정으로 자동 연결할게요.</div>';
-      }
-      extra.style.display = ""; btn.disabled = false;
+      wrap.innerHTML = matched
+        ? '<div class="cm-match-block">⛔ 이미 <b>' + matched.name + '</b>의 사업자번호로 등록돼 있어요. 번호를 다시 확인해 주세요.</div>'
+        : '<div class="cm-match-block">⛔ 이미 등록된 사업자번호예요. 번호를 다시 확인해 주세요.</div>';
     } else if (c === "EXISTING_OTHER") {
-      wrap.innerHTML = '<div class="cm-match-block">⛔ 이미 다른 대행사가 담당하는 사업자번호예요. <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="CS 접수됐어요">고객센터에 문의</a>해 주세요.</div>';
-    } else if (c === "EXISTING_SELF") {
-      wrap.innerHTML = '<div class="cm-match-block">⛔ 이미 비즈플래닛을 직접 사용 중인 사장님의 사업자번호예요. <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="CS 접수됐어요">고객센터에 문의</a>해 주세요.</div>';
-      btn.disabled = true;
+      /* 우리 대행사 소속이 아닌 사업자번호 — 다른 대행사 소속인지 직접 이용 중인지는 구분하지 않고 동일하게 차단 */
+      wrap.innerHTML = '<div class="cm-match-block">⛔ 이미 다른 곳에 등록된 사업자번호예요. 번호를 다시 확인해 주세요. 번호가 맞다면 <a href="#" style="color:var(--blue);font-weight:700" data-action="toast" data-toast-msg="CS 접수됐어요">고객센터</a>에 문의해 주세요.</div>';
     } else {
       wrap.innerHTML = '<div class="cm-match-ok">✅ 새로운 사업자번호예요. 신규 매장으로 등록할게요.</div>';
       extra.style.display = ""; btn.disabled = false;
@@ -790,20 +937,14 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     var brandStatus = brandType === "none" ? "none" : brandType === "new" ? "pending" : "official";
     var brandName = brandType === "none" ? null : brandType === "new" ? document.getElementById("reg-franchise-brand-name").value.trim() : franchiseValue;
 
+    /* 사업자번호가 이미 등록된 케이스(같은/다른 대행사, 직접 이용 중)는 전부 확인 단계에서 차단되므로
+       여기까지 도달하는 건 항상 신규 사업자번호뿐 — 사장님 정보 없이 초대 전 상태로 시작 */
     var newStore = {
       name: name, cat: category, bizno: bizno, plan: "Basic",
       ops: "설정전", todo: 0, warn: null,
-      brandStatus: brandStatus, brand: brandName, active: true
+      brandStatus: brandStatus, brand: brandName, active: true, role: "대표",
+      owner: "", phone: "", inv: "초대 전"
     };
-    if (regBizCase === "EXISTING_SAME" && regMatchedOwner) {
-      newStore.owner = regMatchedOwner.owner;
-      newStore.phone = regMatchedOwner.phone;
-      newStore.inv   = "가입 완료";
-    } else {
-      newStore.owner = "";
-      newStore.phone = "";
-      newStore.inv   = "초대 전";
-    }
     STORES.push(newStore);
     renderTable();
 
@@ -818,17 +959,34 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     document.getElementById("reg-biz-result").style.display = "none";
     document.getElementById("reg-extra").style.display = "none";
     document.getElementById("btn-reg-submit").disabled = true;
-    var wasExistingSame = regBizCase === "EXISTING_SAME";
     regBizCase = null;
-    regMatchedOwner = null;
-    if (window.UW) window.UW.toast(wasExistingSame ? name + " 등록 완료 · 같은 사장님 계정으로 자동 연결했어요" : name + " 등록 완료 · 매장 정보를 설정해 주세요");
+    if (window.UW) window.UW.toast(name + " 등록 완료 · 매장 정보를 설정해 주세요");
   });
 
   /* ---- 초대 모달 ---- */
-  /* 이미 비즈플래닛에 가입된 사장님 목록(프로토타입 목데이터) — 휴대폰이 조회 기준키 */
-  var REGISTERED_OWNERS = [
+  var invRole = "대표";
+  function setInviteRole(role) {
+    invRole = role === "매니저" ? "매니저" : "대표";
+    document.querySelectorAll("#inv-role-cards [data-role]").forEach(function (c) {
+      c.classList.toggle("is-on", c.getAttribute("data-role") === invRole);
+    });
+  }
+  document.getElementById("inv-role-cards").addEventListener("click", function (e) {
+    var card = e.target.closest("[data-role]");
+    if (!card) return;
+    setInviteRole(card.getAttribute("data-role"));
+  });
+
+  /* 우리 대행사에서 이미 위탁 운영 중인 사장님 번호(프로토타입 목데이터) — 이름까지 알고 있어서 안내 문구에 노출 가능 */
+  var OUR_AGENCY_OWNERS = [
     { name: "홍길동", phone: "010-1234-5678" }
   ];
+  function findOurOwnerByPhone(phone) {
+    var norm = phone.replace(/\D/g, "");
+    return OUR_AGENCY_OWNERS.find(function (o) { return o.phone.replace(/\D/g, "") === norm; });
+  }
+  /* 우리 소속은 아니지만 이미 비즈플래닛에 가입된 회원(프로토타입 목데이터) — 이름은 알 수 없고 번호로만 존재 확인 */
+  var EXTERNALLY_REGISTERED_PHONES = ["010-9999-0000"];
   var invCase = null;
 
   document.getElementById("btn-inv-check").addEventListener("click", function () {
@@ -836,28 +994,25 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     var phone = document.getElementById("inv-phone").value.trim();
     if (!name || !phone) { if (window.UW) window.UW.toast("이름과 번호를 모두 입력해 주세요"); return; }
 
-    var byPhone = REGISTERED_OWNERS.find(function (o) { return o.phone.replace(/\D/g, "") === phone.replace(/\D/g, ""); });
-    if (byPhone && byPhone.name === name) {
-      invCase = "LINKED";
-    } else if (byPhone) {
-      invCase = "PHONE_MISMATCH";
-    } else {
-      invCase = "NEW";
-    }
+    var normPhone  = phone.replace(/\D/g, "");
+    var ourOwner   = findOurOwnerByPhone(phone);
+    var isExternal = EXTERNALLY_REGISTERED_PHONES.some(function (p) { return p.replace(/\D/g, "") === normPhone; });
+
+    if (ourOwner) invCase = "OUR_AGENCY";
+    else if (isExternal) invCase = "OTHER_REGISTERED";
+    else invCase = "NEW";
 
     var wrap = document.getElementById("inv-result");
     var btn = document.getElementById("btn-inv-submit");
     wrap.style.display = "";
-    if (invCase === "LINKED") {
-      wrap.innerHTML = '<div class="cm-match-ok" style="margin-top:10px">✅ 이미 가입된 사장님이에요. 초대 문자 없이 매장을 바로 연결할게요.</div>';
-      btn.textContent = "계정에 연결하기";
-      btn.disabled = false;
-    } else if (invCase === "PHONE_MISMATCH") {
-      wrap.innerHTML = '<div class="cm-match-block">이 휴대폰 번호로 이미 가입된 다른 사장님이 있어요.<br>이름을 다시 확인하시거나, 정확한 확인이 필요하면 <b>고객센터</b>에 문의해 주세요.</div>';
+    if (invCase === "OUR_AGENCY") {
+      wrap.innerHTML = '<div class="cm-match-block">' + ourOwner.name + '님은 이미 가입한 계정이에요. 번호를 다시 확인해 주세요.</div>';
+      btn.disabled = true;
+    } else if (invCase === "OTHER_REGISTERED") {
+      wrap.innerHTML = '<div class="cm-match-block">이 휴대폰 번호로 이미 가입한 회원이 있어요. 번호를 다시 확인해 주세요.<br>번호가 맞다면 <b>고객센터</b>에 문의해 주세요.</div>';
       btn.disabled = true;
     } else {
-      wrap.innerHTML = '<div class="cm-match-ok" style="margin-top:10px">✅ 새로운 사장님이에요. 초대 문자를 보낼게요.</div>';
-      btn.textContent = "초대 보내기";
+      wrap.innerHTML = '<div class="cm-match-ok" style="margin-top:10px">✅ 새로운 ' + (invRole === "매니저" ? "매니저예요" : "사장님이에요") + '. 초대 문자를 보낼게요.</div>';
       btn.disabled = false;
     }
   });
@@ -868,12 +1023,13 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     if (currentStore) {
       currentStore.owner = name;
       currentStore.phone = phone;
-      currentStore.inv   = invCase === "LINKED" ? "가입 완료" : "초대 대기";
+      currentStore.role  = invRole;
+      currentStore.inv   = "초대 대기";
       openDetail(currentStore.name);
       renderTable();
     }
     document.getElementById("modal-invite").classList.remove("is-open");
-    if (window.UW) window.UW.toast(invCase === "LINKED" ? name + " 사장님 계정에 매장을 연결했어요" : name + " 사장님에게 초대 문자를 보냈어요");
+    if (window.UW) window.UW.toast(name + (invRole === "매니저" ? "님에게 매니저 초대 문자를 보냈어요" : " 사장님에게 초대 문자를 보냈어요"));
   });
 
 
@@ -881,10 +1037,15 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   document.getElementById("btn-deactivate-confirm").addEventListener("click", function () {
     if (pendingDeactivate) {
       var s = STORES.find(function (x) { return x.name === pendingDeactivate; });
-      if (s) s.active = false;
+      var memo = document.getElementById("deactivate-memo").value.trim();
+      if (s) {
+        s.active = false;
+        s.deactivateMemo = memo || null;
+      }
       renderTable();
-      if (window.UW) window.UW.toast(pendingDeactivate + "을(를) 비활성화했어요. 모든 서비스가 중단됐어요");
+      if (window.UW) window.UW.toast(pendingDeactivate + window.UW.josa(pendingDeactivate, "을", "를") + " 비활성화했어요. 모든 서비스가 중단됐어요");
       pendingDeactivate = null;
+      document.getElementById("deactivate-memo").value = "";
     }
     document.getElementById("modal-deactivate").classList.remove("is-open");
   });
@@ -904,7 +1065,6 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       document.getElementById("reg-extra").style.display = "none";
       document.getElementById("btn-reg-submit").disabled = true;
       regBizCase = null;
-      regMatchedOwner = null;
     }
     if (e.target.id === "inv-name" || e.target.id === "inv-phone") {
       document.getElementById("inv-result").style.display = "none";

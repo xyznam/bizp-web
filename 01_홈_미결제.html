@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>홈 (미결제) — 비즈플래닛</title>
-<!-- UW_TEST_PAY · 미결제 상태 홈 (별도 목업 — 01_홈은 결제 완료 상태 그대로 유지)
+<!-- UW_HM_05 · 미결제 상태 홈 (별도 목업 — 01_홈은 결제 완료 상태 그대로 유지)
      레벨별: L2 요금제 시작 히어로+가치 4타일 / L1 대행사 관리 안내 / L3 비대상 가드
      LNB: 유료 메뉴(홈~AI챗봇·우리 매장 정보) 잠금 → 클릭 시 09_요금제비용 이동. 도움말·내 계정 정상 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 @media (max-width: 640px) { .pay-tiles { grid-template-columns: 1fr; } }
 </style>
 </head>
-<body data-screen="UW_TEST_PAY">
+<body data-screen="UW_HM_05">
 
 <div class="uw-frame">
 
@@ -54,6 +54,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
 
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
@@ -162,8 +163,9 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       var p = document.getElementById("pay-" + l);
       if (p) p.classList.toggle("is-active", l === lv);
     });
-    /* 미등재 화면(UW_TEST_PAY)은 렌더러 render()가 조기 리턴하므로
-       레벨 버튼 활성 표시·data-only-level 표시를 여기서 직접 처리 */
+    /* 2026-08-28: UW_HM_05가 이제 capability-matrix.js에 등록돼 render()도 이 두 가지를 처리하지만
+       (data-bind ownerName/persona가 이제 실제로 채워짐), 이 pay-pane 전환 자체는 render()가 모르는
+       화면 전용 로직이라 계속 직접 처리 — 아래 두 줄은 render()와 중복 실행되지만 멱등이라 무해함 */
     document.querySelectorAll(".uw-lvl-switch button").forEach(function (b) {
       b.classList.toggle("is-on", b.getAttribute("data-level-btn") === lv);
     });

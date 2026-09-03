@@ -11,6 +11,14 @@
        - 승인권한은 role과 무관한 별도 토글. 승인권한 가진 직원이 0명이어도 강제로 부여하지 않음(비용 이슈라 매니저가 신중히 판단)
        - 배정 변경 이력 기록
        - 직원 초대는 이름+휴대폰만 입력(이메일·비밀번호는 19_초대가입에서 본인이 직접 설정)
+     2026-08-31 재설계:
+       - 직원 이름에 직함을 섞어 쓰지 않음(예: "김마케 매니저" → "김마케"). 역할은 이름 옆 배지로만 표시(직함 설정 UI 자체가 없었던 문제 해결)
+       - "담당 매장" 목록(행+해제 버튼)을 상세 카드에서 제거. [매장 배정 관리] 버튼 하나로 매장 배정 모달에서 추가/해제를 모두 처리(체크=배정, 해제=배정 해제) — 매장이 50개 넘어도 모달의 검색+스크롤 영역 안에서 처리되므로 카드가 안 늘어짐
+       - ALL_STORES를 12_매장목록.html의 STORES와 이름을 동일하게 맞춤(25곳) — 별도 공유 모듈은 없고 화면마다 독립 mock을 쓰는 이 프로젝트 관례를 따름, 내용만 일치시킴
+       - 직원 초대 번호 검증에 "이미 우리 직원인 번호" 차단 케이스 추가(기존엔 이 체크가 아예 없어서 같은 사람을 중복 초대할 수 있었음) — 12_매장목록 사장님 초대의 "우리 소속에 이미 있음" 케이스와 동일한 정책. 단 "이미 가입돼 있지만 우리 직원은 아닌 계정"은 사장님 초대와 다르게 차단하지 않고 이름이 맞으면 소속수락으로 계속 진행(팀 합류는 매장 대표 배타적 소유권과 달리 계정 재사용이 자연스러움)
+     2026-09-02: 초대 모달의 역할 select를 라디오 카드로 교체(소상공인 마케팅 웹앱 디자인 가이드 §7 —
+       드롭다운 금지, 20_함께쓰는사람.html과 동일 패턴). 이 검증 로직(초대 차단 4케이스)이 20_함께쓰는사람에도
+       이식됨 — 함께쓰는사람_정책.md 참조
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -32,6 +40,13 @@
 .em-history-item:last-child { border-bottom: 0; }
 .em-assign-item { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-radius: 8px; }
 .em-assign-item:hover { background: var(--inset); }
+/* 역할 선택 카드(select 대신 상시 노출, 2026-09-02 — 소상공인 마케팅 웹앱 디자인 가이드 §7 반영, 20_함께쓰는사람과 동일 패턴) */
+.gs-role-card { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--input-border); border-radius: 14px; padding: 12px 14px; cursor: pointer; }
+.gs-role-card.is-on { border: 2px solid var(--blue); background: var(--blue-50); padding: 11px 13px; }
+.gs-role-card .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--input-border); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+.gs-role-card.is-on .dot { border-color: var(--blue); background: radial-gradient(circle, var(--blue) 0 6px, transparent 7px); }
+.gs-role-card .t { font-size: 14px; font-weight: 700; color: var(--ink-900); }
+.gs-role-card .d { font-size: 12px; color: var(--ink-500); margin-top: 2px; }
 </style>
 </head>
 <body data-screen="UW_HM_04">
@@ -44,7 +59,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -60,7 +75,7 @@
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">김</div>
       <div>
-        <div class="u-name" data-bind="ownerName">김마케 매니저</div>
+        <div class="u-name" data-bind="ownerName">김마케</div>
         <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
       </div>
     </div>
@@ -131,7 +146,7 @@
               <div class="em-staff-avatar" id="detail-avatar" style="width:44px;height:44px;font-size:16px">김</div>
               <div style="flex:1;min-width:0">
                 <div style="display:flex;align-items:center;gap:6px">
-                  <span id="detail-name" style="font-size:16px;font-weight:800">김마케 매니저</span>
+                  <span id="detail-name" style="font-size:16px;font-weight:800">김마케</span>
                   <span class="uw-badge b-blue" id="detail-role">매니저</span>
                 </div>
                 <div style="font-size:12px;color:var(--ink-500);margin-top:2px" id="detail-meta">010-1234-5678 · 2025.11.02 합류</div>
@@ -155,9 +170,8 @@
 
             <div style="display:flex;align-items:center;gap:8px;margin-top:16px">
               <h3 class="uw-section-title" style="font-size:15px">담당 매장 <span class="uw-section-caption" id="assigned-count">3곳</span></h3>
-              <button class="btn btn-secondary btn-sm" style="margin-left:auto" data-action="open-modal" data-modal="modal-assign-store">+ 매장 배정</button>
+              <button class="btn btn-secondary btn-sm" style="margin-left:auto" data-action="open-modal" data-modal="modal-assign-store">매장 배정 관리</button>
             </div>
-            <div class="mt-8" id="assigned-store-list"></div>
           </section>
 
           <!-- M03 · view · L3: 배정 변경 이력 -->
@@ -189,10 +203,16 @@
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--ink-700)">역할</label>
-          <select id="invite-staff-role" style="width:100%;margin-top:5px;height:42px;border:1px solid var(--input-border);border-radius:12px;padding:0 12px;font-family:inherit;font-size:13px;box-sizing:border-box">
-            <option value="운영자">운영자</option>
-            <option value="매니저">매니저 (직원 관리·초대 권한 포함)</option>
-          </select>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:5px" id="invite-role-cards">
+            <div class="gs-role-card is-on" data-role-card="운영자">
+              <span class="dot"></span>
+              <div><div class="t">운영자</div><div class="d">담당 매장 실무만</div></div>
+            </div>
+            <div class="gs-role-card" data-role-card="매니저">
+              <span class="dot"></span>
+              <div><div class="t">매니저</div><div class="d">직원 관리·초대 권한 포함</div></div>
+            </div>
+          </div>
         </div>
         <div class="em-store-row" style="padding:4px 0 0">
           <div style="flex:1">
@@ -203,10 +223,10 @@
         </div>
       </div>
 
-      <!-- 이름 불일치 재확인 (이 번호로 가입된 계정이 있는데 이름이 다를 때만 노출) -->
-      <div id="invite-name-mismatch" style="display:none;margin-top:14px;background:var(--red-bg,#fff0f0);border:1px solid var(--red);border-radius:var(--radius-tile);padding:12px 14px">
-        <div style="font-size:13px;font-weight:700;color:var(--red)">이미 다른 이름으로 가입된 번호예요.</div>
-        <div style="font-size:12px;color:var(--ink-600);margin-top:4px">이름과 번호가 맞는지 다시 확인해 주세요. 계속 문제가 있으면 고객센터에 문의해 주세요.</div>
+      <!-- 초대 차단 안내 (이미 우리 직원인 번호 / 이름이 다른 기존 계정 — 둘 중 하나일 때만 노출) -->
+      <div id="invite-block-msg" style="display:none;margin-top:14px;background:var(--red-bg,#fff0f0);border:1px solid var(--red);border-radius:var(--radius-tile);padding:12px 14px">
+        <div style="font-size:13px;font-weight:700;color:var(--red)" id="invite-block-title"></div>
+        <div style="font-size:12px;color:var(--ink-600);margin-top:4px" id="invite-block-desc"></div>
       </div>
     </div>
     <div class="uw-modal-actions">
@@ -221,13 +241,13 @@
   <div class="uw-modal">
     <div class="uw-modal-title">매장 배정</div>
     <div class="uw-modal-body">
-      <div style="font-size:12px;color:var(--ink-500);margin-bottom:8px">매장 하나에 담당자는 1명이에요. 이미 담당자가 있는 매장을 고르면 담당자가 교체돼요.</div>
+      <div style="font-size:12px;color:var(--ink-500);margin-bottom:8px">매장 하나에 담당자는 1명이에요. 체크하면 배정, 체크 해제하면 배정이 풀려요. 이미 다른 직원 담당인 매장을 고르면 담당자가 교체돼요.</div>
       <input class="em-search" id="assign-search" placeholder="매장명으로 찾기" style="margin-top:0">
       <div class="mt-8" id="assign-store-list" style="max-height:280px;overflow-y:auto"></div>
     </div>
     <div class="uw-modal-actions">
       <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
-      <button class="btn btn-primary btn-sm" data-action="confirm-assign">선택한 매장 배정</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-assign">저장</button>
     </div>
   </div>
 </div>
@@ -262,22 +282,29 @@
 (function () {
   "use strict";
 
-  var ALL_STORES = ["카페봄봄 신촌점", "스시오마카세 강남점", "스시오마카세 판교점", "청담라인의원", "테라스의원", "종로스킨클리닉", "광화문미래의원"];
+  /* 12_매장목록.html의 STORES와 동일한 78곳 표본(25곳)을 이름만 그대로 재사용 — 별도 공유 모듈 없이 화면마다 독립 mock을 쓰는 이 프로젝트 관례를 따름 */
+  var ALL_STORES = [
+    "스시오마카세 강남점", "스시오마카세 판교점", "카페봄봄 신촌점", "테라스의원", "민준헤어",
+    "스타커피 홍대점", "스타커피 강남점", "든든약국 잠실점", "스마일치과 수원점", "헤어라운지 성수점",
+    "네일가든 이태원점", "코딩스쿨 분당점", "코딩스쿨 일산점", "그린마트 화정점", "북적문구점 인천점",
+    "우리동네세탁소 광명점", "펫그루밍 안양점", "달콤베이커리 부천점", "달콤베이커리 안산점", "튼튼정형외과 동탄점",
+    "샤인네일 여의도점", "청년공인중개사 판교점", "잉글리시허브 목동점", "청춘분식 신림점", "리틀팜 유아용품점"
+  ];
 
   var STAFF = [
-    { id: "s1", name: "김마케 매니저", phone: "010-1234-5678", joined: "2025.11.02", role: "매니저", status: "active", canApprove: true,
+    { id: "s1", name: "김마케", phone: "010-1234-5678", joined: "2025.11.02", role: "매니저", status: "active", canApprove: true,
       stores: ["카페봄봄 신촌점", "스시오마카세 강남점", "테라스의원"] },
-    { id: "s2", name: "이운영 프로", phone: "010-2222-3333", joined: "2026.01.15", role: "운영자", status: "active", canApprove: false,
-      stores: ["스시오마카세 판교점", "청담라인의원"] },
-    { id: "s3", name: "박콘텐츠 매니저", phone: "010-4444-5555", joined: "2026.03.20", role: "운영자", status: "active", canApprove: false,
+    { id: "s2", name: "이운영", phone: "010-2222-3333", joined: "2026.01.15", role: "운영자", status: "active", canApprove: false,
+      stores: ["스시오마카세 판교점", "스마일치과 수원점"] },
+    { id: "s3", name: "박콘텐츠", phone: "010-4444-5555", joined: "2026.03.20", role: "운영자", status: "active", canApprove: false,
       stores: [] }
   ];
 
   var HISTORY = [
-    { time: "7.6 오전 10:12", text: "김마케 매니저 → 카페봄봄 신촌점 담당자로 배정" },
-    { time: "7.4 오후 3:40", text: "이운영 프로 → 승인권한 켬" },
-    { time: "7.1 오전 9:05", text: "박콘텐츠 매니저 초대" },
-    { time: "6.28 오후 2:15", text: "김마케 매니저 → 스시오마카세 강남점 담당자로 배정" }
+    { time: "7.6 오전 10:12", text: "김마케 → 카페봄봄 신촌점 담당자로 배정" },
+    { time: "7.4 오후 3:40", text: "이운영 → 승인권한 켬" },
+    { time: "7.1 오전 9:05", text: "박콘텐츠 초대" },
+    { time: "6.28 오후 2:15", text: "김마케 → 스시오마카세 강남점 담당자로 배정" }
   ];
 
   var currentId = "s1";
@@ -332,7 +359,6 @@
       assignBtn.disabled = true;
       assignBtn.title = "초대 수락 전에는 매장을 배정할 수 없어요";
       document.getElementById("assigned-count").textContent = "";
-      document.getElementById("assigned-store-list").innerHTML = '<div style="padding:14px 4px;font-size:13px;color:var(--ink-400)">아직 초대를 수락하지 않았어요. 수락 후에 매장을 배정할 수 있어요.</div>';
       renderStaffList();
       return;
     }
@@ -344,18 +370,6 @@
     document.getElementById("approve-switch").classList.toggle("is-on", s.canApprove);
 
     document.getElementById("assigned-count").textContent = s.stores.length + "곳";
-    var listEl = document.getElementById("assigned-store-list");
-    if (!s.stores.length) {
-      listEl.innerHTML = '<div style="padding:14px 4px;font-size:13px;color:var(--ink-400)">아직 배정된 매장이 없어요</div>';
-    } else {
-      listEl.innerHTML = s.stores.map(function (name) {
-        return '<div class="em-store-row">' +
-          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink-900)">' + name + '</div>' +
-          '<div style="font-size:12px;color:var(--ink-500)">담당자</div></div>' +
-          '<button class="btn btn-ghost btn-sm" data-unassign-store="' + name + '">해제</button>' +
-        '</div>';
-      }).join("");
-    }
     renderStaffList();
   }
 
@@ -382,39 +396,49 @@
     for (var i = 0; i < EXISTING_ACCOUNTS.length; i++) if (EXISTING_ACCOUNTS[i].phone === norm) return EXISTING_ACCOUNTS[i];
     return null;
   }
+  /* 이미 우리 대행사 직원(초대 대기 포함)인지 — 12 매장목록의 "우리 소속" 차단 케이스와 동일한 정책 */
+  function findStaffByPhone(phone) {
+    var norm = normalizeInvitePhone(phone);
+    for (var i = 0; i < STAFF.length; i++) if (normalizeInvitePhone(STAFF[i].phone) === norm) return STAFF[i];
+    return null;
+  }
+  function showInviteBlock(title, desc) {
+    var titleEl = document.getElementById("invite-block-title");
+    titleEl.textContent = title || "";
+    titleEl.style.display = title ? "" : "none";
+    document.getElementById("invite-block-desc").textContent = desc;
+    document.getElementById("invite-block-msg").style.display = "";
+  }
+  function hideInviteBlock() {
+    document.getElementById("invite-block-msg").style.display = "none";
+  }
 
   function resetInviteModal() {
     document.getElementById("invite-staff-name").value = "";
     document.getElementById("invite-staff-phone").value = "";
-    document.getElementById("invite-staff-role").value = "운영자";
+    document.querySelectorAll("#invite-role-cards [data-role-card]").forEach(function (c) {
+      c.classList.toggle("is-on", c.getAttribute("data-role-card") === "운영자");
+    });
     document.getElementById("invite-approve-switch").classList.remove("is-on");
-    document.getElementById("invite-name-mismatch").style.display = "none";
+    hideInviteBlock();
   }
   document.querySelector('button[data-modal="modal-invite-staff"]').addEventListener("click", resetInviteModal);
   document.getElementById("invite-approve-switch").addEventListener("click", function () {
     this.classList.toggle("is-on");
   });
+  document.getElementById("invite-role-cards").addEventListener("click", function (e) {
+    var card = e.target.closest("[data-role-card]");
+    if (!card) return;
+    document.querySelectorAll("#invite-role-cards [data-role-card]").forEach(function (c) { c.classList.remove("is-on"); });
+    card.classList.add("is-on");
+  });
   ["invite-staff-name", "invite-staff-phone"].forEach(function (id) {
-    document.getElementById(id).addEventListener("input", function () {
-      document.getElementById("invite-name-mismatch").style.display = "none";
-    });
+    document.getElementById(id).addEventListener("input", hideInviteBlock);
   });
 
   document.getElementById("staff-search").addEventListener("input", function (e) {
     searchKw = e.target.value.trim();
     renderStaffList();
-  });
-
-  document.getElementById("assigned-store-list").addEventListener("click", function (e) {
-    var un = e.target.closest("[data-unassign-store]");
-    if (un) {
-      var uname = un.getAttribute("data-unassign-store");
-      var s = findStaff(currentId);
-      s.stores = s.stores.filter(function (x) { return x !== uname; });
-      HISTORY.unshift({ time: "방금", text: s.name + " → " + uname + " 담당자 배정 해제" });
-      renderDetail(); renderHistory();
-      if (window.UW) window.UW.toast("배정을 해제했어요");
-    }
   });
 
   /* ---- 매장 배정 모달 ---- */
@@ -426,9 +450,11 @@
     el.innerHTML = list.map(function (n) {
       var owner = whoIsAssigned(n);
       var already = mine.indexOf(n) > -1;
-      var checked = already || pendingAssign[n];
-      var ownerNote = owner && owner.id !== currentId ? '<span style="font-size:11px;color:var(--orange)">현재 담당: ' + owner.name + '</span>' : (already ? '<span style="font-size:11px;color:var(--blue)">이미 담당 중</span>' : '');
-      return '<label class="em-assign-item"><input type="checkbox" data-assign-chk="' + n + '"' + (checked ? " checked" : "") + (already ? " disabled" : "") + '>' +
+      var checked = pendingAssign.hasOwnProperty(n) ? pendingAssign[n] : already;
+      var ownerNote = owner && owner.id !== currentId
+        ? '<span style="font-size:11px;color:var(--orange)">현재 담당: ' + owner.name + '</span>'
+        : (already ? '<span style="font-size:11px;color:var(--blue)">담당 중 · 체크 해제하면 배정이 풀려요</span>' : '');
+      return '<label class="em-assign-item"><input type="checkbox" data-assign-chk="' + n + '"' + (checked ? " checked" : "") + '>' +
         '<span style="flex:1;font-size:13px;font-weight:600;color:var(--ink-800)">' + n + '</span>' + ownerNote + '</label>';
     }).join("");
   }
@@ -447,7 +473,8 @@
 
   /* ---- 초대 발송 공용 처리: 계정 유무에 따라 문구·연결 목적지가 다름 ---- */
   function sendInvite(name, phone, hasExisting) {
-    var role = document.getElementById("invite-staff-role").value;
+    var roleCard = document.querySelector('#invite-role-cards [data-role-card].is-on');
+    var role = roleCard ? roleCard.getAttribute("data-role-card") : "운영자";
     var canApprove = document.getElementById("invite-approve-switch").classList.contains("is-on");
     var id = "s" + (STAFF.length + 1);
     STAFF.push({ id: id, name: name, phone: phone, joined: "방금", role: role, status: "pending", canApprove: canApprove, stores: [], viaExisting: !!hasExisting });
@@ -480,12 +507,21 @@
       var phone = document.getElementById("invite-staff-phone").value.trim();
       if (!name || !phone) { if (window.UW) window.UW.toast("이름과 휴대폰 번호를 입력해 주세요"); return; }
 
-      var existing = findExistingAccount(phone);
-      if (existing && existing.name !== name) {
-        // 계정은 있는데 이름이 다름 → 초대 자체를 막음 (상대방 실명은 노출하지 않음)
-        document.getElementById("invite-name-mismatch").style.display = "";
+      // 1) 이미 우리 대행사 직원(초대 대기 포함)인 번호 → 차단, 이름 특정해서 안내
+      var already = findStaffByPhone(phone);
+      if (already) {
+        showInviteBlock(already.name + "님은 이미 우리 직원이에요.", "번호를 다시 확인해 주세요.");
         return;
       }
+
+      // 2) 그 외 이미 가입된 계정 → 이름 일치 시 소속수락으로 진행, 불일치 시 차단(상대방 실명은 노출 안 함)
+      var existing = findExistingAccount(phone);
+      if (existing && existing.name !== name) {
+        showInviteBlock("", "이름과 번호가 맞는지 다시 확인해 주세요. 계속 문제가 있으면 고객센터에 문의해 주세요.");
+        return;
+      }
+
+      // 3) 신규 번호, 또는 이름까지 일치하는 기존 계정 → 정상 진행
       sendInvite(name, phone, !!existing);
     }
 
@@ -506,17 +542,28 @@
     if (act === "confirm-assign") {
       var s = findStaff(currentId);
       if (s.status === "pending") { t.closest(".uw-modal-backdrop").classList.remove("is-open"); return; }
-      var added = 0;
+      var added = 0, removed = 0;
       Object.keys(pendingAssign).forEach(function (name) {
-        if (!pendingAssign[name]) return;
-        // 다른 직원에게 배정돼 있으면 교체
-        STAFF.forEach(function (st) { st.stores = st.stores.filter(function (x) { return x !== name; }); });
-        s.stores.push(name);
-        HISTORY.unshift({ time: "방금", text: s.name + " → " + name + " 담당자로 배정" });
-        added++;
+        var wasMine = s.stores.indexOf(name) > -1;
+        var wantChecked = pendingAssign[name];
+        if (wantChecked && !wasMine) {
+          // 다른 직원에게 배정돼 있으면 교체
+          STAFF.forEach(function (st) { st.stores = st.stores.filter(function (x) { return x !== name; }); });
+          s.stores.push(name);
+          HISTORY.unshift({ time: "방금", text: s.name + " → " + name + " 담당자로 배정" });
+          added++;
+        } else if (!wantChecked && wasMine) {
+          s.stores = s.stores.filter(function (x) { return x !== name; });
+          HISTORY.unshift({ time: "방금", text: s.name + " → " + name + " 담당자 배정 해제" });
+          removed++;
+        }
       });
       t.closest(".uw-modal-backdrop").classList.remove("is-open");
-      if (added) { renderDetail(); renderHistory(); if (window.UW) window.UW.toast(added + "곳을 배정했어요"); }
+      if (added || removed) {
+        renderDetail(); renderHistory();
+        var msg = [added ? added + "곳 배정" : null, removed ? removed + "곳 해제" : null].filter(Boolean).join(" · ");
+        if (window.UW) window.UW.toast(msg + "했어요");
+      }
     }
 
     if (act === "confirm-remove-staff") {

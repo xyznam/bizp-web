@@ -19,7 +19,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -30,6 +30,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -105,12 +106,14 @@
                 <div class="uw-row-body">
                   <div style="font-size:12px;color:var(--ink-500)">소속</div>
                   <div id="affiliation-list" style="margin-top:4px"></div>
-                  <!-- 프로토타입 전용 데모 스위치 (2026-08-27 신설) : L1/L2/L3 모두 본인이 어떤 매장의
-                       대표라, 회원 탈퇴가 항상 차단 상태로만 보임. 정상 탈퇴 경로(비대표 소속)를 보여주기
-                       위한 화면 전용 토글 — 실제 레벨/소속 데이터를 바꾸지 않고 이 화면 표시만 잠깐 바꿈 -->
+                  <!-- 프로토타입 전용 데모 스위치 (2026-08-27 신설, 2026-08-28 3번째 상태 추가) : L1/L2/L3
+                       모두 본인이 활성 매장의 대표라, 회원 탈퇴가 항상 차단 상태로만 보임. 나머지 두 경로
+                       (비대표 소속 / 해지된 매장의 대표)를 보여주기 위한 화면 전용 토글 — 실제 레벨/소속
+                       데이터를 바꾸지 않고 이 화면 표시만 잠깐 바꿈 -->
                   <div class="uw-lvl-switch" id="affil-demo-switch" title="프로토타입 전용 — 회원 탈퇴 데모용 소속 전환" style="margin-top:10px;display:inline-flex">
                     <button type="button" data-affil-demo="real" class="is-on">내 소속</button>
                     <button type="button" data-affil-demo="nonowner">비대표 예시로 보기</button>
+                    <button type="button" data-affil-demo="cancelled-owner">해지 매장 대표 예시로 보기</button>
                   </div>
                 </div>
               </div>
@@ -282,11 +285,13 @@
 /* ---- 화면 고유 로직: 내 정보·비밀번호 저장, 로그아웃 이동, 소속 목록 렌더 (계약 §1: 화면 고유 표현 한정) ---- */
 (function () {
   // 프로토타입 전용 데모 상태(위 affil-demo-switch) — 실제 mock을 바꾸지 않고 이 화면 표시만 잠깐 바꿈
-  var DEMO_NONOWNER_AFFIL = [{ name: "리사 헤어살롱 서초점", type: "store", role: "매니저" }];
+  var DEMO_NONOWNER_AFFIL = [{ name: "리사 헤어살롱 서초점", type: "store", role: "매니저", status: "이용중" }];
+  var DEMO_CANCELLED_OWNER_AFFIL = [{ name: "행복부동산 마포점", type: "store", role: "대표", status: "이용 중지" }];
   var affilDemoMode = "real";
 
   function effectiveAffiliations() {
     if (affilDemoMode === "nonowner") return DEMO_NONOWNER_AFFIL;
+    if (affilDemoMode === "cancelled-owner") return DEMO_CANCELLED_OWNER_AFFIL;
     var lv = document.body.getAttribute("data-level") || "L2";
     var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
     return mock.affiliations || [];
@@ -313,11 +318,17 @@
   });
   document.addEventListener("DOMContentLoaded", renderAffiliations);
 
-  /* ---- 회원 탈퇴 모달: 매장 대표(Owner)면 차단 ----
+  /* ---- 회원 탈퇴 모달: 활성 매장의 대표(Owner)면 차단 ----
      "대표"는 이 데이터 모델에서 매장당 1명뿐인 소유자 개념(매장구조_회원정책.md §3) — 여러 명이
-     동시에 대표일 수 없으므로 "대표로 등록돼 있으면 곧 유일한 대표"라고 봐도 된다. */
+     동시에 대표일 수 없으므로 "대표로 등록돼 있으면 곧 유일한 대표"라고 봐도 된다.
+     단, §5(2026-08-28 정정): 매장을 해지해도 대표 매핑은 안 끊기므로, "대표 매장이 있으면 무조건 차단"으로
+     두면 한번이라도 매장 대표였던 사람은 영영 탈퇴를 못 하게 된다. 그래서 활성 상태(이용중 계열)인
+     매장의 대표일 때만 차단 — 이미 해지된 매장의 대표는 더 이상 관리 주체가 필요하지 않으므로 통과. */
+  var ACTIVE_STORE_STATUSES = ["이용중", "이용중(무료매장)", "이용중(트라이얼)"];
   function renderWithdrawModal() {
-    var ownerStores = effectiveAffiliations().filter(function (a) { return a.type === "store" && a.role === "대표"; });
+    var ownerStores = effectiveAffiliations().filter(function (a) {
+      return a.type === "store" && a.role === "대표" && (!a.status || ACTIVE_STORE_STATUSES.indexOf(a.status) >= 0);
+    });
     var blockedNote = document.getElementById("withdraw-blocked-note");
     var okNote = document.getElementById("withdraw-ok-note");
     var inquiryBtn = document.getElementById("btn-withdraw-inquiry");

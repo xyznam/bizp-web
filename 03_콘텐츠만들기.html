@@ -8,6 +8,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* ① 소식 유형 칩 선택 표시 — .uw-kw-chip은 다른 화면(16 마케팅전략상세 등)에서 "클릭해서
+   비활성화"(opacity 0.35) 용도로 이미 쓰이고 있어 그 전역 클래스에 손대지 않고, 이 화면의
+   단일 선택 칩(#topic-chips)에만 선택 상태를 스코프해서 정의한다. 2026-09-03: 지금까지
+   JS는 is-selected를 정확히 토글하고 있었는데 시각 표시가 아예 없어서 "선택이 안 된다"는
+   버그로 보였던 것 — CSS 누락이 원인. */
+#topic-chips [data-topic].is-selected { background: var(--blue); border-color: var(--blue); color: var(--white); }
+
+/* M08 생성 옵션(이번 글 한정 조정) 칩 — 말투·길이는 단일 선택, 키워드는 다중 선택이지만
+   선택 표시는 동일(파란 채움) */
+#gen-override-panel .uw-kw-chip { cursor: pointer; }
+#gen-override-panel .uw-kw-chip.is-selected { background: var(--blue); border-color: var(--blue); color: var(--white); }
+
+/* 제출 완료 후 잠금 상태 — userweb.css에 공통 disabled 스타일이 없어 이 화면에서 정의 */
+.btn[disabled] { opacity: .45; pointer-events: none; cursor: default; }
+</style>
 </head>
 <body data-screen="UW_CT_01">
 
@@ -19,7 +35,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html" class="is-active">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" class="is-active" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -30,6 +46,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -70,7 +87,7 @@
             <p class="uw-h1-caption">고르기만 하면 AI가 글을 써드려요</p>
           </section>
 
-          <!-- M03 · create · L2+: 스텝① 소식 유형 (L1은 대체 카드로 전환, fallbackName이 M04~M06까지 대표) -->
+          <!-- M03 · create · L2+: 스텝① 소식 유형 (L1은 대체 카드로 전환, fallbackName이 M04~M06·M08까지 대표) -->
           <section class="uw-card mt-16" data-module="M03" style="padding:18px">
             <div style="font-size:13px;font-weight:800;color:var(--ink-600)">① 어떤 소식인가요?</div>
             <div class="mt-12" id="topic-chips" style="display:flex;flex-wrap:wrap;gap:8px">
@@ -98,18 +115,51 @@
                 <div style="font-size:13px;font-weight:700">당근마켓</div>
               </div>
             </div>
-            <button class="btn btn-primary mt-16" style="width:100%" id="btn-generate">✨ AI로 글 만들기</button>
-          </section>
 
-          <!-- M07 · bulk · L3 전용: 여러 매장 동시 생성 -->
-          <section class="uw-card mt-8" data-module="M07" style="padding:18px">
-            <div style="font-size:13px;font-weight:800;color:var(--ink-600)">여러 매장에 같은 소식 알리기</div>
-            <div class="mt-12" style="display:flex;flex-wrap:wrap;gap:8px">
-              <span class="uw-store-chip is-selected" data-store="스시오마카세 강남점" style="cursor:pointer;background:var(--blue-50);color:var(--blue)">스시오마카세 강남점</span>
-              <span class="uw-store-chip" data-store="스시오마카세 판교점" style="cursor:pointer">스시오마카세 판교점</span>
-              <span class="uw-store-chip" data-store="카페봄봄 신촌점" style="cursor:pointer">카페봄봄 신촌점</span>
+            <!-- M08 · advanced · L2+: 생성 옵션(이번 글 한정 조정)
+                 2026-09-03: 모달 → 이 자리로 인라인 전환, L3 전용에서 L2도 포함하도록 확장.
+                 말투·길이 정본은 16 마케팅전략상세라 여기선 그 요약만 보여주고, 다시 입력받지
+                 않는다 — "이번 글만 다르게" 체크할 때만 가벼운 오버라이드를 받는 선택 항목이라
+                 ①②③처럼 번호를 붙이지 않음(필수 스텝이 아님을 표시) -->
+            <div class="mt-16" data-module="M08" id="gen-options" style="border-top:1px solid var(--divider);padding-top:14px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:12px;font-weight:700;color:var(--ink-500)">지금 매장 기본값으로 써요</span>
+                <!-- 링크 문구는 레벨에 따라 갈림: L2 사장님 간단카드에는 '글 길이' 항목이 없어서(말투만 있음)
+                     "길이 바꾸기"라고 하면 가서 찾을 수 없는 걸 가리키게 됨 — refreshLevelUI() 참조 -->
+                <a href="16_마케팅전략상세.html" id="gen-style-link" style="margin-left:auto;font-size:12px;font-weight:700;color:var(--blue);text-decoration:none">말투 바꾸기 →</a>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink-700);margin-top:4px">친근하고 다정하게 · 보통 길이(700자 내외)</div>
+
+              <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer">
+                <input type="checkbox" id="gen-override-toggle">
+                <span style="font-size:13px;font-weight:600;color:var(--ink-700)">이번 글만 다르게 쓸까요? <span style="font-weight:500;color:var(--ink-400)">(선택)</span></span>
+              </label>
+
+              <div id="gen-override-panel" style="display:none;margin-top:12px">
+                <div style="font-size:12px;font-weight:700;color:var(--ink-500)">말투</div>
+                <div class="mt-8" style="display:flex;gap:6px;flex-wrap:wrap" id="gen-tone-chips">
+                  <span class="uw-kw-chip" data-tone="친근하게">친근하게</span>
+                  <span class="uw-kw-chip" data-tone="정중하게">정중하게</span>
+                  <span class="uw-kw-chip" data-tone="발랄하게">발랄하게</span>
+                </div>
+
+                <div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-top:12px">길이</div>
+                <div class="mt-8" style="display:flex;gap:6px;flex-wrap:wrap" id="gen-length-chips">
+                  <span class="uw-kw-chip" data-length="짧게">짧게 · 400자 내외</span>
+                  <span class="uw-kw-chip" data-length="보통">보통 · 700자 내외</span>
+                  <span class="uw-kw-chip" data-length="길게">길게 · 1,000자 내외</span>
+                </div>
+
+                <div style="font-size:12px;font-weight:700;color:var(--ink-500);margin-top:12px">꼭 넣을 키워드 <span style="font-weight:500;color:var(--ink-400)">(매장 소재 키워드 중에서)</span></div>
+                <div class="mt-8" style="display:flex;gap:6px;flex-wrap:wrap" id="gen-kw-chips">
+                  <span class="uw-kw-chip" data-kw="제철 재료">제철 재료</span>
+                  <span class="uw-kw-chip" data-kw="여름 한정">여름 한정</span>
+                  <span class="uw-kw-chip" data-kw="단골 감사">단골 감사</span>
+                </div>
+              </div>
             </div>
-            <div class="uw-h1-caption mt-8">매장을 고르면 각 매장 말투로 따로 써드려요</div>
+
+            <button class="btn btn-primary mt-16" style="width:100%" id="btn-generate">✨ AI로 글 만들기</button>
           </section>
 
         </div>
@@ -123,8 +173,6 @@
             <section data-module="M02">
               <div style="display:flex;align-items:center;gap:8px">
                 <div style="font-size:14px;font-weight:800">AI 초안 미리보기</div>
-                <!-- M08 · advanced · L3: 생성 옵션 -->
-                <button class="btn btn-ghost btn-sm" data-module="M08" data-action="open-modal" data-modal="modal-gen-option" style="margin-left:auto">⚙ 생성 옵션</button>
               </div>
               <div class="mt-12" style="display:flex;align-items:center;gap:8px">
                 <span class="uw-badge b-purple" id="ct-gen-badge">약 8초 전 생성</span>
@@ -142,9 +190,14 @@
               </div>
             </section>
 
-            <!-- M06 · create · L2+: 검토 요청 / 다시 쓰기 / 직접 수정 (L1 자동 숨김) -->
+            <!-- M06 · create · L2+: 승인/제출 · 다시 쓰기 · 직접 수정 (L1 자동 숨김)
+                 2026-09-03: 즉석 생성은 07 마케팅계획의 스케줄 자동생성(→02 콘텐츠검토 큐)과는 별개 경로.
+                 승인권자가 나 자신(L2, L3+모드B)이면 큐를 거치지 않고 바로 등록 대기로 끝내고,
+                 승인권자가 따로 있으면(L3+모드A=사장님) 그쪽에 승인을 요청한다. 버튼 문구/토스트는
+                 02_콘텐츠검토.html의 reviewerOf() 판정과 동일한 기준(레벨+검수모드)을 이 화면 스크립트에서
+                 그대로 재사용 — data-copy(레벨만 구분) 대신 커스텀 로직 필요해서 전용 함수로 뺌 -->
             <section class="uw-actionbar" data-module="M06">
-              <button class="btn btn-primary" data-action="submit-content" data-copy="submit.btn">🚀 이대로 검토 요청</button>
+              <button class="btn btn-primary" id="btn-submit" data-action="submit-content">🚀 이대로 승인 완료</button>
               <button class="btn btn-ghost" data-action="rewrite-content">↻ 다시 쓰기</button>
               <button class="btn btn-ghost" data-action="edit-content">✏️ 직접 수정</button>
             </section>
@@ -156,41 +209,47 @@
   </div>
 </div>
 
-<!-- ==================== 생성 옵션 모달 (M08 · L3) ==================== -->
-<div class="uw-modal-backdrop" id="modal-gen-option">
-  <div class="uw-modal">
-    <div class="uw-modal-title">생성 옵션</div>
-    <div class="uw-modal-body">
-      AI가 글을 쓸 때 반영할 옵션을 정해요.
-      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:10px">
-        <div style="font-size:13px;font-weight:700;color:var(--ink-600)">말투</div>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-tone" checked> 친근하게</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-tone"> 정중하게</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-tone"> 발랄하게</label>
-      </div>
-      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:10px">
-        <div style="font-size:13px;font-weight:700;color:var(--ink-600)">글 길이</div>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-length"> 짧게</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-length" checked> 보통</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="gen-length"> 길게</label>
-      </div>
-      <div class="uw-preview-box">
-        <div style="font-size:13px;font-weight:700;color:var(--ink-600)">꼭 넣을 키워드</div>
-        <input type="text" placeholder="예: 제철 재료, 여름 한정" style="width:100%;margin-top:8px;border:1px solid var(--input-border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px">
-      </div>
-    </div>
-    <div class="uw-modal-actions">
-      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
-      <button class="btn btn-primary btn-sm" data-action="save-gen-option">저장</button>
-    </div>
-  </div>
-</div>
-
 <script src="assets/capability-matrix.js"></script>
 <script src="assets/userweb.js"></script>
 <script>
-/* ---- 화면 고유 로직: 위저드 칩 선택·채널 선택·매장 선택·생성/제출 흉내 (계약 §1: 화면 고유 표현 한정) ---- */
+/* ---- 화면 고유 로직: 위저드 칩 선택·채널 선택·생성/제출 흉내 (계약 §1: 화면 고유 표현 한정) ---- */
 (function () {
+  // 승인권자가 나 자신인가? — L2는 대행사가 없어 항상 본인, L3는 검수모드가 B(대행사 위임형)일 때만 본인.
+  // 02_콘텐츠검토.html의 reviewerOf()/effMode()와 같은 기준(레벨+검수모드)을 그대로 씀.
+  function selfApproves() {
+    var lv = (window.UW && window.UW.currentLevel) ? window.UW.currentLevel() : document.body.getAttribute("data-level");
+    if (lv !== "L3") return true; // L1은 M06 자체가 숨겨짐, L2는 항상 본인
+    var mode = (window.UW && window.UW.reviewMode) ? window.UW.reviewMode() : "A";
+    return mode === "B";
+  }
+  /* 제출 버튼을 "아직 안 낸 상태"로 되돌린다(라벨은 레벨+검수모드로 결정).
+     새 초안이 만들어질 때(생성·다시 쓰기)와 레벨/모드가 바뀔 때 호출한다. */
+  function resetSubmitButton() {
+    var btn = document.getElementById("btn-submit");
+    if (!btn) return;
+    btn.disabled = false;
+    btn.textContent = selfApproves() ? "🚀 이대로 승인 완료" : "🚀 이대로 사장님에게 승인 요청";
+  }
+  /* 제출 직후 — 같은 초안을 두 번 내지 못하게 잠그고 완료형 라벨로 바꾼다 */
+  function markSubmitted() {
+    var btn = document.getElementById("btn-submit");
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = selfApproves() ? "✓ 승인 완료" : "✓ 승인 요청함";
+  }
+  /* 레벨에 따라 달라지는 문구 일괄 갱신 */
+  function refreshLevelUI() {
+    resetSubmitButton();
+    var link = document.getElementById("gen-style-link");
+    if (link) {
+      var lv = (window.UW && window.UW.currentLevel) ? window.UW.currentLevel() : document.body.getAttribute("data-level");
+      // L2 사장님 간단카드에는 말투만 있고 글 길이 항목이 없음(글 길이는 L3 탭2 전용)
+      link.textContent = (lv === "L3") ? "말투·길이 바꾸기 →" : "말투 바꾸기 →";
+    }
+  }
+  document.addEventListener("uw:levelchange", refreshLevelUI);
+  document.addEventListener("DOMContentLoaded", refreshLevelUI);
+
   document.addEventListener("click", function (e) {
     // 스텝① 소식 유형 칩 — 단일 선택 토글
     var topic = e.target.closest("[data-topic]");
@@ -207,14 +266,6 @@
       document.getElementById("ct-channel-label").textContent = channel.getAttribute("data-channel");
       return;
     }
-    // M07 매장 칩 — 다중 선택 토글
-    var storeChip = e.target.closest("[data-store]");
-    if (storeChip) {
-      storeChip.classList.toggle("is-selected");
-      storeChip.style.background = storeChip.classList.contains("is-selected") ? "var(--blue-50)" : "";
-      storeChip.style.color = storeChip.classList.contains("is-selected") ? "var(--blue)" : "";
-      return;
-    }
     // M05 · AI로 글 만들기 (+모바일 2단계 내비: 생성 시 미리보기로 전환 — 26 ISS-3)
     if (e.target.closest("#btn-generate")) {
       window.UW.toast("AI가 글을 쓰고 있어요. 약 8초 걸려요.");
@@ -223,19 +274,29 @@
       setTimeout(function () {
         badge.textContent = "약 8초 전 생성";
       }, 1200);
+      resetSubmitButton(); // 새 초안이므로 제출 버튼 다시 열어줌
       return;
     }
-    // M06 · 검토 요청 (레벨별 분기 카피)
+    // M06 · 승인 완료 / 사장님에게 승인 요청 (레벨+검수모드 분기 — 02_콘텐츠검토.reviewerOf()와 동일 기준)
     if (e.target.closest("[data-action='submit-content']")) {
-      var lv = document.body.getAttribute("data-level");
-      var copies = (window.UW_COPY["UW_CT_01"] || {})["submit.toast"] || {};
-      var msg = copies[lv] || copies.L2 || copies.L1 || copies.L3 || "검토함에 담았어요.";
-      window.UW.toast(msg);
+      var ch = document.getElementById("ct-channel-label").textContent;
+      var lv2 = (window.UW && window.UW.currentLevel) ? window.UW.currentLevel() : document.body.getAttribute("data-level");
+      if (selfApproves() && lv2 === "L2") {
+        /* L2 셀프는 승인 완료가 종착점 — 등록 대기·완료 처리 단계가 없다(콘텐츠검토_정책.md §1) */
+        window.UW.toast("승인했어요. " + ch + "에 올려주세요. 검토는 여기서 끝나요.");
+      } else if (selfApproves()) {
+        /* L3+모드B: 등록 대기로 넘어가고, 채널에 올린 뒤 02 콘텐츠검토에서 URL 입력해 완료 처리 */
+        window.UW.toast("검수 완료. " + ch + "에 직접 등록한 뒤 완료 처리하세요.");
+      } else {
+        window.UW.toast("사장님에게 승인을 요청했어요. 승인되면 등록 대기 목록에 들어와요.");
+      }
+      markSubmitted(); // 같은 초안 중복 제출 방지
       return;
     }
     // M06 · 다시 쓰기
     if (e.target.closest("[data-action='rewrite-content']")) {
       window.UW.toast("AI가 다시 쓰고 있어요. 잠시만요.");
+      resetSubmitButton(); // 새로 쓰는 중이므로 제출 버튼 다시 열어줌
       return;
     }
     // M06 · 직접 수정
@@ -243,13 +304,35 @@
       window.UW.toast("본문을 눌러 바로 고칠 수 있어요");
       return;
     }
-    // M08 · 생성 옵션 저장
-    if (e.target.closest("[data-action='save-gen-option']")) {
-      e.target.closest(".uw-modal-backdrop").classList.remove("is-open");
-      window.UW.toast("생성 옵션을 저장했어요.");
+    // M08 · 생성 옵션 — 말투 단일 선택
+    var toneChip = e.target.closest("#gen-tone-chips [data-tone]");
+    if (toneChip) {
+      document.querySelectorAll("#gen-tone-chips [data-tone]").forEach(function (c) { c.classList.remove("is-selected"); });
+      toneChip.classList.add("is-selected");
+      return;
+    }
+    // M08 · 생성 옵션 — 길이 단일 선택
+    var lengthChip = e.target.closest("#gen-length-chips [data-length]");
+    if (lengthChip) {
+      document.querySelectorAll("#gen-length-chips [data-length]").forEach(function (c) { c.classList.remove("is-selected"); });
+      lengthChip.classList.add("is-selected");
+      return;
+    }
+    // M08 · 생성 옵션 — 꼭 넣을 키워드(매장 소재 키워드 중) 다중 선택
+    var kwChip = e.target.closest("#gen-kw-chips [data-kw]");
+    if (kwChip) {
+      kwChip.classList.toggle("is-selected");
       return;
     }
   });
+
+  // M08 · "이번 글만 다르게" 체크 시에만 오버라이드 패널 노출
+  var genOverrideToggle = document.getElementById("gen-override-toggle");
+  if (genOverrideToggle) {
+    genOverrideToggle.addEventListener("change", function (e) {
+      document.getElementById("gen-override-panel").style.display = e.target.checked ? "" : "none";
+    });
+  }
 })();
 </script>
 <script>

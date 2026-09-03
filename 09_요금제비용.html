@@ -8,6 +8,27 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* ---- 다음 청구 카드 (M07) ---- */
+.bl-next { background: var(--blue-50); border-radius: var(--radius-tile); padding: 16px; }
+.bl-next-k { font-size: 12px; font-weight: 700; color: var(--blue-text); }
+.bl-next-d { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+.bl-next-a { font-size: 22px; font-weight: 800; color: var(--blue); margin-top: 4px; }
+
+/* ---- 요금제 선택 (M05 모달) ---- */
+.bl-plan-opt {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font-family: inherit;
+  border: 1px solid var(--input-border); border-radius: 12px; padding: 13px 14px; background: var(--white); cursor: pointer;
+}
+.bl-plan-opt + .bl-plan-opt { margin-top: 8px; }
+.bl-plan-opt:hover { border-color: var(--blue-border); }
+.bl-plan-opt.is-on { border-color: var(--blue); background: var(--blue-50); }
+.bl-plan-opt.is-cur { opacity: .55; cursor: default; }
+.bl-plan-opt-body { flex: 1; min-width: 0; }
+.bl-plan-opt-name { font-size: 14px; font-weight: 800; }
+.bl-plan-opt-sub { font-size: 12px; color: var(--ink-500); font-weight: 500; margin-top: 3px; line-height: 1.5; }
+.bl-plan-opt-price { font-size: 14px; font-weight: 800; white-space: nowrap; }
+</style>
 </head>
 <body data-screen="UW_BL_01">
 
@@ -30,6 +51,10 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_요청관리.html">📨 요청 관리</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
+      <a href="09_담당매장청구.html">💳 구독·청구</a>
+      <a href="09_대행사정산.html">🧾 정산·수수료</a>
     </nav>
     <div class="uw-lnb-user">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -69,7 +94,7 @@
         <div class="uw-col-main">
 
           <!-- M01 · view: 현재 요금제 카드 (시안 9 다크 카드 — 유일하게 허용되는 비토큰 색) -->
-          <section class="uw-card" data-module="M01" style="background:#1E2A44;color:#fff;border:0;padding:24px">
+          <section id="bl-sec-plan" class="uw-card" data-module="M01" style="background:#1E2A44;color:#fff;border:0;padding:24px">
             <div style="display:flex;align-items:center;gap:8px">
               <span class="uw-badge" style="background:rgba(255,255,255,.18);color:#fff" id="plan-status-badge">현재 이용 중</span>
             </div>
@@ -82,9 +107,9 @@
           </section>
 
           <!-- M02 · stat: 이번 달 사용량 -->
-          <section class="uw-card" data-module="M02" style="margin-top:16px">
-            <h3 class="uw-section-title" style="font-size:15px">이번 달 사용량</h3>
-            <div class="uw-section-caption mt-8">7월 1일 ~ 31일</div>
+          <section id="bl-sec-usage" class="uw-card" data-module="M02" style="margin-top:16px">
+            <h3 class="uw-section-title" style="font-size:15px">이번 주기 사용량</h3>
+            <div class="uw-section-caption mt-8" id="usage-period">—</div>
 
             <div class="uw-rows mt-12" style="font-size:13px">
               <div class="uw-row" style="flex-direction:column;align-items:stretch;gap:6px;padding:12px 0">
@@ -112,11 +137,12 @@
           </section>
 
           <!-- M05 · edit · L2+ (fallback tbd-card): 요금제 변경 · 문자 충전 -->
-          <section data-module="M05" style="margin-top:16px">
+          <section id="bl-sec-planchange" data-module="M05" style="margin-top:16px">
             <div style="background:var(--orange-bg);border-radius:var(--radius-card);padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
               <div style="flex:1;min-width:200px;font-size:13px;font-weight:700;color:var(--ink-700)">문자가 더 필요하면 100건당 8,000원으로 추가할 수 있어요</div>
               <button class="btn btn-secondary btn-sm" data-action="toast" data-toast-msg="충전 결제 방식은 확정 후 열려요 (OD-U6)">문자 충전</button>
-              <a class="btn btn-ghost btn-sm" href="25_요금제변경.html" style="text-decoration:none">요금제 변경</a>
+              <button class="btn btn-primary btn-sm" id="open-plan-modal">요금제 변경</button>
+              <a class="btn btn-ghost btn-sm" href="25_요금제변경.html" style="text-decoration:none">비교해 보기</a>
             </div>
           </section>
 
@@ -125,8 +151,18 @@
         <!-- ========== 우측 컬럼 ========== -->
         <aside class="uw-col-side">
 
-          <!-- M04 · edit · L2+ (fallback tbd-card): 결제 수단 -->
-          <section class="uw-card" data-module="M04">
+          <!-- M07 · view: 다음 청구 예정 -->
+          <section id="bl-sec-next" class="uw-card" data-module="M07">
+            <div class="bl-next">
+              <div class="bl-next-k">다음 청구</div>
+              <div class="bl-next-d" id="next-date">—</div>
+              <div class="bl-next-a" id="next-amt">—</div>
+            </div>
+            <div class="uw-section-caption" style="margin-top:12px" id="next-note">—</div>
+          </section>
+
+          <!-- M04 · edit · L2+ : 결제 수단 (L1 은 대행사 대납이라 노출하지 않는다) -->
+          <section id="bl-sec-method" class="uw-card" data-module="M04" style="margin-top:16px">
             <h3 class="uw-section-title" style="font-size:15px">결제 수단</h3>
             <div class="uw-rows mt-12">
               <div class="uw-row" style="padding:8px 0">
@@ -137,29 +173,31 @@
             </div>
           </section>
 
-          <!-- M03 · view: 결제 내역 -->
-          <section class="uw-card" data-module="M03" style="margin-top:16px">
-            <h3 class="uw-section-title" style="font-size:15px">결제 내역</h3>
-            <div class="uw-rows mt-8" style="font-size:13px" id="billing-history">
-              <div class="uw-row" style="padding:10px 0">
-                <div class="uw-row-body"><div style="font-size:14px;font-weight:700">2026년 6월 <span class="bh-amount">₩39,000</span></div><div class="uw-row-desc">6.15 결제</div></div>
-                <span class="uw-badge b-green">결제 완료</span>
-              </div>
-              <div class="uw-row" style="padding:10px 0">
-                <div class="uw-row-body"><div style="font-size:14px;font-weight:700">2026년 5월 <span class="bh-amount">₩39,000</span></div><div class="uw-row-desc">5.15 결제</div></div>
-                <span class="uw-badge b-green">결제 완료</span>
-              </div>
-              <div class="uw-row" style="padding:10px 0">
-                <div class="uw-row-body"><div style="font-size:14px;font-weight:700">2026년 4월 <span class="bh-amount">₩39,000</span></div><div class="uw-row-desc">4.15 결제</div></div>
-                <span class="uw-badge b-green">결제 완료</span>
-              </div>
+          <!-- M03 · view: 결제·영수 내역 (레벨마다 결제일·결제 수단이 다르므로 JS 렌더) -->
+          <section id="bl-sec-history" class="uw-card" data-module="M03" style="margin-top:16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <h3 class="uw-section-title" style="font-size:15px">결제 내역</h3>
+              <span class="uw-section-caption" style="margin-left:auto" id="pay-method-note">—</span>
             </div>
+            <div class="uw-rows mt-8" style="font-size:13px" id="billing-history"></div>
             <button class="btn btn-ghost btn-sm mt-12" style="width:100%" data-action="toast" data-toast-msg="영수증 목록은 W3에서 열려요">영수증 전체 보기</button>
           </section>
 
+          <!-- M08 · edit · L2: 이용 해지 -->
+          <section id="bl-sec-cancel" class="uw-card" data-module="M08" style="margin-top:16px">
+            <h3 class="uw-section-title" style="font-size:15px">이용을 그만두고 싶다면</h3>
+            <div class="uw-section-caption mt-8">
+              해지해도 이미 낸 기간까지는 그대로 쓸 수 있어요. 만든 콘텐츠와 챗봇은 그 뒤에 볼 수 없게 돼요.
+            </div>
+            <a class="btn btn-secondary btn-sm mt-12" href="24_해지.html" style="text-decoration:none;display:inline-flex">해지 안내 보기</a>
+          </section>
+
           <!-- M06 · bulk · L3: 다매장 청구 통합 -->
-          <section class="uw-card" data-module="M06" style="margin-top:16px">
-            <h3 class="uw-section-title" style="font-size:15px">담당 매장 청구 현황</h3>
+          <section id="bl-sec-multi" class="uw-card" data-module="M06" style="margin-top:16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <h3 class="uw-section-title" style="font-size:15px">담당 매장 청구 현황</h3>
+              <a href="09_담당매장청구.html" class="btn btn-ghost btn-sm" style="margin-left:auto;text-decoration:none">전체 보기 →</a>
+            </div>
             <div class="uw-rows mt-8" style="font-size:13px">
               <div class="uw-row" style="padding:9px 0">
                 <div class="uw-row-body"><div style="font-size:13px;font-weight:600">스시오마카세 강남점</div><div class="uw-row-desc">Pro</div></div>
@@ -181,7 +219,7 @@
                 <div style="font-size:15px;font-weight:800">₩167,000</div>
               </div>
             </div>
-            <div class="uw-section-caption mt-8">업체 통합 결제는 청구계정 기준으로 묶여요</div>
+            <div class="uw-section-caption mt-8">담당 78곳 중 3곳만 보여드려요 · 통합 결제는 청구 계정 기준으로 묶여요</div>
           </section>
 
         </aside>
@@ -190,39 +228,171 @@
   </div>
 </div>
 
+<!-- ==================== 요금제 변경 모달 (M05) ==================== -->
+<div class="uw-modal-backdrop" id="modal-plan">
+  <div class="uw-modal">
+    <div class="uw-modal-title">요금제 바꾸기</div>
+    <div class="uw-modal-body">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div id="plan-options"></div>
+        <div class="uw-preview-box" style="margin-top:0" id="plan-effect">요금제를 골라주세요.</div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-secondary" data-action="close-modal">취소</button>
+      <button class="btn btn-primary" id="plan-submit">이 요금제로 바꾸기</button>
+    </div>
+  </div>
+</div>
+
 <script src="assets/capability-matrix.js"></script>
 <script src="assets/userweb.js"></script>
 <script>
-/* ---- 화면 고유 로직: 레벨 전환 시 요금제 카드·결제 내역 금액 갱신 (계약 §1: 화면 고유 표현 한정) ---- */
+/* ---- 화면 고유 로직 : 레벨별 요금제 카드 · 다음 청구 · 결제 내역 · 요금제 변경 ----
+   2026-08-29 : L1·L2 의 청구 정본을 이 화면으로 모았다(UW_BL_05 는 L3 다매장 전용으로 복귀).
+   갱신일·상태는 UW_MOCK 을 읽는다 — 화면 안에 날짜를 따로 두면 화면끼리 답이 갈린다.
+   결제일·결제 수단만 레벨별 표현이라 여기서 파생시킨다. */
 (function () {
-  function syncPlanCard() {
-    var lv = (document.body.getAttribute("data-level")) || "L2";
-    var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
-    if (!mock.plan) return;
+  "use strict";
 
+  var PLANS = {
+    Basic:   { price: 39000,  desc: "문자 1,000건 · AI 글 20건 · 챗봇 미포함" },
+    Pro:     { price: 89000,  desc: "문자 5,000건 · AI 글 50건 · 챗봇 100건" },
+    Premium: { price: 189000, desc: "문자 20,000건 · AI 글 무제한 · 챗봇 무제한" }
+  };
+  /* 요금제 이름이 영문이라 '로/으로'가 갈린다. 3종뿐이라 표로 둔다 */
+  var RO = { Basic: "으로", Pro: "로", Premium: "으로" };
+
+  /* 레벨별 결제 수단 표현 — 금액·갱신일은 UW_MOCK 이 정본이라 여기 두지 않는다 */
+  var PAY = {
+    L1: { method: "대행사 마케팅파트너스 대납", how: "대행사 대납 · 세금계산서",
+          nextNote: "대행사가 대신 결제해요. 사장님이 따로 하실 일은 없어요." },
+    L2: { method: "신한카드 (1234)", how: "신한카드 (1234)",
+          nextNote: "결제가 안 되면 문자로 알려드려요." },
+    L3: { method: "업체 통합 결제 (BA-0102-01)", how: "대행사 대납 · 세금계산서",
+          nextNote: "이 매장은 대행사 청구 그룹에 묶여 청구돼요." }
+  };
+
+  function mockOf() {
+    var lv = document.body.getAttribute("data-level") || "L2";
+    return (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+  }
+  function won(n) { return "₩" + n.toLocaleString("ko-KR"); }
+  function kdate(s) { var p = s.split("-"); return p[0] + "년 " + (+p[1]) + "월 " + (+p[2]) + "일"; }
+  /* 갱신일에서 N개월 전 결제일을 만든다 (결제일 = 갱신 주기 같은 날) */
+  function backMonths(iso, n) {
+    var p = iso.split("-"), d = new Date(+p[0], +p[1] - 1 - n, +p[2]);
+    return [d.getFullYear(), ("0" + (d.getMonth() + 1)).slice(-2), ("0" + d.getDate()).slice(-2)].join("-");
+  }
+
+  function syncPlanCard() {
+    var lv = document.body.getAttribute("data-level") || "L2";
+    var mock = mockOf(), pay = PAY[lv] || PAY.L2;
+    if (!mock.plan) return;
+    var price = PLANS[mock.plan] ? PLANS[mock.plan].price : parseInt(String(mock.planPrice).replace(/,/g, ""), 10);
+
+    /* M01 현재 요금제 */
     document.getElementById("plan-name").textContent = mock.plan + " 요금제";
-    document.getElementById("plan-price").textContent = "₩" + mock.planPrice + " / 월";
+    document.getElementById("plan-price").textContent = won(price) + " / 월";
     document.getElementById("plan-caption").textContent = "다음 결제일 " + mock.renewal + " · " + mock.billingNote;
 
     var badge = document.getElementById("plan-status-badge");
     if (mock.subStatus === "만료 임박") {
-      badge.className = "uw-badge b-orange";
-      badge.style.background = "";
-      badge.style.color = "";
+      badge.className = "uw-badge b-orange"; badge.style.background = ""; badge.style.color = "";
       badge.textContent = "만료 임박";
     } else {
-      badge.className = "uw-badge";
-      badge.style.background = "rgba(255,255,255,.18)";
-      badge.style.color = "#fff";
+      badge.className = "uw-badge"; badge.style.background = "rgba(255,255,255,.18)"; badge.style.color = "#fff";
       badge.textContent = "현재 이용 중";
     }
 
-    document.querySelectorAll(".bh-amount").forEach(function (el) {
-      el.textContent = "₩" + mock.planPrice;
-    });
+    /* M02 사용량 집계 기간 — 캘린더 월이 아니라 청구 주기다 (G-12 표 6) */
+    var cyc = backMonths(mock.renewal, 1).split("-"), nxt = mock.renewal.split("-");
+    var prevDay = new Date(+nxt[0], +nxt[1] - 1, +nxt[2] - 1);
+    document.getElementById("usage-period").textContent =
+      "이번 청구 주기 " + (+cyc[1]) + "월 " + (+cyc[2]) + "일 ~ " +
+      (prevDay.getMonth() + 1) + "월 " + prevDay.getDate() + "일";
+
+    /* M07 다음 청구 */
+    document.getElementById("next-date").textContent = kdate(mock.renewal);
+    document.getElementById("next-amt").textContent = won(price);
+    document.getElementById("next-note").textContent = pay.nextNote;
+
+    /* M03 결제·영수 내역 — 갱신일 기준 직전 3회 */
+    document.getElementById("pay-method-note").textContent = pay.method;
+    document.getElementById("billing-history").innerHTML = [1, 2, 3].map(function (n) {
+      var d = backMonths(mock.renewal, n), p = d.split("-");
+      return '<div class="uw-row" style="padding:10px 0">' +
+        '<div class="uw-row-body">' +
+          '<div style="font-size:14px;font-weight:700">' + p[0] + '년 ' + (+p[1]) + '월 <span class="bh-amount">' + won(price) + '</span>' +
+          (n === 1 ? ' <span class="uw-badge b-green" style="margin-left:4px">최근</span>' : '') + '</div>' +
+          '<div class="uw-row-desc">' + (+p[1]) + '.' + (+p[2]) + ' 결제 · ' + pay.how + '</div>' +
+        '</div>' +
+        '<button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="영수증을 새 창으로 열었어요">영수증</button>' +
+      '</div>';
+    }).join("");
+
+    renderPlanOptions();
   }
+
+  /* ---------- M05 요금제 변경 모달 ---------- */
+  var planPick = null;
+
+  function renderPlanOptions() {
+    var cur = mockOf().plan;
+    var box = document.getElementById("plan-options");
+    if (!box) return;
+    box.innerHTML = Object.keys(PLANS).map(function (k) {
+      var isCur = k === cur;
+      return '<button class="bl-plan-opt' + (isCur ? " is-cur" : "") + (planPick === k ? " is-on" : "") + '"' +
+        (isCur ? " disabled" : "") + ' data-plan-opt="' + k + '">' +
+        '<div class="bl-plan-opt-body">' +
+          '<div class="bl-plan-opt-name">' + k + (isCur ? ' <span class="uw-badge b-gray" style="margin-left:4px">지금 요금제</span>' : '') + '</div>' +
+          '<div class="bl-plan-opt-sub">' + PLANS[k].desc + '</div>' +
+        '</div>' +
+        '<div class="bl-plan-opt-price">' + won(PLANS[k].price) + '</div>' +
+      '</button>';
+    }).join("");
+    updateEffect();
+  }
+
+  function updateEffect() {
+    var box = document.getElementById("plan-effect"), mock = mockOf();
+    if (!box) return;
+    if (!planPick) { box.textContent = "요금제를 골라주세요."; return; }
+    var diff = PLANS[planPick].price - PLANS[mock.plan].price;
+    box.innerHTML = "<b>" + planPick + "</b>" + RO[planPick] + " 바꾸면 " +
+      (diff > 0 ? "매달 " + won(diff) + " 더 내요." : (diff < 0 ? "매달 " + won(-diff) + " 덜 내요." : "금액은 그대로예요.")) +
+      "<br>바뀌는 시점은 <b>" + kdate(mock.renewal) + "</b>이에요. 그때까지는 지금 요금제 그대로 쓰세요.";
+  }
+
+  document.getElementById("open-plan-modal").addEventListener("click", function () {
+    planPick = null; renderPlanOptions();
+    document.getElementById("modal-plan").classList.add("is-open");
+  });
+  document.getElementById("plan-options").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-plan-opt]");
+    if (!b || b.disabled) return;
+    planPick = b.getAttribute("data-plan-opt");
+    renderPlanOptions();
+  });
+  document.getElementById("plan-submit").addEventListener("click", function () {
+    if (!planPick) { if (window.UW) window.UW.toast("바꿀 요금제를 골라주세요."); return; }
+    /* 프로토타입: UW_MOCK 을 직접 고쳐 다른 화면과 값이 갈리지 않게 한다 */
+    var lv = document.body.getAttribute("data-level") || "L2";
+    var m = window.UW_MOCK.levels[lv];
+    m.plan = planPick;
+    m.planPrice = PLANS[planPick].price.toLocaleString("ko-KR");
+    document.getElementById("modal-plan").classList.remove("is-open");
+    if (window.UW) {
+      window.UW.toast(planPick + RO[planPick] + " 바꿨어요. " + kdate(m.renewal) + "부터 적용돼요.");
+      window.UW.render();
+    }
+    syncPlanCard();
+  });
+
   document.addEventListener("uw:levelchange", syncPlanCard);
-  document.addEventListener("DOMContentLoaded", syncPlanCard);
+  if (document.readyState !== "loading") syncPlanCard();
+  else document.addEventListener("DOMContentLoaded", syncPlanCard);
 })();
 </script>
 </body>

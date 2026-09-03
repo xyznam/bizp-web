@@ -42,25 +42,50 @@
     render();
   }
 
+  /* ---------- 구독 취소 예약 상태 (2026-08-28 신설) ----------
+     09_요금제비용/25_요금제변경/24_해지 세 화면이 공유하는 단순 플래그. 프로토타입 범위라 매장별로
+     안 나뉘고 브라우저 하나에 하나만 저장(레벨/검수모드와 같은 방식) — 실사용에선 매장 단위 데이터. */
+  var CANCEL_KEY = "uw_cancel_pending";
+  function cancelPending() {
+    try { return localStorage.getItem(CANCEL_KEY) === "1"; } catch (e) { return false; }
+  }
+  function setCancelPending(v) {
+    try { if (v) localStorage.setItem(CANCEL_KEY, "1"); else localStorage.removeItem(CANCEL_KEY); } catch (e) {}
+  }
+
+  /* ---------- 조사 자동 선택 ----------
+     받침 유무에 따라 은/는, 이/가, 을/를, 과/와 같은 조사를 골라준다(완성형 한글 유니코드 코드포인트로 판별).
+     "OO은(는)" 식으로 괄호 표기를 그대로 노출하던 문제 수정용(2026-08-28).
+     한글이 아닌 문자(영문·숫자 등)로 끝나면 받침 있는 쪽을 기본값으로 씀. */
+  function josa(word, withBatchim, withoutBatchim) {
+    var s = String(word == null ? "" : word);
+    var ch = s.charCodeAt(s.length - 1);
+    if (ch >= 0xAC00 && ch <= 0xD7A3) {
+      return (ch - 0xAC00) % 28 === 0 ? withoutBatchim : withBatchim;
+    }
+    return withBatchim;
+  }
+
   /* ---------- 대체 카드 (L1 fallback) ----------
      agency-card: 대행사가 대신 수행하는 기능 자리
      tbd-card   : 대행사별 요금제·결제 방식에 따라 제공 (TBD) — OD-U2 결정(2026-07-07) */
   function buildFallback(modId, mod, mock) {
     var agency = mock.agencyName || "대행사";
+    var name = mod.fallbackName || mod.name;
     var el = document.createElement("div");
     el.className = "uw-fallback";
     el.setAttribute("data-fallback-for", modId);
     if (mod.fallback === "tbd-card") {
       el.innerHTML =
         '<div class="uw-fallback-chip">💳</div>' +
-        '<div><div class="uw-fallback-title">' + (mod.fallbackName || mod.name) + " — 대행사별 상이한 요금제·결제 방식에 따라 제공됩니다 <span class=\"uw-badge b-gray\">TBD</span></div>" +
+        '<div><div class="uw-fallback-title">' + name + " — 대행사별 상이한 요금제·결제 방식에 따라 제공됩니다 <span class=\"uw-badge b-gray\">TBD</span></div>" +
         '<div class="uw-fallback-desc">자세한 내용은 담당 대행사 ' + agency + "에 문의해 주세요.</div></div>" +
         '<button class="btn btn-ghost btn-sm" data-action="contact-agency">대행사 문의</button>';
       return el;
     }
     el.innerHTML =
       '<div class="uw-fallback-chip">🤝</div>' +
-      '<div><div class="uw-fallback-title">' + (mod.fallbackName || mod.name) + "은(는) 대행사 " + agency + "이 관리하고 있어요</div>" +
+      '<div><div class="uw-fallback-title">' + name + josa(name, "은", "는") + " 대행사 " + agency + josa(agency, "이", "가") + " 관리하고 있어요</div>" +
       '<div class="uw-fallback-desc">원하는 내용이 있으면 편하게 요청해 주세요. 보통 하루 안에 답을 드려요.</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-action="request-agency">대행사에 요청하기</button>';
     return el;
@@ -86,12 +111,13 @@
     render();
   }
   function buildPermCard(modId, mod) {
+    var name = window.UW_PERMS.catalog[mod.perm] || mod.name;
     var el = document.createElement("div");
     el.className = "uw-fallback";
     el.setAttribute("data-fallback-for", modId);
     el.innerHTML =
       '<div class="uw-fallback-chip">🔒</div>' +
-      '<div><div class="uw-fallback-title">' + (window.UW_PERMS.catalog[mod.perm] || mod.name) + "은(는) 사장님이 권한을 주면 쓸 수 있어요</div>" +
+      '<div><div class="uw-fallback-title">' + name + josa(name, "은", "는") + " 사장님이 권한을 주면 쓸 수 있어요</div>" +
       '<div class="uw-fallback-desc">필요하면 사장님께 요청해 보세요.</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-action="request-perm">권한 요청하기</button>';
     return el;
@@ -248,8 +274,11 @@
     });
 
     // 레벨별 표시 요소 (data-only-level="L3" 등 — 모듈보다 작은 장식 단위)
+    // 2026-09-03: 콤마로 여러 레벨 허용(data-only-level="L2,L3"). 기존 단일값은 그대로 동작.
+    // LNB에서 "L1만 빼고 노출"처럼 여집합을 표현할 방법이 없어서 확장함(03 콘텐츠 만들기 메뉴).
     document.querySelectorAll("[data-only-level]").forEach(function (el) {
-      el.style.display = el.getAttribute("data-only-level") === lv ? "" : "none";
+      var allow = el.getAttribute("data-only-level").split(",").map(function (s) { return s.trim(); });
+      el.style.display = allow.indexOf(lv) >= 0 ? "" : "none";
     });
 
     ensureTabbar(screenId);
@@ -298,7 +327,7 @@
       case "close-modal":
         closeModal(t); break;
       case "enter-staff": {
-        var preset = (window.UW_PERMS.presets[t.getAttribute("data-preset")] || window.UW_PERMS.presets.reply_only);
+        var preset = (window.UW_PERMS.presets[t.getAttribute("data-preset")] || window.UW_PERMS.presets.view_only);
         setRole("staff", preset.grants, t.getAttribute("data-staff-name"));
         toast("직원 화면으로 전환했어요. 권한: " + preset.label);
         break;
@@ -335,5 +364,5 @@
     (mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(function () { render(); });
   }
 
-  window.UW = { render: render, setLevel: setLevel, currentLevel: currentLevel, reviewMode: reviewMode, setReviewMode: setReviewMode, currentRole: currentRole, setRole: setRole, staffGrants: staffGrants, toast: toast };
+  window.UW = { render: render, setLevel: setLevel, currentLevel: currentLevel, reviewMode: reviewMode, setReviewMode: setReviewMode, currentRole: currentRole, setRole: setRole, staffGrants: staffGrants, toast: toast, josa: josa, cancelPending: cancelPending, setCancelPending: setCancelPending };
 })();

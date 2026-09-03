@@ -19,7 +19,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html" class="is-active">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
       <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
@@ -30,6 +30,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <a href="09_요금제비용.html" class="uw-lnb-user" style="text-decoration:none;color:inherit">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -92,14 +93,27 @@
           <div style="font-size:16px;font-weight:800;letter-spacing:-0.02em">2026년 7월</div>
           <button class="btn btn-ghost btn-sm" data-action="toast" data-toast-msg="다른 달은 W3에서 열려요" aria-label="다음 달">›</button>
 
-          <!-- M08 · advanced · L3: 계획 룰 설정 -->
-          <button class="btn btn-ghost btn-sm" data-module="M08" style="margin-left:auto" data-action="open-modal" data-modal="modal-rule">⚙ 계획 룰</button>
-
-          <div style="display:flex;align-items:center;gap:14px;font-size:12px;color:var(--ink-600);width:100%;justify-content:flex-end;order:3;margin-top:2px">
+          <div style="display:flex;align-items:center;gap:14px;font-size:12px;color:var(--ink-600);margin-left:auto">
             <span style="display:flex;align-items:center;gap:5px"><i style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block"></i>블로그</span>
             <span style="display:flex;align-items:center;gap:5px"><i style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></i>문자</span>
             <span style="display:flex;align-items:center;gap:5px"><i style="width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--ink-400);display:inline-block"></i>주제 미정</span>
           </div>
+        </div>
+
+        <!-- M08 · advanced · L2+L3: 제안 주기 요약(이 화면에서 직접 정하는 값 + 편집 진입점) -->
+        <div class="uw-rule-row" data-module="M08" style="margin-top:14px">
+          <span class="uw-rule-label">제안 주기</span>
+          <span class="uw-rule-value">주당 블로그 2회 · 문자 월 2회</span>
+          <button class="btn btn-ghost btn-sm" style="flex-shrink:0" data-action="open-modal" data-modal="modal-rule">⚙ 제안 주기</button>
+        </div>
+
+        <!-- AI 학습 주기 요약(정본은 15_AI학습현황, 여기선 읽기 전용 — L1 포함 전 레벨).
+             버튼은 제안 주기와 같은 모양(btn-ghost btn-sm)으로 나란히 두되, 기어 아이콘 없이 라벨만
+             달아 "여기서 편집"이 아니라 "가서 본다"는 차이를 미묘하게 구분 -->
+        <div class="uw-rule-row" style="margin-top:2px">
+          <span class="uw-rule-label">AI 학습 주기</span>
+          <span class="uw-rule-value">블로그 2주마다 · 플레이스 리뷰 2주마다 · 매장정보 매주</span>
+          <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="location.href='15_AI학습현황.html'">AI학습현황</button>
         </div>
 
         <div class="uw-cal-grid" style="margin-top:14px" id="cal-grid"></div>
@@ -132,10 +146,10 @@
   </div>
 </div>
 
-<!-- ==================== 계획 룰 모달 (M08 · L3) ==================== -->
+<!-- ==================== 제안 주기 모달 (M08 · L2+L3) ==================== -->
 <div class="uw-modal-backdrop" id="modal-rule">
   <div class="uw-modal">
-    <div class="uw-modal-title">계획 룰 설정</div>
+    <div class="uw-modal-title">제안 주기 설정</div>
     <div class="uw-modal-body">
       다음 달 계획을 만들 때 적용할 기준이에요.
       <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:14px">
@@ -157,7 +171,6 @@
           </div>
         </div>
       </div>
-      <div style="font-size:12px;color:var(--ink-500);margin-top:10px">채널 비중은 매장 상황에 따라 AI가 자동으로 조정해요.</div>
     </div>
     <div class="uw-modal-actions">
       <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
@@ -197,6 +210,9 @@
   .uw-agenda-day { font-size: 13px; font-weight: 800; width: 44px; flex-shrink: 0; }
   .uw-agenda-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .uw-agenda-title { font-size: 14px; font-weight: 600; }
+  .uw-rule-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
+  .uw-rule-label { font-size: 12px; font-weight: 700; color: var(--ink-600); flex-shrink: 0; }
+  .uw-rule-value { font-size: 12px; color: var(--ink-700); flex: 1; min-width: 0; }
 </style>
 
 <script src="assets/capability-matrix.js"></script>
@@ -335,7 +351,7 @@
     var act = a.getAttribute("data-action");
     if (act === "save-plan-rule") {
       a.closest(".uw-modal-backdrop").classList.remove("is-open");
-      window.UW.toast("계획 룰을 저장했어요. 다음 달 계획부터 반영돼요.");
+      window.UW.toast("제안 주기를 저장했어요. 다음 달 계획부터 반영돼요.");
     }
   });
 

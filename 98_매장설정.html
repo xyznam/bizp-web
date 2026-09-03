@@ -6,7 +6,10 @@
 <title>매장 정보 설정 — 비즈플래닛</title>
 <!-- UW_ST_08 · 매장 정보 설정 (온보딩 전용)
      구조: Step1 플레이스 불러오기 → Step2 정보 확인·입력 → Step3 채널 연결 → Step4 자료 올리기(선택)
-     사용 주체: L2 셀프 사장님 (가입 후 설정전 자동 진입) · L3 대행사 (12_매장목록 신규 등록 후 진입) -->
+     사용 주체: L2 셀프 사장님 (가입 후 설정전 자동 진입) · L3 대행사 (12_매장목록 신규 등록 후 진입)
+     2026.8.31: Step2에서 사업자번호·이메일 필드 제거(21_회원가입에서 이미 받은 값이라 중복 입력이었음, 06_우리매장정보의
+     매장 정보 수정 모달과 필드 구성을 맞추는 김에 정리). 대표 메뉴 섹션 신규 추가(업종별 프리셋에 따라 노출 항목이
+     달라질 예정이나 프리셋 매핑은 미정 — 지금은 고정으로 노출) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -75,6 +78,15 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 }
 .reg-radio.is-on { border: 2px solid var(--blue); color: var(--blue); font-weight: 700; background: var(--blue-50); }
 
+/* 대표 메뉴 칩 입력 */
+.reg-menu-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 28px; }
+.reg-menu-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--blue); background: var(--white); border: 1px solid var(--blue-border); border-radius: var(--radius-badge); padding: 4px 6px 4px 10px; }
+.reg-menu-chip button { background: none; border: 0; color: var(--blue); font-size: 15px; line-height: 1; cursor: pointer; padding: 0 2px; font-family: inherit; }
+.reg-menu-chip button:hover { color: var(--red); }
+.reg-menu-add { display: flex; gap: 8px; margin-top: 10px; }
+.reg-menu-add input.reg-input { margin-top: 0; }
+.reg-menu-add .btn { flex-shrink: 0; height: 44px; border-radius: var(--radius-btn); }
+
 /* 업로드 드롭존 */
 .reg-drop {
   margin-top: 8px; border: 1.5px dashed var(--input-border); border-radius: var(--radius-card);
@@ -128,7 +140,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -238,16 +250,9 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             </div>
           </div>
 
-          <div class="reg-grid2">
-            <div class="reg-field">
-              <div class="reg-label">사업자번호 <span class="req">*</span></div>
-              <input class="reg-input" data-f="bizno" inputmode="numeric" placeholder="숫자 10자리 (예: 1234567890)" required>
-              <div class="reg-help">가입할 때 입력한 번호예요. 다르면 고쳐 주세요.</div>
-            </div>
-            <div class="reg-field">
-              <div class="reg-label">매장 대표 연락처 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
-              <input class="reg-input" data-f="phone" inputmode="tel" placeholder="예: 0212345678" required>
-            </div>
+          <div class="reg-field">
+            <div class="reg-label">매장 대표 연락처 <span class="req">*</span> <span class="uw-badge b-green" data-only-loaded style="display:none">Place 수집</span></div>
+            <input class="reg-input" data-f="phone" inputmode="tel" placeholder="예: 0212345678" required>
           </div>
 
           <div class="reg-field">
@@ -256,11 +261,6 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
               <input class="reg-input" data-f="addr" placeholder="주소 검색 버튼을 눌러 주세요" required>
               <button class="btn btn-secondary" data-action="toast" data-toast-msg="주소 검색은 프로토타입에서 준비 중이에요">주소 검색</button>
             </div>
-          </div>
-
-          <div class="reg-field">
-            <div class="reg-label">이메일 <span style="font-weight:500;color:var(--ink-400)">(선택)</span></div>
-            <input class="reg-input" data-f="email" type="email" placeholder="세금계산서나 안내를 받을 이메일">
           </div>
 
           <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">운영시간</h3>
@@ -300,6 +300,17 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
               <button type="button" class="reg-radio" data-park="인근">근처 유료 주차장</button>
             </div>
             <div class="reg-help" data-only-loaded style="display:none">플레이스에는 없는 정보예요. 손님 안내 글에 활용돼요.</div>
+          </div>
+
+          <!-- 업종별 프리셋에 따라 노출 항목이 달라질 예정(미정, 추후 지정) — 지금은 대표 메뉴 하나만 고정 노출 -->
+          <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">대표 메뉴 <span style="font-weight:500;color:var(--ink-400);font-size:13px">(선택)</span></h3>
+          <div class="reg-field" style="margin-top:10px">
+            <div class="reg-menu-chips" id="menu-chips"></div>
+            <div class="reg-menu-add">
+              <input class="reg-input" id="menu-name-input" placeholder="메뉴 이름" style="flex:1">
+              <input class="reg-input" id="menu-price-input" placeholder="가격" style="width:120px" inputmode="numeric">
+              <button class="btn btn-secondary" type="button" id="btn-menu-add">추가</button>
+            </div>
           </div>
 
           <h3 class="uw-section-title" style="font-size:15px;margin-top:28px">매장 소개 <span style="font-weight:500;color:var(--ink-400);font-size:13px">(선택)</span></h3>
@@ -541,16 +552,13 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       el.style.display = on ? "" : "none";
     });
     /* 가입 시 프리필은 경로 무관 공통 적용 */
-    var fb = document.querySelector('[data-f="bizno"]');
     var fn = document.querySelector('[data-f="name"]');
-    if (fb && !fb.value) fb.value = "8708700393";
     if (fn && !fn.value) fn.value = "테라스의원";
     if (!on) { dayHours = null; return; }
     /* 폼 채우기 */
     var f = function (k) { return document.querySelector('[data-f="' + k + '"]'); };
     dayHours = JSON.parse(JSON.stringify(PLACE.dayHours));
     /* 가입 시 입력값 프리필 시뮬레이션 (실서비스: 세션에서 주입) */
-    f("bizno").value = "8708700393";   /* 가입 시 입력 */
     f("name").value = PLACE.name;      /* 가입 시 입력 — Place 수집으로도 덮어쓰지 않음 */
     f("category").value = PLACE.category;
     f("phone").value = PLACE.phone;
@@ -630,6 +638,32 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     if (!r) return;
     document.querySelectorAll(".reg-radio").forEach(function (x) { x.classList.remove("is-on"); });
     r.classList.add("is-on");
+  });
+
+  /* ---- 대표 메뉴 칩 입력 ---- */
+  var menuItems = [];
+  function renderMenuChips() {
+    document.getElementById("menu-chips").innerHTML = menuItems.map(function (m, i) {
+      return '<span class="reg-menu-chip">' + m.name + ' · ' + m.price + '<button type="button" data-menu-remove="' + i + '" aria-label="삭제">×</button></span>';
+    }).join("");
+  }
+  document.getElementById("btn-menu-add").addEventListener("click", function () {
+    var nameInput = document.getElementById("menu-name-input");
+    var priceInput = document.getElementById("menu-price-input");
+    var name = nameInput.value.trim();
+    var price = priceInput.value.trim();
+    if (!name || !price) { if (window.UW) window.UW.toast("메뉴 이름과 가격을 입력해 주세요"); return; }
+    if (!/원$/.test(price)) price += "원";
+    menuItems.push({ name: name, price: price });
+    nameInput.value = ""; priceInput.value = "";
+    nameInput.focus();
+    renderMenuChips();
+  });
+  document.getElementById("menu-chips").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-menu-remove]");
+    if (!btn) return;
+    menuItems.splice(Number(btn.getAttribute("data-menu-remove")), 1);
+    renderMenuChips();
   });
 
   /* ---- 요일별 운영시간 모달 ---- */

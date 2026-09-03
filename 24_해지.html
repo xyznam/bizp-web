@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>해지 — 비즈플래닛</title>
+<title>구독 취소 — 비즈플래닛</title>
 <!-- UW_BL_03 · P-B/P-C · OD-U13 잠정: 기간 만료 해지 · 스펙: planning/27 · 계약: planning/24 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -30,6 +30,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -44,7 +45,7 @@
   <div class="uw-main">
 
     <header class="uw-topbar">
-      <span class="uw-topbar-title"><a href="09_요금제비용.html" style="color:var(--ink-500);text-decoration:none">요금제·비용</a> › <span data-bind="persona"></span> 해지</span>
+      <span class="uw-topbar-title"><a href="25_요금제변경.html" style="color:var(--ink-500);text-decoration:none">요금제 변경</a> › <span data-bind="persona"></span> 구독 취소</span>
       <span class="uw-topbar-sub">그만두시기 전에 확인해 주세요</span>
       <div class="uw-topbar-right">
         <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
@@ -61,7 +62,7 @@
     <main class="uw-body">
       <div class="uw-col-main">
 
-        <!-- M01 · view: 지금 쓰고 계신 것 + 해지하면 멈추는 것 -->
+        <!-- M01 · view: 지금 쓰고 계신 것 + 구독을 취소하면 멈추는 것 -->
         <section class="uw-card" data-module="M01">
           <h3 class="uw-section-title" style="font-size:15px">지금 쓰고 계신 것</h3>
           <div style="font-size:12px;color:var(--ink-500);margin-top:4px">🏪 <span data-bind="persona"></span></div>
@@ -73,7 +74,7 @@
             <span class="uw-badge b-blue">이용 중</span>
           </div>
 
-          <div class="uw-section-caption mt-16">해지하면 멈추는 것</div>
+          <div class="uw-section-caption mt-16">구독을 취소하면 멈추는 것</div>
           <div class="uw-rows mt-8">
             <div class="uw-row">
               <div class="uw-row-chip">📝</div>
@@ -103,7 +104,7 @@
           </div>
         </section>
 
-        <!-- M02 · edit · L2+: 해지 사유 선택 (사유 코드는 어드민 66 해지 사유 리포트 수집 원천) -->
+        <!-- M02 · edit · L2+: 구독 취소 사유 선택 (사유 코드는 어드민 66 해지 사유 리포트 수집 원천) -->
         <section class="uw-card mt-16" data-module="M02">
           <h3 class="uw-section-title" style="font-size:15px">어떤 점이 아쉬우셨나요?</h3>
           <div class="uw-section-caption mt-8">알려주시면 서비스를 더 좋게 만드는 데 참고할게요 (선택)</div>
@@ -117,18 +118,20 @@
           <textarea placeholder="더 하고 싶은 말씀이 있으면 적어주세요 (선택)" style="width:100%;margin-top:12px;min-height:80px;border:1px solid var(--input-border);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:14px;resize:vertical"></textarea>
         </section>
 
-        <!-- M03 · view: 기간 만료 해지 안내 (OD-U13 잠정) -->
+        <!-- M03 · view: 기간 만료 구독 취소 안내 (OD-U13 잠정) -->
         <section class="uw-card mt-16" data-module="M03">
-          <h3 class="uw-section-title" style="font-size:15px">해지하면 이렇게 진행돼요</h3>
+          <h3 class="uw-section-title" style="font-size:15px">구독을 취소하면 이렇게 진행돼요</h3>
           <div style="background:var(--orange-bg);border-radius:var(--radius-tile);padding:16px;margin-top:12px;font-size:14px;line-height:1.8;color:var(--ink-700)">
-            해지해도 <b style="color:var(--ink-900)">7월 31일까지는 그대로</b> 쓸 수 있어요. 8월 1일부터 멈춰요. 그 전엔 언제든 되돌릴 수 있어요.
+            취소해도 <b style="color:var(--ink-900)">7월 31일까지는 그대로</b> 쓸 수 있어요. 8월 1일부터 멈춰요. 그 전엔 언제든 되돌릴 수 있어요.
           </div>
         </section>
 
-        <!-- 하단 액션: 잔류 유도가 주 행동 -->
-        <div class="uw-actionbar">
-          <a href="09_요금제비용.html" class="btn btn-primary">계속 쓸게요</a>
-          <button class="btn btn-danger-soft" data-action="open-modal" data-modal="modal-cancel-confirm">해지 예약하기</button>
+        <!-- M04 · edit · L2+: 구독 취소 실행(잔류 유도가 주 행동). L1(위탁)은 셀프 취소 불가 —
+             매장구조_회원정책.md §6: 운영·결제를 대행사에 위탁한 상태라 담당 대행사를 거쳐야 함.
+             L1에선 이 자리에 대체 카드(대행사에 요청하기)가 대신 뜸 -->
+        <div class="uw-actionbar" data-module="M04">
+          <a href="25_요금제변경.html" class="btn btn-primary">계속 쓸게요</a>
+          <button class="btn btn-danger-soft" data-action="open-modal" data-modal="modal-cancel-confirm">구독 취소하기</button>
         </div>
 
       </div>
@@ -136,14 +139,14 @@
   </div>
 </div>
 
-<!-- ==================== 해지 확인 모달 ==================== -->
+<!-- ==================== 구독 취소 확인 모달 ==================== -->
 <div class="uw-modal-backdrop" id="modal-cancel-confirm">
   <div class="uw-modal">
-    <div class="uw-modal-title" id="modal-cancel-title">정말 해지 예약할까요?</div>
+    <div class="uw-modal-title" id="modal-cancel-title">정말 구독을 취소할까요?</div>
     <div class="uw-modal-body">7월 31일까지는 그대로 이용하실 수 있고, 이후 자동 결제가 멈춰요.</div>
     <div class="uw-modal-actions">
-      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
-      <button class="btn btn-danger-soft btn-sm" data-action="confirm-cancel">해지 예약하기</button>
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">아니요</button>
+      <button class="btn btn-danger-soft btn-sm" data-action="confirm-cancel">구독 취소하기</button>
     </div>
   </div>
 </div>
@@ -151,7 +154,7 @@
 <script src="assets/capability-matrix.js"></script>
 <script src="assets/userweb.js"></script>
 <script>
-/* ---- 화면 고유 로직: 현재 요금제 레벨 동기화 + 사유 칩 선택 + 해지 예약 확정 ---- */
+/* ---- 화면 고유 로직: 현재 요금제 레벨 동기화 + 사유 칩 선택 + 구독 취소 확정 ---- */
 (function () {
   function syncPlanCard() {
     var lv = document.body.getAttribute("data-level") || "L2";
@@ -159,9 +162,9 @@
     if (!mock.plan) return;
     document.getElementById("cur-plan-name").textContent = mock.plan + " 요금제";
     document.getElementById("cur-plan-price").textContent = "₩" + mock.planPrice + " / 월";
-    // 매장 단위 해지라 확인 모달에도 어느 매장인지 다시 보여줌(L3가 담당 매장 78곳 중 잘못 고르는 걸 방지)
+    // 매장 단위 구독 취소라 확인 모달에도 어느 매장인지 다시 보여줌(L3가 담당 매장 78곳 중 잘못 고르는 걸 방지)
     var titleEl = document.getElementById("modal-cancel-title");
-    if (titleEl && mock.persona) titleEl.textContent = "정말 " + mock.persona + " 해지를 예약할까요?";
+    if (titleEl && mock.persona) titleEl.textContent = "정말 " + mock.persona + " 구독을 취소할까요?";
   }
   document.addEventListener("uw:levelchange", syncPlanCard);
   document.addEventListener("DOMContentLoaded", syncPlanCard);
@@ -178,10 +181,9 @@
     var confirmBtn = e.target.closest('[data-action="confirm-cancel"]');
     if (confirmBtn) {
       confirmBtn.closest(".uw-modal-backdrop").classList.remove("is-open");
-      var lv = document.body.getAttribute("data-level") || "L2";
-      var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
-      var name = mock.persona ? mock.persona + " " : "";
-      window.UW.toast(name + "해지를 예약했어요. 마음이 바뀌면 요금제 화면에서 되돌릴 수 있어요.");
+      if (window.UW && window.UW.setCancelPending) window.UW.setCancelPending(true);
+      // 결과 토스트는 이 화면이 아니라 돌아가는 25_요금제변경에서 보여줌(?cancelled=1)
+      location.href = "25_요금제변경.html?cancelled=1";
     }
   });
 })();

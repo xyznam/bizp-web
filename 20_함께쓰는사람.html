@@ -8,6 +8,20 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* 이 화면 전용: 역할 선택 카드(select 대신 상시 노출, 2026-09-02 디자인 가이드 §7 반영) + 편집·승인 권한 스위치 */
+.gs-role-card { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--input-border); border-radius: 14px; padding: 12px 14px; cursor: pointer; }
+.gs-role-card.is-on { border: 2px solid var(--blue); background: var(--blue-50); padding: 11px 13px; }
+.gs-role-card .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--input-border); flex-shrink: 0; margin-top: 1px; box-sizing: border-box; }
+.gs-role-card.is-on .dot { border-color: var(--blue); background: radial-gradient(circle, var(--blue) 0 6px, transparent 7px); }
+.gs-role-card .t { font-size: 14px; font-weight: 700; color: var(--ink-900); }
+.gs-role-card .d { font-size: 12px; color: var(--ink-500); margin-top: 2px; }
+.gs-perm-row { display: flex; align-items: center; gap: 10px; padding: 12px 0 0; }
+.gs-switch { position: relative; width: 38px; height: 22px; border-radius: 11px; background: var(--card-border); border: 0; flex-shrink: 0; cursor: pointer; }
+.gs-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.gs-switch.is-on { background: var(--blue); }
+.gs-switch.is-on::after { left: 18px; }
+</style>
 </head>
 <body data-screen="UW_ST_07">
 
@@ -19,7 +33,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -30,6 +44,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -64,21 +79,27 @@
 
           <!-- M01 · view: 직원 목록 -->
           <section class="uw-card" data-module="M01">
-            <h3 class="uw-section-title">함께 쓰는 사람 <span class="uw-section-caption">2명 이용 중</span></h3>
+            <h3 class="uw-section-title">함께 쓰는 사람 <span class="uw-section-caption" id="staff-count">2명 이용 중</span></h3>
             <div class="uw-rows mt-8" id="staff-list"></div>
           </section>
 
           <!-- M03 · edit: 권한 편집 (직원 선택 시 표시) -->
           <section class="uw-card mt-16" data-module="M03" id="perm-panel" style="display:none">
             <h3 class="uw-section-title" style="font-size:15px">권한 정하기 — <span id="perm-name"></span></h3>
-            <div class="uw-section-caption mt-8">묶음으로 고르거나, 하나씩 켜고 끌 수 있어요. 언제든 바꿀 수 있어요.</div>
-            <div class="mt-12" style="display:flex;gap:6px" id="perm-presets"></div>
-            <div class="uw-rows mt-12" id="perm-toggles"></div>
-            <div class="uw-section-caption mt-8">기본으로 할 수 있는 것: AI 학습 보기 · 문자 캠페인 보기 · 챗봇 상담 내역 보기 · 손님 응대</div>
+            <div class="uw-section-caption mt-8">언제든 바꿀 수 있어요.</div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-top:14px">역할</div>
+            <div class="mt-8" style="display:flex;flex-direction:column;gap:8px" id="perm-role-cards"></div>
+            <div class="gs-perm-row">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:var(--ink-900)">편집·승인 권한</div>
+                <div style="font-size:12px;color:var(--ink-500);margin-top:2px">콘텐츠·문자·챗봇을 직접 편집하고 승인할 수 있어요. 없으면 조회만 가능해요</div>
+              </div>
+              <button type="button" class="gs-switch" id="perm-edit-switch"></button>
+            </div>
+            <div class="uw-section-caption mt-8">역할과 별개로, 편집·승인 권한이 없으면 콘텐츠·문자 발송·챗봇 설정은 조회만 되고 손님 응대는 그대로 가능해요.</div>
             <div style="display:flex;gap:8px;margin-top:14px">
               <button class="btn btn-secondary btn-sm" data-action="save-perms">권한 저장</button>
-              <!-- M04 · view: 직원 화면 미리보기 (데모 — userweb.js enter-staff) -->
-              <button class="btn btn-ghost btn-sm" data-module="M04" data-action="enter-staff" data-preset="review_reply" data-staff-name="김하나 매니저" id="preview-staff">👀 이 직원 화면 미리보기</button>
+              <button class="btn btn-ghost btn-sm" style="margin-left:auto" data-action="open-modal" data-modal="modal-remove-staff" id="btn-remove-staff">직원 해지</button>
             </div>
           </section>
 
@@ -86,11 +107,11 @@
 
         <aside class="uw-col-side">
 
-          <!-- M02 · create: 직원 초대 -->
+          <!-- M02 · create: 직원 초대(대표 미가입 매장은 사장님 초대도 포함) -->
           <section class="uw-card" data-module="M02">
-            <h3 class="uw-section-title" style="font-size:15px">새 직원 초대</h3>
-            <div class="uw-section-caption mt-8">문자로 초대 링크를 보내드려요. 직원이 수락하면 목록에 나타나요.</div>
-            <button class="btn btn-primary mt-12" style="width:100%" data-action="open-modal" data-modal="modal-invite">+ 직원 초대하기</button>
+            <h3 class="uw-section-title" style="font-size:15px">새로 초대하기</h3>
+            <div class="uw-section-caption mt-8">문자로 초대 링크를 보내드려요. 수락하면 목록에 나타나요.</div>
+            <button class="btn btn-primary mt-12" style="width:100%" data-action="open-modal" data-modal="modal-invite">+ 초대하기</button>
           </section>
 
           <!-- M05 · edit: 초대 취소·비활성 -->
@@ -109,7 +130,7 @@
               <button class="btn btn-ghost btn-sm" style="flex:1" data-action="toast" data-toast-msg="초대 문자를 다시 보냈어요.">다시 보내기</button>
               <button class="btn btn-danger-soft btn-sm" style="flex:1" data-action="toast" data-toast-msg="초대를 취소했어요. 기록은 남아 있어요.">초대 취소</button>
             </div>
-            <div class="uw-section-caption mt-8">그만둔 직원은 목록에서 '이용 중지'로 바꿔주세요. 기록은 지워지지 않아요.</div>
+            <div class="uw-section-caption mt-8">그만둔 직원은 목록에서 선택한 뒤 [직원 해지]로 처리해 주세요.</div>
           </section>
 
         </aside>
@@ -121,17 +142,41 @@
 <!-- ==================== 초대 모달 (M02) ==================== -->
 <div class="uw-modal-backdrop" id="modal-invite">
   <div class="uw-modal">
-    <div class="uw-modal-title">직원을 초대할게요</div>
+    <div class="uw-modal-title">함께 쓸 사람을 초대할게요</div>
     <div class="uw-modal-body">
-      <div style="font-size:13px;font-weight:600;color:var(--ink-600)">이름</div>
-      <input type="text" placeholder="함께 일하는 분 이름" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px">
-      <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-top:12px">휴대폰 번호</div>
-      <input type="text" placeholder="010-0000-0000" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px">
-      <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-top:12px">처음 권한 (나중에 바꿀 수 있어요)</div>
-      <div class="mt-8" style="display:flex;gap:6px" id="invite-presets">
-        <span class="uw-kw-chip" style="cursor:pointer" data-preset-chip="reply_only">응대만</span>
-        <span class="uw-kw-chip" style="cursor:pointer;background:var(--blue);color:#fff" data-preset-chip="review_reply">검토+응대</span>
-        <span class="uw-kw-chip" style="cursor:pointer" data-preset-chip="full">전체</span>
+      <div id="invite-name-phone">
+        <div style="font-size:13px;font-weight:600;color:var(--ink-600)">이름</div>
+        <input type="text" id="invite-name" placeholder="함께 일하는 분 이름" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-top:12px">휴대폰 번호</div>
+        <input type="text" id="invite-phone" placeholder="010-0000-0000" style="width:100%;margin-top:6px;height:48px;border:1px solid var(--input-border);border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px">
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-top:12px">역할 (나중에 바꿀 수 있어요)</div>
+      <div class="mt-8" style="display:flex;flex-direction:column;gap:8px" id="invite-role-cards">
+        <div class="gs-role-card" data-role-card="사장님">
+          <span class="dot"></span>
+          <div><div class="t">사장님</div><div class="d">매장 대표로 가입해요. 항상 모든 권한을 가져요</div></div>
+        </div>
+        <div class="gs-role-card" data-role-card="매니저">
+          <span class="dot"></span>
+          <div><div class="t">매니저</div><div class="d">직원 초대·관리 가능</div></div>
+        </div>
+        <div class="gs-role-card is-on" data-role-card="운영자">
+          <span class="dot"></span>
+          <div><div class="t">운영자</div><div class="d">직원 초대·관리 불가</div></div>
+        </div>
+      </div>
+      <div class="gs-perm-row" id="invite-perm-row">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--ink-900)">편집·승인 권한</div>
+          <div style="font-size:12px;color:var(--ink-500);margin-top:2px">콘텐츠·문자·챗봇을 직접 편집하고 승인할 수 있어요. 없으면 조회만 가능해요</div>
+        </div>
+        <button type="button" class="gs-switch" id="invite-edit-switch"></button>
+      </div>
+
+      <!-- 초대 차단 안내 (이미 우리 직원인 번호 / 이름이 다른 기존 계정 — 둘 중 하나일 때만 노출, 17_직원관리와 동일 패턴) -->
+      <div id="invite-block-msg" style="display:none;margin-top:14px;background:var(--red-bg,#fff0f0);border:1px solid var(--red);border-radius:var(--radius-tile);padding:12px 14px">
+        <div style="font-size:13px;font-weight:700;color:var(--red)" id="invite-block-title"></div>
+        <div style="font-size:12px;color:var(--ink-600);margin-top:4px" id="invite-block-desc"></div>
       </div>
     </div>
     <div class="uw-modal-actions">
@@ -141,28 +186,63 @@
   </div>
 </div>
 
+<!-- 직원 해지 확인 모달 (17_직원관리와 동일 패턴 — 완전 삭제) -->
+<div class="uw-modal-backdrop" id="modal-remove-staff">
+  <div class="uw-modal">
+    <div class="uw-modal-title">직원을 해지할까요?</div>
+    <div class="uw-modal-body" id="remove-staff-body">더 이상 이 매장에 접근할 수 없어요.</div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-remove-staff" style="background:#c62828;border-color:#c62828">해지</button>
+    </div>
+  </div>
+</div>
+
 <script src="assets/capability-matrix.js"></script>
 <script src="assets/userweb.js"></script>
 <script>
-/* ---- 화면 고유 로직: 직원 목록·권한 편집 (정본: UW_MOCK.staff + UW_PERMS) ---- */
+/* ---- 화면 고유 로직: 직원 목록·권한 편집 (정본: UW_MOCK.staff + UW_PERMS)
+   2026-09-02: preset(응대만/검토+응대/전체) → role(매니저/운영자) + canEdit(편집·승인 권한) 개편.
+   역할은 직원관리 접근 여부를 나타내는 설명용 값(실제 화면 차단은 미구현, 함께쓰는사람_정책.md 참조),
+   편집·승인 권한만 실제로 staffGrants()를 통해 다른 화면의 perm 게이팅에 반영된다.
+   2026-09-02: "이 직원 화면 미리보기"(M04, enter-staff)는 오버스펙 판단으로 제거 —
+   같은 페이지에서 곧바로 자기 자신의 ownerOnly 잠금에 걸려 제대로 동작하지 않던 기능이었음. ---- */
 (function () {
+  var ROLE_DESC = {
+    "사장님": "매장 대표로 가입해요. 항상 모든 권한을 가져요",
+    "매니저": "직원 초대·관리 가능",
+    "운영자": "직원 초대·관리 불가"
+  };
   var selected = -1;
-  var edits = {}; // idx -> grants[]
+  var edits = {}; // idx -> {role, canEdit}
 
-  function grantsOf(i) {
-    var st = window.UW_MOCK.staff[i];
-    return edits[i] || window.UW_PERMS.presets[st.preset].grants.slice();
+  /* 매장에 대표가 아직 없을 때만 초대 시 "사장님" 역할을 고를 수 있음(매장당 대표는 1명) */
+  function hasOwner() {
+    return window.UW_MOCK.staff.some(function (s) { return s.role === "사장님"; });
   }
+
+  function roleOf(i) { var e = edits[i]; return (e && e.role) || window.UW_MOCK.staff[i].role; }
+  function canEditOf(i) { var e = edits[i]; return e && e.canEdit !== undefined ? e.canEdit : window.UW_MOCK.staff[i].canEdit; }
+
+  function roleCardsHtml(name, roles, activeRole) {
+    return roles.map(function (r) {
+      return '<div class="gs-role-card' + (r === activeRole ? " is-on" : "") + '" data-role-card="' + r + '" data-role-group="' + name + '">' +
+        '<span class="dot"></span><div><div class="t">' + r + '</div><div class="d">' + ROLE_DESC[r] + "</div></div></div>";
+    }).join("");
+  }
+
+  function maskPhone(p) { var d = p.replace(/\D/g, ""); return d.slice(0, 3) + "-****-" + d.slice(-4); }
 
   function renderList() {
     var el = document.getElementById("staff-list");
+    document.getElementById("staff-count").textContent = window.UW_MOCK.staff.length + "명 이용 중";
     el.innerHTML = window.UW_MOCK.staff.map(function (st, i) {
-      var presetLabel = window.UW_PERMS.presets[st.preset].label;
       return '<div class="uw-row" data-staff="' + i + '" style="cursor:pointer' + (i === selected ? ';background:var(--blue-50);border-radius:12px;padding-left:10px;padding-right:10px' : "") + '">' +
         '<div class="uw-row-chip">👤</div>' +
         '<div class="uw-row-body"><div class="uw-row-title">' + st.name + '</div>' +
-        '<div class="uw-row-desc">' + st.phone + " · " + st.since + "부터 함께해요</div></div>" +
-        '<span class="uw-badge b-blue">' + presetLabel + '</span>' +
+        '<div class="uw-row-desc">' + maskPhone(st.phone) + " · " + st.since + "부터 함께해요</div></div>" +
+        '<span class="uw-badge ' + (st.role === "매니저" ? "b-blue" : "b-gray") + '">' + st.role + '</span>' +
+        '<span class="uw-badge ' + (st.canEdit ? "b-blue" : "b-gray") + '">' + (st.canEdit ? "편집·승인" : "읽기 전용") + '</span>' +
         '<span class="uw-badge b-green">' + st.status + "</span>" +
         '<span class="uw-row-arrow">›</span></div>';
     }).join("");
@@ -174,60 +254,147 @@
     panel.style.display = "";
     var st = window.UW_MOCK.staff[selected];
     document.getElementById("perm-name").textContent = st.name;
-    var grants = grantsOf(selected);
-    // 프리셋 버튼
-    document.getElementById("perm-presets").innerHTML = Object.keys(window.UW_PERMS.presets).map(function (k) {
-      var p = window.UW_PERMS.presets[k];
-      var on = JSON.stringify(p.grants.slice().sort()) === JSON.stringify(grants.slice().sort());
-      return '<span class="uw-kw-chip" data-apply-preset="' + k + '" style="cursor:pointer' + (on ? ';background:var(--blue);color:#fff' : "") + '">' + p.label + "</span>";
-    }).join("");
-    // 개별 토글 (권한 매트릭스 '권한시' 항목)
-    document.getElementById("perm-toggles").innerHTML = Object.keys(window.UW_PERMS.catalog).map(function (pid) {
-      var on = grants.indexOf(pid) >= 0;
-      return '<label class="uw-row" style="padding:10px 0;cursor:pointer"><input type="checkbox" data-perm="' + pid + '"' + (on ? " checked" : "") + ' style="width:18px;height:18px;accent-color:var(--blue)">' +
-        '<span style="font-size:14px;font-weight:600">' + window.UW_PERMS.catalog[pid] + "</span></label>";
-    }).join("");
-    // 미리보기 버튼에 현재 직원 반영
-    var pv = document.getElementById("preview-staff");
-    pv.setAttribute("data-staff-name", st.name);
-    pv.setAttribute("data-preset", st.preset);
+    // 기존 직원의 역할 변경은 매니저/운영자만 — 대표 승격(대표 위임)은 셀프서비스 대상 아님(매장구조_회원정책.md §5)
+    document.getElementById("perm-role-cards").innerHTML = roleCardsHtml("perm", ["매니저", "운영자"], roleOf(selected));
+    document.getElementById("perm-edit-switch").classList.toggle("is-on", canEditOf(selected));
   }
+
+  function resetInviteModal() {
+    document.getElementById("invite-name").value = "";
+    document.getElementById("invite-phone").value = "";
+    var inviteRoles = hasOwner() ? ["매니저", "운영자"] : ["사장님", "매니저", "운영자"];
+    document.getElementById("invite-role-cards").innerHTML = roleCardsHtml("invite", inviteRoles, "운영자");
+    document.getElementById("invite-perm-row").style.display = "";
+    document.getElementById("invite-edit-switch").classList.remove("is-on");
+    hideInviteBlock();
+  }
+
+  /* ---- 초대 번호·이름 검증 (17_직원관리와 동일 정책, 4케이스)
+     1) 이미 우리 매장 직원(초대 대기 포함)인 번호 → 차단
+     2) 그 외 이미 가입된 계정 + 이름 일치 → 소속수락으로 진행
+     3) 그 외 이미 가입된 계정 + 이름 불일치 → 차단(상대 실명 노출 안 함)
+     4) 신규 번호 → 정상 진행
+     mock: 전화번호 기준 기존 계정/우리 직원 조회(프로토타입) — 실서비스는 서버에서 USER 테이블 조회 ---- */
+  var PENDING_INVITE = { phone: "01099990012", name: "이수진" }; // 우측 "보낸 초대"의 이수진(010-****-9012) — 재초대 시나리오용
+  var EXISTING_ACCOUNTS = [
+    { phone: "01088889999", name: "최기존" }, // 이름 일치 시나리오용
+    { phone: "01077778888", name: "박선희" }  // 이름 불일치 시나리오용(초대 시 다른 이름을 입력해 보세요)
+  ];
+  function normalizeInvitePhone(p) { return p.replace(/\D/g, ""); }
+  function findStaffByPhone(phone) {
+    var norm = normalizeInvitePhone(phone);
+    if (norm === PENDING_INVITE.phone) return PENDING_INVITE;
+    for (var i = 0; i < window.UW_MOCK.staff.length; i++) {
+      if (normalizeInvitePhone(window.UW_MOCK.staff[i].phone) === norm) return window.UW_MOCK.staff[i];
+    }
+    return null;
+  }
+  function findExistingAccount(phone) {
+    var norm = normalizeInvitePhone(phone);
+    for (var i = 0; i < EXISTING_ACCOUNTS.length; i++) if (EXISTING_ACCOUNTS[i].phone === norm) return EXISTING_ACCOUNTS[i];
+    return null;
+  }
+  function showInviteBlock(title, desc) {
+    var titleEl = document.getElementById("invite-block-title");
+    titleEl.textContent = title || "";
+    titleEl.style.display = title ? "" : "none";
+    document.getElementById("invite-block-desc").textContent = desc;
+    document.getElementById("invite-block-msg").style.display = "";
+  }
+  function hideInviteBlock() {
+    document.getElementById("invite-block-msg").style.display = "none";
+  }
+  ["invite-name", "invite-phone"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", hideInviteBlock);
+  });
 
   document.addEventListener("click", function (e) {
     var row = e.target.closest("[data-staff]");
     if (row) { selected = +row.getAttribute("data-staff"); renderList(); renderPanel(); return; }
-    var pr = e.target.closest("[data-apply-preset]");
-    if (pr) {
-      edits[selected] = window.UW_PERMS.presets[pr.getAttribute("data-apply-preset")].grants.slice();
-      renderPanel(); return;
+
+    var rc = e.target.closest("[data-role-card]");
+    if (rc) {
+      var group = rc.getAttribute("data-role-group");
+      var role = rc.getAttribute("data-role-card");
+      rc.parentNode.querySelectorAll("[data-role-card]").forEach(function (c) { c.classList.remove("is-on"); });
+      rc.classList.add("is-on");
+      if (group === "perm") { edits[selected] = edits[selected] || {}; edits[selected].role = role; }
+      if (group === "invite") {
+        // 사장님은 항상 모든 권한이라 편집·승인 토글 자체가 의미 없음
+        document.getElementById("invite-perm-row").style.display = role === "사장님" ? "none" : "";
+      }
+      return;
     }
-    var chip = e.target.closest("[data-preset-chip]");
-    if (chip) {
-      chip.parentNode.querySelectorAll("[data-preset-chip]").forEach(function (c) { c.style.background = ""; c.style.color = ""; });
-      chip.style.background = "var(--blue)"; chip.style.color = "#fff"; return;
+    if (e.target.closest("#perm-edit-switch")) {
+      edits[selected] = edits[selected] || {};
+      edits[selected].canEdit = !canEditOf(selected);
+      document.getElementById("perm-edit-switch").classList.toggle("is-on", edits[selected].canEdit);
+      return;
     }
+    if (e.target.closest("#invite-edit-switch")) {
+      e.target.closest("#invite-edit-switch").classList.toggle("is-on");
+      return;
+    }
+
     var a = e.target.closest("[data-action]");
     if (!a) return;
     var act = a.getAttribute("data-action");
     if (act === "save-perms") {
-      var checked = [].slice.call(document.querySelectorAll("#perm-toggles [data-perm]:checked")).map(function (c) { return c.getAttribute("data-perm"); });
-      edits[selected] = checked;
-      window.UW.toast("권한을 저장했어요. " + window.UW_MOCK.staff[selected].name + "님 화면에 바로 반영돼요.");
-      renderPanel();
+      var st = window.UW_MOCK.staff[selected];
+      st.role = roleOf(selected);
+      st.canEdit = canEditOf(selected);
+      delete edits[selected];
+      window.UW.toast("권한을 저장했어요. " + st.name + "님 화면에 바로 반영돼요.");
+      renderList(); renderPanel();
+    }
+    if (act === "open-modal" && a.getAttribute("data-modal") === "modal-invite") {
+      resetInviteModal();
     }
     if (act === "send-invite") {
+      var name = document.getElementById("invite-name").value.trim();
+      var phone = document.getElementById("invite-phone").value.trim();
+      if (!name || !phone) { window.UW.toast("이름과 휴대폰 번호를 입력해 주세요"); return; }
+
+      // 1) 이미 우리 매장 직원(초대 대기 포함)인 번호 → 차단, 이름 특정해서 안내
+      var already = findStaffByPhone(phone);
+      if (already) {
+        showInviteBlock(already.name + "님은 이미 우리 매장 직원이에요.", "번호를 다시 확인해 주세요.");
+        return;
+      }
+
+      // 2) 그 외 이미 가입된 계정 → 이름 일치 시 소속수락으로 진행, 불일치 시 차단(상대방 실명은 노출 안 함)
+      var existing = findExistingAccount(phone);
+      if (existing && existing.name !== name) {
+        showInviteBlock("", "이름과 번호가 맞는지 다시 확인해 주세요. 계속 문제가 있으면 고객센터에 문의해 주세요.");
+        return;
+      }
+
+      // 3) 신규 번호, 또는 이름까지 일치하는 기존 계정 → 정상 진행
+      var chosenRole = document.querySelector('#invite-role-cards [data-role-card].is-on');
+      var roleLabel = chosenRole ? chosenRole.getAttribute("data-role-card") : "운영자";
       a.closest(".uw-modal-backdrop").classList.remove("is-open");
-      window.UW.toast("초대 문자를 보냈어요. 수락하면 알림으로 알려드릴게요.");
+      if (existing) {
+        window.UW.toast(phone + "로 소속수락 문자를 보냈어요(" + roleLabel + ", 로그인 후 확인)");
+      } else {
+        window.UW.toast("초대 문자를 보냈어요(" + roleLabel + "). 수락하면 알림으로 알려드릴게요.");
+      }
+    }
+    if (act === "confirm-remove-staff") {
+      var removed = window.UW_MOCK.staff[selected];
+      window.UW_MOCK.staff.splice(selected, 1);
+      delete edits[selected];
+      selected = -1;
+      a.closest(".uw-modal-backdrop").classList.remove("is-open");
+      renderList(); renderPanel();
+      window.UW.toast(removed.name + "님을 해지했어요.");
     }
   });
 
-  document.addEventListener("change", function (e) {
-    if (e.target.matches("#perm-toggles [data-perm]")) {
-      var checked = [].slice.call(document.querySelectorAll("#perm-toggles [data-perm]:checked")).map(function (c) { return c.getAttribute("data-perm"); });
-      edits[selected] = checked;
-      // 프리셋 하이라이트 갱신
-      renderPanel();
-    }
+  /* 해지 확인 모달 본문에 선택된 직원 이름 반영(17_직원관리와 동일 패턴) */
+  document.getElementById("btn-remove-staff").addEventListener("click", function () {
+    var st = window.UW_MOCK.staff[selected];
+    if (!st) return;
+    document.getElementById("remove-staff-body").textContent = st.name + "님은 더 이상 이 매장에 접근할 수 없어요.";
   });
 
   document.addEventListener("DOMContentLoaded", function () { renderList(); });

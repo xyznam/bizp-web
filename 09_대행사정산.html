@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>정산·수수료 — 비즈플래닛</title>
+<!-- UW_BL_06 · 대행사 정산·수수료 (대행사 L3 전용)
+     갭 축 D : 어드민 54 수동 정산 원장 ↔ 대행사가 받아보는 수수료 명세
+
+     어드민 정본과의 관계 (G-04 표 6·표 7 · 어드민 54)
+     - 이 화면은 조회 전용이다. 수수료 산정·확정·지급은 전부 어드민(54)의 운영자 수동 처리다
+     - 수수료 자동 산정은 도입 금지(런칭 정책). 여기에도 계산기를 두지 않는다
+     - 귀속월 상태 : 집계 중(open) → 가마감(pre_closed) → 확정(closed) → 지급 완료(paid)
+     - 행 상태     : 집계 중(회색) / 확정 대기(노랑) / 지급 대기(주황) / 지급 완료(초록)
+     - 순거래액 = 21 결제 원장 마감 스냅샷 기준 순매출. 환불 차감 후 VAT 제외(공급가).
+                  대행사 명의 청구 계정(BA)에 연결된 구독의 결제 귀속분만 편입된다
+     - 정산금 = 수수료(수동 입력) + 조정·반제 라인 합계
+     - 조정·반제 6종 : 인센티브(+) 페널티(−) 전월 과지급 반제(−) 과소지급 보전(+) 환불 클로백(−) 기타(±)
+     - 확정된 귀속월은 재수정 불가(회계 불변성). 사후 오류·이의는 차월 반제/조정 라인으로만 처리한다
+
+     대행사 관점 추가 : '매장별 순거래액 내역'(M05)은 어드민 54에 없는 분해 뷰다.
+     같은 21 원장 스냅샷을 매장 축으로 나눠 보여줄 뿐이고 새 수치를 만들지 않는다.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* ---- 귀속월 선택 ---- */
+.st-months { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.st-month {
+  border: 1px solid var(--card-border); background: var(--white); border-radius: var(--radius-tile);
+  padding: 10px 14px; cursor: pointer; font-family: inherit; text-align: left; min-width: 132px;
+}
+.st-month:hover { border-color: var(--blue-border); }
+.st-month.is-on { border-color: var(--blue); background: var(--blue-50); }
+.st-month-label { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; }
+.st-month-sub { font-size: 11px; font-weight: 600; color: var(--ink-500); margin-top: 4px; }
+
+/* ---- 정산 요약 ---- */
+.st-sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 900px) { .st-sum { grid-template-columns: repeat(2, 1fr); } }
+.st-sum-item { background: var(--inset); border-radius: var(--radius-tile); padding: 13px 15px; }
+.st-sum-k { font-size: 11px; font-weight: 700; color: var(--ink-600); }
+.st-sum-v { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; margin-top: 5px; }
+.st-sum-v small { font-size: 12px; font-weight: 600; color: var(--ink-500); }
+.st-sum-note { font-size: 11px; font-weight: 500; color: var(--ink-400); margin-top: 3px; line-height: 1.5; }
+.st-sum-item.is-total { background: var(--blue-50); }
+.st-sum-item.is-total .st-sum-v { color: var(--blue); }
+
+/* ---- 조정 라인 ---- */
+.st-adj-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; font-size: 13px; }
+.st-adj-row + .st-adj-row { border-top: 1px solid var(--divider); }
+.st-adj-body { flex: 1; min-width: 0; }
+.st-adj-why { font-size: 12px; color: var(--ink-500); font-weight: 500; margin-top: 3px; line-height: 1.6; }
+.st-adj-amt { font-weight: 800; white-space: nowrap; }
+.st-adj-amt.is-plus { color: var(--green); }
+.st-adj-amt.is-minus { color: var(--red); }
+
+/* ---- 매장별 내역 ---- */
+#st-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#st-table thead tr { background: var(--inset); }
+#st-table th { padding: 10px; text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-600); white-space: nowrap; }
+#st-table td { padding: 10px; border-top: 1px solid var(--divider); }
+#st-table td.num, #st-table th.num { text-align: right; }
+#st-table tr.is-sum td { border-top: 2px solid var(--card-border); font-weight: 800; }
+
+/* ---- 지급 이력 ---- */
+.st-pay-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; font-size: 13px; }
+.st-pay-row + .st-pay-row { border-top: 1px solid var(--divider); }
+.st-pay-meta { font-size: 11px; color: var(--ink-500); margin-top: 2px; }
+
+.st-muted { color: var(--ink-400); }
+.st-textarea {
+  width: 100%; min-height: 88px; border: 1px solid var(--input-border); border-radius: 12px;
+  padding: 11px 12px; font-family: inherit; font-size: 14px; line-height: 1.6; color: var(--ink-900);
+  outline: none; resize: vertical; box-sizing: border-box;
+}
+.st-textarea:focus { border-color: var(--blue); }
+.st-modal-select {
+  width: 100%; height: 44px; border: 1px solid var(--input-border); border-radius: 12px;
+  padding: 0 12px; font-family: inherit; font-size: 14px; color: var(--ink-900); background: var(--white);
+  outline: none; box-sizing: border-box;
+}
+.st-label { font-size: 12px; font-weight: 700; color: var(--ink-700); }
+</style>
+</head>
+<body data-screen="UW_BL_06">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_요청관리.html">📨 요청 관리</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
+      <a href="09_담당매장청구.html">💳 구독·청구</a>
+      <a href="09_대행사정산.html" class="is-active">🧾 정산·수수료</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">정산·수수료</span>
+      <span class="uw-topbar-sub">달마다 받으실 수수료를 확인하세요</span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- ========== L1/L2 가드 ========== -->
+      <div data-only-level="L1">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">🧾</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">대행사가 받는 수수료 명세라서 사장님 계정에는 나오지 않아요. 우리 매장 요금은 <b>요금제·비용</b>에서 확인하세요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="09_요금제비용.html" style="text-decoration:none">요금제·비용 보기</a>
+        </div>
+      </div>
+      <div data-only-level="L2">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">🧾</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">대행사가 받는 수수료 명세라서 사장님 계정에는 나오지 않아요. 우리 매장 요금은 <b>요금제·비용</b>에서 확인하세요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="09_요금제비용.html" style="text-decoration:none">요금제·비용 보기</a>
+        </div>
+      </div>
+
+      <!-- ========== M01 · view : 귀속월 선택 ========== -->
+      <section id="st-sec-months" data-module="M01">
+        <div class="st-months" id="month-row"></div>
+        <div class="uw-section-caption" style="margin-top:10px" id="month-note"></div>
+      </section>
+
+      <div class="uw-cols" style="margin-top:14px">
+        <div class="uw-col-main">
+
+          <!-- ========== M02 · stat : 정산 요약 ========== -->
+          <section id="st-sec-summary" class="uw-card" data-module="M02">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <h3 class="uw-section-title" style="font-size:15px" id="sum-title">정산 요약</h3>
+              <span id="sum-status" style="margin-left:auto"></span>
+            </div>
+            <div class="st-sum mt-12">
+              <div class="st-sum-item">
+                <div class="st-sum-k">순거래액</div>
+                <div class="st-sum-v" id="sum-gmv">—</div>
+                <div class="st-sum-note">환불 뺀 금액 · 부가세 별도</div>
+              </div>
+              <div class="st-sum-item">
+                <div class="st-sum-k">수수료</div>
+                <div class="st-sum-v" id="sum-fee">—</div>
+                <div class="st-sum-note" id="sum-rate">운영팀이 계약대로 산정해요</div>
+              </div>
+              <div class="st-sum-item">
+                <div class="st-sum-k">조정·반제</div>
+                <div class="st-sum-v" id="sum-adj">—</div>
+                <div class="st-sum-note" id="sum-adj-cnt">—</div>
+              </div>
+              <div class="st-sum-item is-total">
+                <div class="st-sum-k">받으실 금액</div>
+                <div class="st-sum-v" id="sum-total">—</div>
+                <div class="st-sum-note" id="sum-total-note">수수료 확정 후 나와요</div>
+              </div>
+            </div>
+            <div class="uw-section-caption" style="margin-top:12px" id="sum-id"></div>
+          </section>
+
+          <!-- ========== M03 · view : 산정 근거 ========== -->
+          <section id="st-sec-basis" class="uw-card" data-module="M03" style="margin-top:12px">
+            <h3 class="uw-section-title" style="font-size:15px">이렇게 계산했어요</h3>
+            <div class="uw-preview-box" id="basis-box" style="margin-top:10px">—</div>
+          </section>
+
+          <!-- ========== M04 · view : 조정·반제 라인 ========== -->
+          <section id="st-sec-adj" class="uw-card" data-module="M04" style="margin-top:12px">
+            <h3 class="uw-section-title" style="font-size:15px">더하거나 뺀 금액</h3>
+            <div class="uw-section-caption mt-8">계약에 따라 더해지거나 빠진 항목이에요. 항목마다 근거가 함께 기록돼요.</div>
+            <div class="mt-8" id="adj-list"></div>
+          </section>
+
+          <!-- ========== M05 · view : 매장별 순거래액 내역 ========== -->
+          <section id="st-sec-stores" class="uw-card" data-module="M05" style="margin-top:12px;padding:0;overflow-x:auto">
+            <div style="padding:20px 24px 0">
+              <h3 class="uw-section-title" style="font-size:15px">매장별 내역</h3>
+              <div class="uw-section-caption mt-8">대행사 대납으로 청구된 매장만 들어가요. 사장님이 직접 결제하는 매장은 빠져요.</div>
+            </div>
+            <table id="st-table" style="margin-top:12px">
+              <thead>
+                <tr><th>매장</th><th>요금제</th><th class="num">순거래액</th></tr>
+              </thead>
+              <tbody id="st-tbody"></tbody>
+            </table>
+          </section>
+
+        </div>
+
+        <aside class="uw-col-side">
+
+          <!-- ========== M06 · view : 지급 이력 ========== -->
+          <section id="st-sec-pay" class="uw-card" data-module="M06">
+            <h3 class="uw-section-title" style="font-size:15px">지급 이력</h3>
+            <div class="mt-8" id="pay-list"></div>
+          </section>
+
+          <!-- ========== M07 · create : 정산 문의 ========== -->
+          <section id="st-sec-inquiry" class="uw-card" data-module="M07" style="margin-top:12px">
+            <h3 class="uw-section-title" style="font-size:15px">금액이 이상한가요?</h3>
+            <div class="uw-section-caption mt-8">
+              확정된 달의 금액은 고치지 않아요. 대신 다음 달 정산에 <b>조정 항목</b>으로 반영해 드려요.
+            </div>
+            <button class="btn btn-primary btn-sm mt-12" style="width:100%" data-action="open-modal" data-modal="modal-inquiry">정산 문의하기</button>
+          </section>
+
+        </aside>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 정산 문의 모달 (M07) ==================== -->
+<div class="uw-modal-backdrop" id="modal-inquiry">
+  <div class="uw-modal">
+    <div class="uw-modal-title">정산 문의</div>
+    <div class="uw-modal-body">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label class="st-label" for="inq-month">어느 달인가요?</label>
+          <select class="st-modal-select" id="inq-month"></select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label class="st-label" for="inq-body">어떤 점이 다른가요?</label>
+          <textarea class="st-textarea" id="inq-body" placeholder="예) 7월에 해지된 매장 2곳이 순거래액에 그대로 들어간 것 같아요"></textarea>
+        </div>
+        <div class="uw-preview-box" style="margin-top:0">
+          확정된 달은 금액을 되돌리지 않아요. 확인해서 차이가 있으면 <b>다음 달 정산에 조정 항목으로</b> 넣어 드릴게요.
+        </div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-secondary" data-action="close-modal">취소</button>
+      <button class="btn btn-primary" id="inq-submit">문의 보내기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직 : 귀속월 전환 · 조회 전용 명세 ----
+   조회 전용이다. 수수료를 이 화면에서 계산하지 않는다(어드민 54 수동 입력값을 그대로 받는다).
+   정산금 = 수수료 + 조정 합계 만 화면에서 검산해 표시한다. */
+(function () {
+  "use strict";
+
+  var AGENCY = "마케팅파트너스";
+
+  /* 귀속월 명세 — 어드민 54 원장의 대행사 1건(마케팅파트너스) 관점
+     status : 집계 중 | 확정 대기 | 지급 대기 | 지급 완료  (G-04 표 6 행 단위 상태)
+     monthState : open(집계 중) | pre_closed(가마감) | closed(확정) | paid(지급 완료) */
+  var LEDGER = [
+    {
+      ym: "2026-08", id: "SET-2608-07", status: "집계 중", monthState: "open",
+      gmv: null, fee: null, rate: null, basis: null,
+      snapshot: null,
+      adjustments: [],
+      stores: null,
+      paid: null
+    },
+    {
+      ym: "2026-07", id: "SET-2607-07", status: "지급 대기", monthState: "closed",
+      gmv: 4900000, fee: 392000, rate: "8%",
+      basis: "7월 합의 요율 8% 적용 (계약서 제3조). 순거래액 4,900,000원 × 8% = 392,000원. " +
+             "대행사 명의 청구 그룹 3개(강남·서초 2,151,000 + 분당·판교 1,748,000 + 병의원 1,061,000 = 4,960,000원)에서 " +
+             "환불 60,000원을 뺀 금액이에요. 환불에 딸린 수수료는 아래 환불 조정으로 따로 뺐어요.",
+      snapshot: "2026-08-01 04:00 결제 원장 기준",
+      adjustments: [
+        { type: "인센티브", sign: 1, amount: 150000, why: "7월 신규 매장 6곳 유치 달성 (합의 조건) · 증빙 SET-2607-07" },
+        { type: "환불 클로백", sign: -1, amount: 4800, why: "카페봄봄 신촌점 7월 환불 60,000원분 수수료 회수 · 증빙 REF-2607-0114" }
+      ],
+      stores: [
+        { name: "테라스의원", plan: "Premium", amt: 189000 },
+        { name: "브레드하우스 성수점", plan: "Premium", amt: 189000 },
+        { name: "스시오마카세 강남점", plan: "Pro", amt: 89000 },
+        { name: "라라네일 홍대점", plan: "Pro", amt: 89000 },
+        { name: "우리동네정형외과", plan: "Pro", amt: 89000 },
+        { name: "김마케 김밥집", plan: "Pro", amt: 89000 },
+        { name: "스시오마카세 판교점", plan: "Basic", amt: 39000 },
+        { name: "카페봄봄 신촌점", plan: "Basic", amt: 39000 },
+        { name: "청춘분식", plan: "Basic", amt: 39000 },
+        { name: "하나로약국", plan: "Basic", amt: 39000 },
+        { name: "그 외 62곳", plan: "—", amt: 4010000 }
+      ],
+      paid: null
+    },
+    {
+      ym: "2026-06", id: "SET-2606-07", status: "지급 완료", monthState: "paid",
+      gmv: 4912000, fee: 392960, rate: "8%",
+      basis: "6월 합의 요율 8% 적용 (계약서 제3조). 순거래액 4,912,000원 × 8% = 392,960원. " +
+             "대행사 명의 청구 그룹 3개(2,132,000 + 1,732,000 + 1,048,000) 합계이고 6월은 환불이 없었어요.",
+      snapshot: "2026-07-01 04:00 결제 원장 기준",
+      adjustments: [
+        { type: "전월 과지급 반제", sign: -1, amount: 25000, why: "5월 정산에서 더 드린 25,000원 회수 · 증빙 SET-2605-07" }
+      ],
+      stores: [
+        { name: "테라스의원", plan: "Premium", amt: 189000 },
+        { name: "브레드하우스 성수점", plan: "Premium", amt: 189000 },
+        { name: "스시오마카세 강남점", plan: "Pro", amt: 89000 },
+        { name: "라라네일 홍대점", plan: "Pro", amt: 89000 },
+        { name: "우리동네정형외과", plan: "Pro", amt: 89000 },
+        { name: "김마케 김밥집", plan: "Pro", amt: 89000 },
+        { name: "스시오마카세 판교점", plan: "Basic", amt: 39000 },
+        { name: "카페봄봄 신촌점", plan: "Basic", amt: 39000 },
+        { name: "청춘분식", plan: "Basic", amt: 39000 },
+        { name: "하나로약국", plan: "Basic", amt: 39000 },
+        { name: "그 외 62곳", plan: "—", amt: 4022000 }
+      ],
+      paid: { date: "2026-07-15", ref: "TRF-20260715-0087" }
+    }
+  ];
+
+  var current = "2026-07";
+  function find(ym) { return LEDGER.filter(function (m) { return m.ym === ym; })[0]; }
+  function won(n) { return n.toLocaleString("ko-KR") + "원"; }
+  function ymText(ym) { var p = ym.split("-"); return p[0] + "년 " + (+p[1]) + "월"; }
+
+  function statusBadge(st) {
+    var cls = st === "지급 완료" ? "b-green" : (st === "지급 대기" ? "b-orange" : (st === "확정 대기" ? "b-orange" : "b-gray"));
+    return '<span class="uw-badge ' + cls + '">' + st + '</span>';
+  }
+  /* 귀속월 상태를 대행사가 알아들을 말로 옮긴다 (G-04 표 6 귀속월 축) */
+  function monthStateText(m) {
+    if (m.monthState === "open")       return "아직 집계 중이에요 — 다음 달 초에 금액이 나와요";
+    if (m.monthState === "pre_closed") return "금액을 맞춰보는 중이에요";
+    if (m.monthState === "closed")     return "금액이 확정됐어요 — 지급을 기다리는 중이에요";
+    return "지급까지 끝났어요";
+  }
+
+  function adjTotal(m) {
+    return m.adjustments.reduce(function (s, a) { return s + a.sign * a.amount; }, 0);
+  }
+
+  /* ---------- 렌더 ---------- */
+  function renderMonths() {
+    document.getElementById("month-row").innerHTML = LEDGER.map(function (m) {
+      return '<button class="st-month' + (m.ym === current ? ' is-on' : '') + '" data-ym="' + m.ym + '">' +
+        '<div class="st-month-label">' + ymText(m.ym) + '</div>' +
+        '<div class="st-month-sub">' + m.status + '</div>' +
+      '</button>';
+    }).join("");
+  }
+
+  function renderSummary(m) {
+    document.getElementById("sum-title").textContent = ymText(m.ym) + " 정산 요약";
+    document.getElementById("sum-status").innerHTML = statusBadge(m.status);
+    document.getElementById("month-note").textContent = monthStateText(m) +
+      (m.snapshot ? " · " + m.snapshot : "");
+
+    var adj = adjTotal(m);
+    if (m.gmv == null) {
+      document.getElementById("sum-gmv").textContent = "집계 중";
+      document.getElementById("sum-fee").textContent = "—";
+      document.getElementById("sum-rate").textContent = "운영팀이 계약대로 산정해요";
+      document.getElementById("sum-adj").textContent = "—";
+      document.getElementById("sum-adj-cnt").textContent = "아직 없어요";
+      document.getElementById("sum-total").textContent = "—";
+      document.getElementById("sum-total-note").textContent = "수수료가 정해지면 나와요";
+    } else {
+      document.getElementById("sum-gmv").textContent = won(m.gmv);
+      document.getElementById("sum-fee").textContent = won(m.fee);
+      document.getElementById("sum-rate").textContent = "요율 " + m.rate + " 적용";
+      document.getElementById("sum-adj").innerHTML =
+        (adj >= 0 ? "+" : "−") + won(Math.abs(adj)).replace("원", "") + '<small>원</small>';
+      document.getElementById("sum-adj-cnt").textContent = m.adjustments.length + "건";
+      document.getElementById("sum-total").textContent = won(m.fee + adj);
+      document.getElementById("sum-total-note").textContent =
+        m.status === "지급 완료" ? "지급 완료" : "지급 예정";
+    }
+    document.getElementById("sum-id").textContent = "정산 번호 " + m.id + " · " + AGENCY;
+  }
+
+  function renderBasis(m) {
+    document.getElementById("basis-box").textContent =
+      m.basis || "이번 달은 아직 집계 중이에요. 마감이 끝나면 계산한 근거를 여기에 적어드려요.";
+  }
+
+  function renderAdj(m) {
+    var el = document.getElementById("adj-list");
+    if (!m.adjustments.length) {
+      el.innerHTML = '<div style="padding:16px 0;font-size:13px;color:var(--ink-400)">더하거나 뺀 금액이 없어요</div>';
+      return;
+    }
+    el.innerHTML = m.adjustments.map(function (a) {
+      return '<div class="st-adj-row">' +
+        '<div class="st-adj-body">' +
+          '<div style="font-weight:700">' + a.type + '</div>' +
+          '<div class="st-adj-why">' + a.why + '</div>' +
+        '</div>' +
+        '<div class="st-adj-amt ' + (a.sign > 0 ? "is-plus" : "is-minus") + '">' +
+          (a.sign > 0 ? "+" : "−") + won(a.amount) +
+        '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  function renderStores(m) {
+    var tb = document.getElementById("st-tbody");
+    if (!m.stores) {
+      tb.innerHTML = '<tr><td colspan="3" style="padding:26px 10px;text-align:center;color:var(--ink-400);font-size:13px">마감이 끝나면 매장별 내역이 나와요</td></tr>';
+      return;
+    }
+    var sum = m.stores.reduce(function (s, r) { return s + r.amt; }, 0);
+    tb.innerHTML = m.stores.map(function (r) {
+      return '<tr><td>' + r.name + '</td><td>' +
+        (r.plan === "—" ? '<span class="st-muted">—</span>' : r.plan) +
+        '</td><td class="num">' + won(r.amt) + '</td></tr>';
+    }).join("") +
+    '<tr class="is-sum"><td>합계</td><td></td><td class="num">' + won(sum) + '</td></tr>';
+  }
+
+  function renderPayments() {
+    document.getElementById("pay-list").innerHTML = LEDGER.map(function (m) {
+      var right = m.paid
+        ? '<span class="uw-badge b-green">지급 완료</span>'
+        : statusBadge(m.status);
+      var amount = (m.gmv == null) ? "집계 중" : won(m.fee + adjTotal(m));
+      var meta = m.paid
+        ? m.paid.date.replace(/-/g, ".") + " 입금 · " + m.paid.ref
+        : (m.gmv == null ? "마감 전" : "지급 예정");
+      return '<div class="st-pay-row">' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:700">' + ymText(m.ym) + ' · ' + amount + '</div>' +
+          '<div class="st-pay-meta">' + meta + '</div>' +
+        '</div>' + right +
+      '</div>';
+    }).join("");
+  }
+
+  function render() {
+    var m = find(current);
+    renderMonths(); renderSummary(m); renderBasis(m); renderAdj(m); renderStores(m); renderPayments();
+  }
+
+  /* ---------- 이벤트 ---------- */
+  document.getElementById("month-row").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-ym]");
+    if (!b) return;
+    current = b.getAttribute("data-ym");
+    render();
+  });
+
+  document.getElementById("inq-month").innerHTML = LEDGER.map(function (m) {
+    return '<option value="' + m.ym + '">' + ymText(m.ym) + '</option>';
+  }).join("");
+
+  document.getElementById("inq-submit").addEventListener("click", function () {
+    var body = document.getElementById("inq-body").value.trim();
+    if (!body) {
+      if (window.UW && window.UW.toast) window.UW.toast("어떤 점이 다른지 적어주세요.");
+      return;
+    }
+    var ym = document.getElementById("inq-month").value;
+    document.getElementById("modal-inquiry").classList.remove("is-open");
+    document.getElementById("inq-body").value = "";
+    if (window.UW && window.UW.toast) {
+      window.UW.toast(ymText(ym) + " 정산 문의를 보냈어요. 확인하고 알려드릴게요.");
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("inq-month").value = current;
+    render();
+  });
+  if (document.readyState !== "loading") render();
+})();
+</script>
+</body>
+</html>

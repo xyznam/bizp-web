@@ -8,6 +8,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/userweb.css">
+<style>
+/* -- 이 화면 전용: 수집 설정 모달, 콘텐츠 종류별 범위/주기 (2026-09-01 신설) -- */
+.cs-intro { font-size: 13px; color: var(--ink-500); line-height: 1.6; }
+.cs-cat { margin-top: 10px; }
+.cs-cat-title { font-size: 13px; font-weight: 700; color: var(--ink-700); }
+.cs-cat-caption { font-size: 12px; color: var(--ink-400); margin-top: 2px; line-height: 1.5; }
+.cs-row { display: flex; gap: 10px; margin-top: 8px; }
+.cs-field { flex: 1; }
+.cs-field label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-500); margin-bottom: 4px; }
+.cs-select { width: 100%; height: 38px; border: 1px solid var(--input-border); border-radius: 10px; background: var(--white); font-family: inherit; font-size: 13px; color: var(--ink-700); padding: 0 10px; }
+.cs-allstore { display: flex; gap: 8px; align-items: center; margin-top: 14px; font-size: 13px; color: var(--ink-600); }
+</style>
 </head>
 <body data-screen="UW_ST_05">
 
@@ -19,7 +31,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -30,6 +42,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -151,20 +164,68 @@
   <div class="uw-modal">
     <div class="uw-modal-title">수집 설정</div>
     <div class="uw-modal-body">
-      AI가 글과 리뷰를 가져오는 범위와 주기를 정해요.
-      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:10px">
-        <div style="font-size:12px;font-weight:700;color:var(--ink-500)">수집 범위</div>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="collect-range"> 최근 3개월</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="collect-range"> 최근 6개월</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="collect-range" checked> 전체</label>
+      <div class="cs-intro" id="cs-intro">수집 범위는 <b>처음 연결할 때 과거를 얼마나 가져올지</b>, 학습 주기는 <b>그 이후 새 콘텐츠를 얼마나 자주 확인할지</b>예요. 이미 가져온 기간을 매번 다시 훑지 않아요.</div>
+
+      <div class="uw-preview-box cs-cat" id="cs-cat-blog">
+        <div class="cs-cat-title">블로그</div>
+        <div class="cs-row">
+          <div class="cs-field">
+            <label>수집 범위(처음 연결 시)</label>
+            <select class="cs-select" data-cs-range="blog">
+              <option value="3m">최근 3개월</option>
+              <option value="6m">최근 6개월</option>
+              <option value="all" selected>전체</option>
+            </select>
+          </div>
+          <div class="cs-field">
+            <label>학습 주기</label>
+            <select class="cs-select" data-cs-cycle="blog">
+              <option value="week">매주</option>
+              <option value="2week" selected>2주마다</option>
+              <option value="month">매달</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="uw-preview-box" style="display:flex;flex-direction:column;gap:10px">
-        <div style="font-size:12px;font-weight:700;color:var(--ink-500)">학습 주기</div>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="learn-cycle"> 매주</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="learn-cycle" checked> 2주마다</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="learn-cycle"> 매달</label>
+
+      <div class="uw-preview-box cs-cat" id="cs-cat-review">
+        <div class="cs-cat-title">플레이스 리뷰</div>
+        <div class="cs-row">
+          <div class="cs-field">
+            <label>수집 범위(처음 연결 시)</label>
+            <select class="cs-select" data-cs-range="review">
+              <option value="3m" selected>최근 3개월</option>
+              <option value="6m">최근 6개월</option>
+              <option value="all">전체</option>
+            </select>
+          </div>
+          <div class="cs-field">
+            <label>학습 주기</label>
+            <select class="cs-select" data-cs-cycle="review">
+              <option value="week">매주</option>
+              <option value="2week" selected>2주마다</option>
+              <option value="month">매달</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--ink-600)">
+
+      <div class="uw-preview-box cs-cat" id="cs-cat-storeinfo">
+        <div class="cs-cat-title">매장정보</div>
+        <div class="cs-cat-caption">플레이스에 등록된 사업정보(운영시간·메뉴·주소 등). 소급 개념이 없어 항상 최신값 기준이라 수집 범위 설정은 없어요.</div>
+        <div class="cs-row">
+          <div class="cs-field">
+            <label>학습 주기</label>
+            <select class="cs-select" data-cs-cycle="storeinfo">
+              <option value="week" selected>매주</option>
+              <option value="2week">2주마다</option>
+              <option value="month">매달</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <label class="cs-allstore">
         <input type="checkbox"> 담당 매장 전체에 같은 설정 적용
       </label>
     </div>

@@ -32,14 +32,19 @@ window.UW_MATRIX = {
     modules: {
       M01: { name: "요금제 비교(3종, 정본가)", type: "view", levels: ["L1","L2","L3"] },
       M02: { name: "변경 확정(다음 결제일 적용)", type: "edit", levels: ["L2","L3"], fallback: "tbd-card",
-             fallbackName: "요금제 변경" }
+             fallbackName: "요금제 변경" },
+      M03: { name: "구독 취소 시작·되돌리기(2026-08-28 09_요금제비용에서 이전)", type: "edit", levels: ["L2","L3"], fallback: "agency-card",
+             fallbackName: "구독 취소",
+             note: "매장구조_회원정책.md §6: L1 위탁은 셀프 취소 불가, 담당 대행사를 거쳐야 함" }
     } },
-  "UW_BL_03": { file: "24_해지.html", title: "해지", ownerOnly: true,
+  "UW_BL_03": { file: "24_해지.html", title: "구독 취소", ownerOnly: true,
     modules: {
       M01: { name: "현재 이용 요약·잃게 되는 것 안내", type: "view", levels: ["L1","L2","L3"] },
-      M02: { name: "해지 사유 선택(코드화 — 어드민 66 리포트 원천)", type: "edit", levels: ["L2","L3"], fallback: "tbd-card",
-             fallbackName: "해지 신청" },
-      M03: { name: "기간 만료 해지 안내·되돌리기(OD-U13 잠정)", type: "view", levels: ["L1","L2","L3"] }
+      M02: { name: "구독 취소 사유 선택(코드화 — 어드민 66 리포트 원천)", type: "edit", levels: ["L2","L3"] },
+      M03: { name: "기간 만료 취소 안내·되돌리기(OD-U13 잠정)", type: "view", levels: ["L1","L2","L3"] },
+      M04: { name: "구독 취소 실행", type: "edit", levels: ["L2","L3"], fallback: "agency-card",
+             fallbackName: "구독 취소",
+             note: "매장구조_회원정책.md §6(2026-08-28): L1 위탁은 셀프 취소 불가, 담당 대행사를 거쳐야 함" }
     } },
   "UW_BL_04": { file: "26_결제문제.html", title: "결제 문제 안내", ownerOnly: true,
     modules: {
@@ -91,12 +96,13 @@ window.UW_MATRIX = {
     } },
   "UW_ST_07": { file: "20_함께쓰는사람.html", title: "함께 쓰는 사람", ownerOnly: true,
     modules: {
-      M01: { name: "직원 목록(상태·권한 프리셋)", type: "view", levels: ["L1","L2","L3"] },
-      M02: { name: "직원 초대(SMS)", type: "create", levels: ["L1","L2","L3"], exception: "대표 고유 업무 — L1 허용" },
-      M03: { name: "권한 편집(프리셋+개별 토글 = 권한 매트릭스 '권한시' 항목)", type: "edit", levels: ["L1","L2","L3"], exception: "대표 고유 업무 — L1 허용" },
-      M04: { name: "직원 화면 미리보기(데모)", type: "view", levels: ["L1","L2","L3"] },
-      M05: { name: "초대 취소·비활성(이력 유지)", type: "edit", levels: ["L1","L2","L3"], exception: "대표 고유 업무 — L1 허용" }
-    } },
+      M01: { name: "직원 목록(상태·역할·편집승인권한)", type: "view", levels: ["L1","L2","L3"] },
+      M02: { name: "직원/사장님 초대(SMS, 역할+편집승인권한+번호 검증)", type: "create", levels: ["L1","L2","L3"], exception: "대표 고유 업무 — L1 허용",
+             note: "대표가 아직 없는 매장(매니저만 있음)에 한해 역할 카드에 '사장님'이 추가로 노출" },
+      M03: { name: "권한 편집(역할+편집승인권한 단일 토글)+직원 해지", type: "edit", levels: ["L1","L2","L3"], exception: "대표 고유 업무 — L1 허용" },
+      M05: { name: "초대 취소(대기 중인 초대만)", type: "edit", levels: ["L1","L2","L3"], exception: "대표 고유 업무 — L1 허용" }
+    },
+    note: "2026-09-02: M04(직원 화면 미리보기) 삭제 — ownerOnly 화면이라 미리보기 진입 즉시 자기 자신의 사장님 전용 잠금에 걸려 제대로 동작하지 않던 오버스펙 기능이었음. 직원 해지(완전 삭제, 17_직원관리와 동일 방식)를 M03에 추가 — 이전엔 이미 합류한 직원을 내보낼 방법이 아예 없었음" },
   "UW_ST_09": { file: "99_매장자료관리.html", title: "매장 자료 관리",
     modules: {
       M01: { name: "사진 관리(플레이스 수집+직접 업로드 구분)", type: "edit", levels: ["L2","L3"] },
@@ -104,36 +110,42 @@ window.UW_MATRIX = {
       M03: { name: "소개 문서 관리", type: "edit", levels: ["L2","L3"] },
       M04: { name: "기타 자료 관리", type: "edit", levels: ["L2","L3"] }
     } },
+  "UW_ST_10": { file: "06_우리매장정보_수정.html", title: "매장 정보 수정",
+    modules: {},
+    note: "2026-08-31 신설. 06_우리매장정보의 전용 수정 화면(단일 폼이라 data-module 미사용, LNB data-bind 정상 동작을 위해 등록만)" },
 
   /* ---- P3 예약 화면 (§6 매트릭스 요약 — 각 Wave에서 모듈 상세 구현) ---- */
   "UW_CR_01": { file: "02_콘텐츠검토.html",   title: "콘텐츠 검토",   planned: "W1",
     modules: {
-      M01: { name: "검토 대기 리스트", type: "view", levels: ["L1","L2","L3"], perm: "content.view" },
+      M01: { name: "검토 대기 리스트", type: "view", levels: ["L1","L2","L3"],
+             note: "2026-09-02: content.view 권한 요건 삭제 — 조회는 직원 편집·승인 권한과 무관하게 항상 가능(20_함께쓰는사람 §개편)" },
       M02: { name: "본문 미리보기·검색 노출 점수", type: "preview", levels: ["L1","L2","L3"] },
       M03: { name: "승인·반려(사유)", type: "approve", levels: ["L1","L2","L3"], perm: "content.approve" },
       M04: { name: "처리 이력·발행 완료", type: "view", levels: ["L1","L2","L3"] },
-      M05: { name: "문구 직접 수정", type: "edit", levels: ["L2","L3"], fallback: "agency-card",
-             fallbackName: "문구 수정·AI 다시 쓰기", perm: "content.create" },
+      M05: { name: "직접 편집", type: "edit", levels: ["L2","L3"], fallback: "agency-card",
+             fallbackName: "직접 편집·AI 다시 쓰기", perm: "content.create",
+             note: "2026-09-03: 라벨 '문구 수정' → '직접 편집'. 실제 편집기는 아직 미구현(토스트만)" },
       M06: { name: "AI 다시 쓰기", type: "create", levels: ["L2","L3"], perm: "content.create" }, /* 대체 카드는 인접 M05에 통합 (24 §3) */
       M07: { name: "일괄 검수·발행 등록 큐(모드B 위임형 전용)", type: "bulk", levels: ["L3"] },
       M08: { name: "검수 방식 표시·설정 바로가기(06에서 설정)", type: "view", levels: ["L3"] },
-      M09: { name: "등록·발행 완료 처리(직접 등록 후 확인)", type: "bulk", levels: ["L2","L3"],
-             note: "발행 API 없음: 승인·검수 통과분을 채널에 직접 등록→확인→완료. L2 셀프는 사장님 본인이, L3는 대행사가 등록." }
+      M09: { name: "등록·발행 완료 처리(URL 입력 후 확인)", type: "bulk", levels: ["L3"],
+             note: "발행 API 없음: 검수 통과분을 채널에 직접 등록→URL 입력→완료. 2026-09-03: L2 제외(셀프는 '승인 완료'가 종착점이고 발행으로 간주) + 완료 처리 시 발행 URL 입력 모달 추가(네이버 블로그만 필수, 당근마켓은 URL 개념이 달라 생략)." }
     } },
   "UW_CR_02": { file: "02_발행이력.html",   title: "발행 이력",   planned: "W1",
     modules: {
-      M01: { name: "발행·반려 전체 이력(필터·검색)", type: "view", levels: ["L1","L2","L3"], perm: "content.view" }
+      M01: { name: "발행·반려 전체 이력(필터·검색)", type: "view", levels: ["L1","L2","L3"] }
     } },
   "UW_CT_01": { file: "03_콘텐츠만들기.html", title: "콘텐츠 만들기", planned: "W1",
     modules: {
-      M01: { name: "위저드 안내", type: "view", levels: ["L1","L2","L3"], perm: "content.view" },
+      M01: { name: "위저드 안내", type: "view", levels: ["L1","L2","L3"] },
       M02: { name: "AI 초안 미리보기", type: "preview", levels: ["L1","L2","L3"] },
       M03: { name: "스텝1 소식 유형", type: "create", levels: ["L2","L3"], fallback: "agency-card", fallbackName: "콘텐츠 만들기", perm: "content.create" },
       M04: { name: "스텝2 한 줄 입력", type: "create", levels: ["L2","L3"], perm: "content.create" },
       M05: { name: "스텝3 채널 선택·생성", type: "create", levels: ["L2","L3"], perm: "content.create" },
-      M06: { name: "검토 요청·다시 쓰기·직접 수정", type: "create", levels: ["L2","L3"], perm: "content.create" },
-      M07: { name: "여러 매장 동시 생성", type: "bulk", levels: ["L3"] },
-      M08: { name: "생성 옵션 상세", type: "advanced", levels: ["L3"] }
+      M06: { name: "승인 완료(즉석)·다시 쓰기·직접 수정", type: "create", levels: ["L2","L3"], perm: "content.create",
+             note: "2026-09-03: 여러 매장 동시 생성(구 M07) 제거. 즉석 생성은 07 마케팅계획의 스케줄 자동생성(→02 콘텐츠검토 큐)과 별개 경로 — 승인권자가 나 자신(L2, L3+검수모드B)이면 큐 없이 바로 승인 완료, 승인권자가 따로 있으면(L3+검수모드A=사장님) 승인 요청" },
+      M08: { name: "생성 옵션(이번 글 한정 조정, 인라인)", type: "advanced", levels: ["L2","L3"],
+             note: "2026-09-03: 모달 → ③ 채널 선택 카드 안 인라인으로 전환, L3 전용에서 L2도 포함하도록 확장. 말투·길이 정본은 16 마케팅전략상세 — 여기선 그 요약만 보여주고, '이번 글만 다르게' 체크했을 때만 가벼운 오버라이드(말투·길이·매장 소재 키워드 중 선택)를 받음. 정본 값을 다시 입력받는 게 아니라서 ①②③ 같은 번호는 안 붙임" }
     } },
   "UW_BC_01": { file: "04_비즈챗문자.html",   title: "비즈챗 문자",   planned: "W1",
     modules: {
@@ -183,11 +195,13 @@ window.UW_MATRIX = {
       M03: { name: "우리 가게 말투·강조점 조회", type: "view", levels: ["L1","L2","L3"] },
       M04: { name: "정보 수정", type: "edit", levels: ["L2","L3"], fallback: "agency-card" },
       M05: { name: "채널 연결 관리(주소·연결하기)", type: "edit", levels: ["L2","L3"] },
-      M06: { name: "사진 추가·정보 더 채우기", type: "create", levels: ["L2","L3"] }, /* 대체 카드는 인접 M05에 통합 (24 §3) */
+      M06: { name: "매장 자료 요약(건수·최근 등록일)·사진 추가", type: "create", levels: ["L2","L3"],
+             note: "2026-09-02: 실제 배점표와 안 맞던 '+8%' 배지 삭제, 자료 건수·최근 등록일 요약으로 교체" }, /* 대체 카드는 인접 M05에 통합 (24 §3) */
       M07: { name: "매장 정보 일괄 관리", type: "bulk", levels: ["L3"] },
       M08: { name: "마케팅 전략 상세 진입", type: "advanced", levels: ["L3"] },
-      M09: { name: "AI 학습 현황 진입", type: "view", levels: ["L1","L2","L3"] },
-      M10: { name: "마케팅 전략 미리보기(말투·강점) + 더보기", type: "view", levels: ["L1","L2"] }
+      M09: { name: "AI 학습 현황 진입 + 마지막 학습일", type: "view", levels: ["L1","L2","L3"],
+             note: "2026-09-02: 우측 사이드바 전용 카드였던 걸 게이지 배너(M01) 안 버튼으로 이동 — 별도 카드는 없앰" },
+      M10: { name: "마케팅 전략 미리보기(말투·강점) + 마케팅 전략 상세 보기", type: "view", levels: ["L1","L2"] }
     } },
   "UW_PL_01": { file: "07_마케팅계획.html",   title: "마케팅 계획",   planned: "W2",
     modules: {
@@ -196,7 +210,8 @@ window.UW_MATRIX = {
       M03: { name: "일정 상세 미리보기", type: "preview", levels: ["L1","L2","L3"] },
       M05: { name: "조정하기(빼기·옮기기)", type: "edit", levels: ["L2","L3"], fallback: "agency-card" },
       M07: { name: "다매장 계획 일괄 적용", type: "bulk", levels: ["L3"] },
-      M08: { name: "계획 룰 설정", type: "advanced", levels: ["L2","L3"] }
+      M08: { name: "제안 주기 설정(주당 블로그·문자 월 제안 횟수)", type: "advanced", levels: ["L2","L3"],
+             note: "2026-09-02: '계획 룰'에서 개명. AI 학습 주기 요약도 이 화면 캘린더 상단에 같이 노출되지만 그건 15_AI학습현황 소관 읽기전용이라 이 모듈 밖(별도 행)" }
     } },
   "UW_RP_01": { file: "08_실행결과리포트.html", title: "실행 결과 리포트", planned: "W2",
     modules: {
@@ -235,6 +250,11 @@ window.UW_MATRIX = {
       M01: { name: "가이드·FAQ", type: "view", levels: ["L1","L2","L3"] },
       M02: { name: "문의하기", type: "create", levels: ["L1","L2","L3"], exception: "전 레벨 허용 (23 §6)" }
     } },
+  "UW_MY_07": { file: "11_자주묻는질문.html", title: "자주 묻는 질문", planned: "W3",
+    modules: {
+      M01: { name: "카테고리 필터·검색·FAQ 목록", type: "view", levels: ["L1","L2","L3"] },
+      M02: { name: "문의하기", type: "create", levels: ["L1","L2","L3"], exception: "전 레벨 허용 (23 §6, 11과 동일)" }
+    } },
   "UW_ST_02": { file: "12_매장목록.html",     title: "매장 목록",     planned: "W3",
     modules: {
       M01: { name: "필터", type: "view", levels: ["L3"] },
@@ -246,11 +266,11 @@ window.UW_MATRIX = {
      admin-v2(어드민)에 이관 — 사용자웹 13·14번 결번(재사용 금지). 상세: 23 §5.2·§9.4 */
   "UW_ST_05": { file: "15_AI학습현황.html", title: "AI 학습현황", planned: "W3",
     modules: {
-      M01: { name: "채널 연결 상태", type: "view", levels: ["L1","L2","L3"] },
+      M09: { name: "학습 재료 요약(매장정보·매장자료·채널 콘텐츠)", type: "view", levels: ["L2","L3"],
+             note: "2026-08-31: capability-matrix 미등록으로 화면에서 안 보이던 실제 버그였음(발견/수정). 2026-09-01: L1은 학습 자체를 대행사가 관리하므로(topbar.sub 참조) 학습 재료 타일도 노출 대상에서 제외" },
       M02: { name: "학습 현황(상태 기반 단일 뷰)", type: "view", levels: ["L1","L2","L3"] },
       M03: { name: "수집된 콘텐츠 보기", type: "preview", levels: ["L1","L2","L3"] },
       M04: { name: "다시 학습하기", type: "create", levels: ["L2","L3"], fallback: "agency-card", perm: "ai.run" },
-      M05: { name: "채널 주소 관리", type: "edit", levels: ["L2","L3"], fallback: "agency-card" },
       M06: { name: "학습 콘텐츠 선택·AI 작성 의심 관리", type: "advanced", levels: ["L3"] },
       M07: { name: "수집 범위·주기·다매장 일괄", type: "advanced", levels: ["L3"] }
     } },
@@ -260,7 +280,8 @@ window.UW_MATRIX = {
       M02: { name: "글쓰기 스타일", type: "advanced", levels: ["L3"] },
       M03: { name: "이미지 스타일", type: "advanced", levels: ["L3"] },
       M04: { name: "유사 업체 비교", type: "advanced", levels: ["L3"] },
-      M05: { name: "AI 원값 리셋·근거 보기", type: "advanced", levels: ["L3"] }
+      M05: { name: "재학습·이전 학습으로 되돌리기·근거 보기(학습일 포함)", type: "advanced", levels: ["L3"],
+             note: "2026-09-03: '초기화'(최초 분석값 복귀)를 폐기하고 '재학습'(직접 수정 안 한 값만 최신 콘텐츠 기준 재분석)으로 교체, 1단계 되돌리기 버튼 추가. 전 탭 공통(헤더 고정)" }
     } },
   "UW_ST_11": { file: "16_유사업체비교.html", title: "유사업체 비교", planned: "W3",
     modules: {
@@ -289,6 +310,9 @@ window.UW_MATRIX = {
       M02: { name: "선택 직원 상세·담당 매장·승인권한 토글", type: "view", levels: ["L3"] },
       M03: { name: "배정 변경 이력", type: "view", levels: ["L3"] }
     } },
+  "UW_HM_05": { file: "01_홈_미결제.html", title: "홈 (미결제)", planned: "W1",
+    modules: {},
+    note: "2026-08-28: data-screen이 UW_TEST_PAY로 남아 매트릭스 미등록 상태였던 걸 발견/수정 — data-bind(ownerName/persona)가 항상 플레이스홀더로만 보이던 실제 버그였음. 화면 자체는 data-module을 안 써서(레벨 분기는 .pay-pane 전용 스크립트가 직접 처리) modules 없음" },
   "UW_MY_02": { file: "18_알림센터.html",     title: "알림 센터",     planned: "W3",
     modules: {
       M01: { name: "알림 리스트", type: "view", levels: ["L1","L2","L3"] },
@@ -338,15 +362,11 @@ window.UW_COPY = {
       L3: "이번 달 예정 9건 · 일정에 따라 자동 생성됩니다. 검수 후 승인 요청해주세요" }
   },
   "UW_CT_01": {
+    /* 2026-09-03: submit.btn·submit.toast 삭제 — 이제 승인권자(레벨+검수모드)에 따라 갈리는 값이라
+       data-copy(레벨만 구분)로는 표현이 안 돼서 화면 스크립트의 selfApproves()/refreshSubmitButton()로 이동함 */
     "topbar.sub": {
       L2: "고르기만 하면 AI가 글을 써드려요",
-      L3: "만든 콘텐츠는 검수 후 사장님에게 승인 요청돼요" },
-    "submit.btn": {
-      L2: "🚀 이대로 검토 요청",
-      L3: "🚀 이대로 사장님에게 승인 요청" },
-    "submit.toast": {
-      L2: "검토함에 담았어요. 승인하면 발행돼요.",
-      L3: "사장님에게 승인을 요청했어요. 승인되면 등록 대기 목록에 들어와요." }
+      L3: "만든 콘텐츠는 검수 후 사장님에게 승인 요청돼요" }
   },
   "UW_BC_01": {
     "topbar.sub": {
@@ -409,25 +429,28 @@ window.UW_COPY = {
 
 /* ============================================================
    UW_PERMS — 직원(소호 유저) 권한 모델 (27 §5 권한 매트릭스 정본)
-   기본 O(부여 불필요): AI 학습 조회 · 비즈챗 캠페인 조회 · 챗봇 내역 조회 · 챗봇 응대(CB M04)
-   "권한시" 항목만 카탈로그화. 프리셋 3종은 UW_ST_07 권한 부여 화면의 기본 선택지.
+   기본 O(부여 불필요, 권한 무관하게 항상 가능): AI 학습 조회 · 콘텐츠 조회 · 비즈챗 캠페인 조회 ·
+     챗봇 내역 조회 · 챗봇 응대(CB M04)
+   "권한시" 항목만 카탈로그화. 2026-09-02: 8항목 개별 토글 + 프리셋 3종(응대만/검토+응대/전체)을
+     "편집·승인 권한" 단일 토글로 축소(20_함께쓰는사람 §개편) — 문자·챗봇·콘텐츠 전 영역에서
+     "권한 있으면 편집·승인 가능, 없으면 조회만" 한 가지 규칙으로 통일. content.view는 이 개편을
+     계기로 조회 자체를 막을 수 없는 항목이라 판단해 카탈로그에서 빼고 기본 O로 이동.
+     bot.material은 실제로 연결된 화면이 없던 죽은 항목이라 같이 삭제.
    렌더 규칙: role=staff이고 모듈 perm이 미부여면 "권한 필요" 카드 (userweb.js)
+   ※ 역할(매니저/운영자)은 이 권한 모델과 별도 축 — 매장구조_회원정책.md §3, 함께쓰는사람_정책.md 참조
    ============================================================ */
 window.UW_PERMS = {
   catalog: {
     "ai.run":          "AI 다시 학습시키기",
-    "content.view":    "콘텐츠 보기",
     "content.create":  "콘텐츠 만들기",
     "content.approve": "콘텐츠 승인·반려",
     "bizchat.register":"문자 만들기·수정",
     "bizchat.approve": "문자 발송 승인",
-    "bot.material":    "챗봇 자료 주기",
     "bot.config":      "챗봇 응대 설정"
   },
   presets: {
-    reply_only:  { label: "응대만",     grants: [] },
-    review_reply:{ label: "검토+응대",  grants: ["content.view","content.approve"] },
-    full:        { label: "전체",       grants: ["ai.run","content.view","content.create","content.approve","bizchat.register","bizchat.approve","bot.material","bot.config"] }
+    view_only:    { label: "읽기 전용", grants: [] },
+    edit_approve: { label: "편집·승인", grants: ["ai.run","content.create","content.approve","bizchat.register","bizchat.approve","bot.config"] }
   }
 };
 
@@ -440,7 +463,7 @@ window.UW_MOCK = {
       realName: "박서연",                   // 23 내계정 전용 — 실명(2026-08-26 추가, 그 외 화면은 ownerName 유지)
       avatarInitial: "박",
       email: "seoyeon.park@gmail.com",
-      affiliations: [ { name: "카페봄봄 신촌점", type: "store", role: "대표" } ],
+      affiliations: [ { name: "카페봄봄 신촌점", type: "store", role: "대표", status: "이용중" } ], // status: 매장구조_회원정책.md §1 활성 상태(2026-08-28 추가 — §5 탈퇴 차단이 활성 매장 대표에게만 적용되도록)
       plan: "Basic",                        // STR-0008.plan
       planPrice: "39,000",                  // mock-entities plans.Basic (정본 — OD-U8 결정: 시안 99,000 아님)
       subStatus: "만료 임박",                // STR-0008.sub_status
@@ -456,7 +479,7 @@ window.UW_MOCK = {
       realName: "김도윤",
       avatarInitial: "김",
       email: "doyoon.kim@gmail.com",
-      affiliations: [ { name: "피자나라 홍대점", type: "store", role: "대표" } ],
+      affiliations: [ { name: "피자나라 홍대점", type: "store", role: "대표", status: "이용중" } ],
       plan: "Pro",                          // STR-0044.plan
       planPrice: "89,000",                  // plans.Pro (정본)
       subStatus: "정상",
@@ -468,14 +491,14 @@ window.UW_MOCK = {
     L3: {
       label: "L3 대행사",
       persona: "스시오마카세 강남점",        // 현재 선택된 매장 컨텍스트 (STR-0001) — L3 화면은 항상 "어느 매장인지" 명시
-      ownerName: "김마케 매니저",            // AGN-002 직원 페르소나
+      ownerName: "김마케",                   // AGN-002 직원 페르소나(2026-08-31: 직함이 이름에 섞여있던 걸 분리 — 역할은 realName과 별개로 각 화면에서 배지로 노출)
       realName: "김마케",
       avatarInitial: "김",
       email: "kim.market@partners.co.kr",
       // 회원정책(매장구조_회원정책.md) 1:N 매핑 예시 — 대행사 직원이면서 동시에 별도 매장의 대표일 수 있음
       affiliations: [
         { name: "마케팅파트너스", type: "agency", role: "매니저" },
-        { name: "김마케 김밥집", type: "store", role: "대표" }
+        { name: "김마케 김밥집", type: "store", role: "대표", status: "이용중" }
       ],
       plan: "Pro",                          // STR-0001.plan
       planPrice: "89,000",                  // plans.Pro (정본)
@@ -488,8 +511,11 @@ window.UW_MOCK = {
     }
   },
   staff: [
-    { name: "김하나 매니저", phone: "010-****-1234", preset: "review_reply", since: "2026-05-02", status: "이용 중" },
-    { name: "박지훈",        phone: "010-****-5678", preset: "reply_only",   since: "2026-06-20", status: "이용 중" }
+    // 2026-09-02: preset(응대만/검토+응대/전체) → role(매니저/운영자) + canEdit(편집·승인 권한)로 개편.
+    // 이름에 직함을 섞지 않음(17_직원관리와 동일 정리 — 역할은 이름 옆 배지로만 표시)
+    // phone은 실제 번호(초대 검증 매칭용)로 저장 — 화면(20_함께쓰는사람)에서 표시할 때만 가운데 4자리를 마스킹
+    { name: "김하나", phone: "01055551234", role: "매니저", canEdit: true,  since: "2026-05-02", status: "이용 중" },
+    { name: "박지훈", phone: "01055565678", role: "운영자", canEdit: false, since: "2026-06-20", status: "이용 중" }
   ],
   home: {
     reviewPending: 3,

@@ -56,11 +56,16 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 /* ---- 탭 잠금(상속 ON) ---- */
 .rs-pane.is-locked .rs-edit,
 .rs-pane.is-locked textarea,
+.rs-pane.is-locked select,
 .rs-pane.is-locked input:not([type="checkbox"]) { pointer-events: none; opacity: .55; background: var(--inset) !important; }
 .rs-pane.is-locked .rs-chip-add,
 .rs-pane.is-locked .rs-example-add,
+.rs-pane.is-locked .rs-example-del,
 .rs-pane.is-locked .rs-structure-opts,
 .rs-pane.is-locked [data-kw-chip],
+.rs-pane.is-locked .rs-mini-switch button,
+.rs-pane.is-locked .rs-cond-chip,
+.rs-pane.is-locked .rs-photo-pick .btn,
 .rs-pane.is-locked [data-edit-item]:not([data-edit-tier-of="locked"]) { pointer-events: none; opacity: .55; }
 
 /* ---- 사장님용 간단 카드 · 이미지톤 스와치 (org 07 패턴) ---- */
@@ -89,6 +94,9 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 .rs-edit:hover { background: var(--inset); }
 .rs-edit:focus { border-color: var(--blue); background: var(--white); box-shadow: 0 0 0 3px var(--blue-50); }
 .rs-edit::placeholder { color: var(--ink-400); font-weight: 500; }
+.rs-edit[readonly] { cursor: default; background: var(--inset); }
+.rs-edit[readonly]:hover { background: var(--inset); }
+.rs-edit[readonly]:focus { border-color: transparent; background: var(--inset); box-shadow: none; }
 
 /* ---- 예시 목록 (제목/도입부/소제목 패턴) ---- */
 .rs-example-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -123,6 +131,23 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   .rs-label { width: 100%; padding-top: 0; }
   .rs-side { flex-direction: row; width: 100%; justify-content: flex-start; }
 }
+
+/* ---- 재학습/이전 학습 되돌리기 버튼 비활성 상태(네이티브 disabled 대신 클래스로 통일 스타일) ---- */
+.btn[disabled] { opacity: .4; pointer-events: none; cursor: default; }
+
+/* ---- 소재-키워드 맵 등에서 재사용하는 2 ~ 3단 선택 스위치(예: 헤더 정보 없음/사진/HTML, 이미지 생성 여부) ---- */
+.rs-mini-switch { display: inline-flex; background: var(--inset); border-radius: 9px; padding: 3px; gap: 2px; }
+.rs-mini-switch button { border: 0; background: transparent; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink-500); padding: 6px 10px; border-radius: 7px; cursor: pointer; }
+.rs-mini-switch button.is-on { background: var(--white); color: var(--blue); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* ---- 헤더 정보 사진 선택(매장 자료관리 연동 자리) ---- */
+.rs-photo-pick { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px; border: 1px solid var(--card-border); border-radius: var(--radius-tile); }
+.rs-photo-pick-thumb { width: 44px; height: 44px; border-radius: 8px; background: var(--inset); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.rs-photo-pick-name { font-size: 13px; font-weight: 600; color: var(--ink-700); flex: 1; min-width: 0; }
+
+/* ---- 이미지 생성 조건 체크형 칩 ---- */
+.rs-cond-chip { cursor: pointer; }
+.rs-cond-chip.is-off { opacity: .4; }
 </style>
 </head>
 <body data-screen="UW_ST_06">
@@ -135,13 +160,18 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
     <nav class="uw-menu">
       <a href="06_우리매장정보.html" class="is-active">🏪 우리 매장 정보</a>
       <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">테</div>
@@ -212,7 +242,12 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
           <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">AI가 우리 매장을 분석해 정리한 글쓰기 규칙이에요. 콘텐츠를 만들 때마다 이 규칙을 따라요.</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-reset">초기화</button>
+          <!-- 2026-09-03: '초기화'(최초 분석값으로 되돌리기)를 '재학습'(최신 콘텐츠로 다시 분석)으로 교체.
+               직접 고친(사장님/대행사 수정) 필드는 재학습 대상에서 제외 — 아직 AI 분석 상태(b-purple 배지)인
+               필드만 다시 분석함. AI학습현황(15)의 '다시 학습하기'와는 다른 개념 — 거긴 콘텐츠 수집+학습을
+               같이 하고, 여긴 이미 수집된 콘텐츠로 전략값만 다시 뽑아냄(수집 없음). 전 탭 공통(헤더에 고정). -->
+          <button class="btn btn-ghost btn-sm" id="btn-relearn" data-action="open-modal" data-modal="modal-relearn">↻ 재학습</button>
+          <button class="btn btn-ghost btn-sm" id="btn-relearn-undo" data-action="relearn-undo">이전 학습으로 되돌리기</button>
           <button class="btn btn-primary btn-sm" data-action="toast" data-toast-msg="저장했어요. 다음 콘텐츠부터 바로 반영돼요">저장</button>
         </div>
       </div>
@@ -262,18 +297,34 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             </div>
           </div>
 
+          <!-- 2026-09-03: 짧은 명사 나열이라 keywords/hashtags와 같은 칩 형태로 전환 -->
           <div class="rs-row">
             <div class="rs-label">대표 시술</div>
-            <div class="rs-value"><input class="rs-edit" value="울쎄라 · 슈링크 · FX 인모드 · 리팟레이저 · 흑자 제거"></div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="treatments"></div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="treatments" placeholder="시술 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="treatments" style="height:36px">추가</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">클릭해서 비활성화하거나, 아래 입력창으로 추가해요.</div>
+            </div>
             <div class="rs-side">
-              <span class="uw-badge b-purple">AI 분석</span>
+              <span class="uw-badge" data-field-badge="treatments"></span>
               <span class="uw-score-why" data-action="open-modal" data-modal="modal-evidence">근거</span>
             </div>
           </div>
 
+          <!-- 2026-09-03: 항목당 문구가 길어서 짧은 칩보다 제목 패턴과 같은 예시목록형으로 전환 -->
           <div class="rs-row">
             <div class="rs-label">주 손님</div>
-            <div class="rs-value"><textarea class="rs-edit" rows="1">리프팅·탄력에 관심 있는 분 · 장비 선택을 고민하는 분 · 흑자 등 색소 치료를 알아보는 분</textarea></div>
+            <div class="rs-value">
+              <div class="rs-example-list">
+                <div class="rs-example-item"><span class="rs-example-num">유형 1</span><textarea class="rs-example-text" rows="1">리프팅·탄력에 관심 있는 분</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">유형 2</span><textarea class="rs-example-text" rows="1">장비 선택을 고민하는 분</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">유형 3</span><textarea class="rs-example-text" rows="1">흑자 등 색소 치료를 알아보는 분</textarea><span class="rs-example-del" data-del>✕</span></div>
+              </div>
+              <span class="rs-example-add" data-add-ex>+ 유형 추가</span>
+            </div>
             <div class="rs-side">
               <span class="uw-badge b-purple">AI 분석</span>
               <span class="uw-score-why" data-action="open-modal" data-modal="modal-evidence">근거</span>
@@ -293,20 +344,30 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="rs-side"><span class="uw-badge" data-field-badge="keywords"></span></div>
           </div>
 
+          <!-- 2026-09-03: 짧은 명사 나열이라 keywords/hashtags와 같은 칩 형태로 전환 -->
           <div class="rs-row">
             <div class="rs-label">리뷰에서 본 강점</div>
-            <div class="rs-value"><textarea class="rs-edit" rows="1">원장님 설명이 자세함 · 사후관리가 꼼꼼함 · 친절함 · 흑자 제거 결과 만족 · 깔끔한 시설</textarea></div>
+            <div class="rs-value">
+              <div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="reviewStrengths"></div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input data-chip-add-input="reviewStrengths" placeholder="항목 추가" style="flex:1;height:36px;border:1px solid var(--input-border);border-radius:var(--radius-tile);padding:0 10px;font-family:inherit;font-size:13px;outline:none">
+                <button class="btn btn-secondary btn-sm" data-chip-add-btn="reviewStrengths" style="height:36px">추가</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">클릭해서 비활성화하거나, 아래 입력창으로 추가해요.</div>
+            </div>
             <div class="rs-side">
-              <span class="uw-badge b-purple">AI 분석</span>
+              <span class="uw-badge" data-field-badge="reviewStrengths"></span>
               <span class="uw-score-why" data-action="open-modal" data-modal="modal-evidence">근거</span>
             </div>
           </div>
 
+          <!-- 2026-09-03: 분석 결과를 보는 항목이라 수정 불가로 변경(readonly). 구조는 그대로 두고
+               편집만 막음 — 값이 실제로 생기면 강점처럼 칩/목록형으로 다시 검토 가능 -->
           <div class="rs-row">
             <div class="rs-label">리뷰에서 본 약점</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1" style="font-weight:500;color:var(--ink-600)">지금까지의 리뷰로는 뚜렷한 약점을 찾지 못했어요.</textarea>
-              <div class="rs-help">약점은 글에 직접 쓰지 않아요. 보완 전략을 세울 때만 참고해요.</div>
+              <textarea class="rs-edit" rows="1" readonly style="font-weight:500;color:var(--ink-600)">지금까지의 리뷰로는 뚜렷한 약점을 찾지 못했어요.</textarea>
+              <div class="rs-help">약점은 글에 직접 쓰지 않아요. 보완 전략을 세울 때만 참고해요. 분석 결과라 직접 수정할 수 없어요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
@@ -343,6 +404,35 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
         <div class="uw-card" style="margin-top:8px;padding:8px 24px">
           <h3 class="uw-section-title" style="font-size:15px;padding:14px 0 4px">글의 뼈대</h3>
 
+          <!-- 2026-09-03 신설: 선택 항목(AI 분석 대상 아님, 기본 '사용 안 함'). 사진은 새로 업로드받지 않고
+               매장 자료관리(99)에 이미 등록된 사진 중에서 고름 — 사진 정본은 그쪽 하나로 유지 -->
+          <div class="rs-row">
+            <div class="rs-label">헤더 정보</div>
+            <div class="rs-value">
+              <div class="rs-mini-switch" data-header-type-switch>
+                <button type="button" data-header-type="none" class="is-on">사용 안 함</button>
+                <button type="button" data-header-type="photo">사진</button>
+                <button type="button" data-header-type="html">HTML</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">글 맨 위에 항상 붙는 헤더예요. 켜지 않으면 지금처럼 도입부 문장부터 바로 시작해요.</div>
+
+              <div data-header-photo-pick style="display:none">
+                <div class="rs-photo-pick">
+                  <span class="rs-photo-pick-thumb">🖼</span>
+                  <span class="rs-photo-pick-name">매장 전경.jpg</span>
+                  <a href="99_매장자료관리.html" class="btn btn-secondary btn-sm" style="text-decoration:none;flex-shrink:0">사진 바꾸기</a>
+                </div>
+                <div class="rs-help">매장 자료관리에 이미 등록된 사진 중에서 골라요. 새 사진은 그쪽에서 먼저 올려주세요.</div>
+              </div>
+
+              <div data-header-html style="display:none">
+                <textarea class="rs-edit" rows="2" placeholder="헤더에 넣을 HTML을 입력하세요"></textarea>
+                <div class="rs-help">배너·목차 위젯처럼 직접 만든 HTML을 그대로 글 맨 위에 넣어요.</div>
+              </div>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-gray">선택</span></div>
+          </div>
+
           <div class="rs-row">
             <div class="rs-label">글의 목적</div>
             <div class="rs-value">
@@ -353,11 +443,21 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
 
+          <!-- 2026-09-03: 제목 패턴(예시 추가/삭제 가능한 rs-example-list)과 같은 형식으로 변경.
+               예시 num 라벨은 이 화면의 기존 예시 패턴과 동일하게 고정 텍스트(소재명)로 두고, 수정은
+               해당 소재를 지우고 새로 추가하는 방식(제목/도입부/소제목 패턴과 동일한 한계) -->
           <div class="rs-row">
             <div class="rs-label">소재–키워드 맵</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">울쎄라·슈링크·인모드·리팟레이저 중심의 시술 설명 글을 기본으로, 가격·효과·원리·의료진 경력을 함께 배치해요</textarea>
-              <div class="rs-suggest"><span class="uw-badge b-blue">AI 제안</span>소재마다 제목 키워드·본문 보조 키워드·해시태그를 나눠서 관리하면 같은 말 반복을 줄일 수 있어요.</div>
+              <textarea class="rs-edit" rows="1">소재마다 자주 쓰는 키워드를 묶어서 관리해요. 글을 만들 때 이 조합을 기본 글감으로 써요</textarea>
+              <div class="rs-example-list">
+                <div class="rs-example-item"><span class="rs-example-num">울쎄라</span><textarea class="rs-example-text" rows="1">가격, 효과, 원리, 정품 인증</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">슈링크</span><textarea class="rs-example-text" rows="1">인모드와 차이, 통증, 다운타임</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">인모드</span><textarea class="rs-example-text" rows="1">FX 부위별 효과, 시술 횟수, 유지 기간</textarea><span class="rs-example-del" data-del>✕</span></div>
+                <div class="rs-example-item"><span class="rs-example-num">리팟레이저</span><textarea class="rs-example-text" rows="1">흑자 제거, 재발 여부, 회복 기간</textarea><span class="rs-example-del" data-del>✕</span></div>
+              </div>
+              <span class="rs-example-add" data-add-ex>+ 예시 추가</span>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-blue">AI 제안</span>소재마다 제목 키워드·본문 보조 키워드·해시태그를 나눠서 관리하면 같은 말 반복을 줄일 수 있어요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
@@ -441,10 +541,16 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
 
+          <!-- 2026-09-03: 길이 구간을 선택형(짧게/보통/길게)으로 추가, 세부 수치는 기존처럼 텍스트로 병기 -->
           <div class="rs-row">
             <div class="rs-label">글 길이</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">본문 700–1,000자 · 소제목 3–5개 · 마무리 권유 포함</textarea>
+              <div class="rs-mini-switch" data-mini="length">
+                <button type="button" data-val="short">짧게</button>
+                <button type="button" data-val="mid" class="is-on">보통</button>
+                <button type="button" data-val="long">길게</button>
+              </div>
+              <textarea class="rs-edit" rows="1" style="margin-top:8px">본문 700–1,000자 · 소제목 3–5개 · 마무리 권유 포함</textarea>
               <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>예약 전 확인 정보를 담기에 알맞은 길이예요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
@@ -476,20 +582,38 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="rs-side"><span class="uw-badge" data-field-badge="hashtags"></span></div>
           </div>
 
+          <!-- 2026-09-03: '최소로만 써요'처럼 이미 강도어로 표현되던 값이라 3단계 선택형으로 전환 -->
           <div class="rs-row">
             <div class="rs-label">기호·이모지</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">본문에서 쓰지 않아요. 정보 구분용 기호도 최소로만 써요</textarea>
-              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>신뢰가 중요한 업종이라 장식 표현은 아끼는 편이 좋아요.</div>
+              <div class="rs-mini-switch" data-mini="symbol">
+                <button type="button" data-val="none">안 씀</button>
+                <button type="button" data-val="minimal" class="is-on">최소로</button>
+                <button type="button" data-val="active">적극적으로</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px" data-mini-help
+                   data-help-none="본문에서 기호·이모지를 전혀 쓰지 않아요."
+                   data-help-minimal="정보 구분용 기호만 최소로 써요."
+                   data-help-active="이모지·기호를 적극적으로 써서 친근한 느낌을 줘요.">정보 구분용 기호만 최소로 써요.</div>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-gray">현행 유지</span>신뢰가 중요한 업종이라 장식 표현은 아끼는 편이 좋아요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
 
+          <!-- 2026-09-03: 문구가 이미 '중간'이라는 강도어로 시작하던 값이라 3단계 선택형으로 전환 -->
           <div class="rs-row">
             <div class="rs-label">트렌드 반영</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">중간 — 시즌·기념일 소재만 골라 반영해요</textarea>
-              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>매장과 관계없는 유행어는 쓰지 않아요.</div>
+              <div class="rs-mini-switch" data-mini="trend">
+                <button type="button" data-val="low">낮음</button>
+                <button type="button" data-val="mid" class="is-on">중간</button>
+                <button type="button" data-val="high">높음</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px" data-mini-help
+                   data-help-low="매장과 관계없는 유행어나 트렌드는 거의 반영하지 않아요."
+                   data-help-mid="시즌·기념일 소재만 골라 반영해요."
+                   data-help-high="요즘 화제인 소재나 밈도 적극적으로 반영해요.">시즌·기념일 소재만 골라 반영해요.</div>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-gray">현행 유지</span>매장과 관계없는 유행어는 쓰지 않아요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
@@ -598,6 +722,28 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
 
+          <!-- 2026-09-03 신설: 완전 생성 이미지 허용 여부 + 조건. 사장님 페이지(L1/L2 owner-simple-card)에도
+               동일하게 노출 — 대행사만 정할 일이 아니라 사장님도 원하는지 아닌지 판단할 문제라서.
+               조건은 사장님이 이해하기 쉬운 수준만 노출하고, 인포그래픽 수치 금지 등 민감 규칙은
+               기존처럼(파일 하단 '백엔드 전용' 목록) 비노출 유지 -->
+          <div class="rs-row">
+            <div class="rs-label">이미지 생성 여부</div>
+            <div class="rs-value">
+              <div class="rs-mini-switch" data-imggen-switch>
+                <button type="button" data-imggen="off">실사진만 사용</button>
+                <button type="button" data-imggen="on" class="is-on">필요하면 생성</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">아래 조건에 해당할 때만 AI가 새 이미지를 만들어요. 조건에 없으면 실사진만 써요.</div>
+              <div data-imggen-conds style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                <span class="uw-badge b-blue rs-cond-chip" data-imggen-cond="noPhoto">어울리는 실사진이 없을 때</span>
+                <span class="uw-badge b-blue rs-cond-chip" data-imggen-cond="banner">계절·이벤트 배너가 필요할 때</span>
+                <span class="uw-badge b-blue rs-cond-chip" data-imggen-cond="diagram">설명용 그림(다이어그램·일러스트)이 필요할 때</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="margin-top:10px" data-action="open-modal" data-modal="modal-image-preview">생성 미리보기</button>
+            </div>
+            <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
+          </div>
+
           <div class="rs-row">
             <div class="rs-label">허용 편집 항목</div>
             <div class="rs-value">
@@ -625,20 +771,40 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="rs-side"><span class="uw-badge b-red">필수</span></div>
           </div>
 
+          <!-- 2026-09-03: 사용 안 함/사용함 2택이라 선택형으로 전환. 사용함일 때만 세부 안내 노출 -->
           <div class="rs-row">
             <div class="rs-label">텍스트 오버레이</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">제목 텍스트는 넣지 않고, 이미지는 심플하게 그대로 사용해요</textarea>
-              <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>정보 전달형 글이라 이미지에 문구를 얹지 않는 편이 깔끔해요.</div>
+              <div class="rs-mini-switch" data-mini="overlay">
+                <button type="button" data-val="off" class="is-on">사용 안 함</button>
+                <button type="button" data-val="on">사용함</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px" data-mini-help
+                   data-help-off="제목 텍스트는 넣지 않고, 이미지는 심플하게 그대로 사용해요."
+                   data-help-on="이미지 위에 제목·핵심 문구를 얹어요. 문구 스타일은 발행할 때마다 글 제목에 맞춰 정해요.">제목 텍스트는 넣지 않고, 이미지는 심플하게 그대로 사용해요.</div>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-gray">현행 유지</span>정보 전달형 글이라 이미지에 문구를 얹지 않는 편이 깔끔해요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
 
+          <!-- 2026-09-03: 사용 여부 + 위치(4코너)의 조합형이라 선택형으로 전환 -->
           <div class="rs-row">
             <div class="rs-label">로고·워터마크</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">이미지 우측 하단에 매장 로고를 작게 삽입해요</textarea>
-              <div class="rs-suggest"><span class="uw-badge b-blue">AI 제안</span>다른 채널에 무단으로 퍼가는 걸 줄이는 데 도움이 돼요.</div>
+              <div class="rs-mini-switch" data-mini="watermark">
+                <button type="button" data-val="off">사용 안 함</button>
+                <button type="button" data-val="on" class="is-on">사용함</button>
+              </div>
+              <div data-mini-sub="watermark" style="margin-top:8px;display:flex;align-items:center;gap:8px">
+                <span style="font-size:12px;font-weight:700;color:var(--ink-500)">위치</span>
+                <select class="uw-select" id="watermark-position" style="height:32px;border:1px solid var(--input-border);border-radius:8px;padding:0 8px;font-family:inherit;font-size:13px;font-weight:600">
+                  <option value="br" selected>우측 하단</option>
+                  <option value="bl">좌측 하단</option>
+                  <option value="tr">우측 상단</option>
+                  <option value="tl">좌측 상단</option>
+                </select>
+              </div>
+              <div class="rs-suggest" style="margin-top:8px"><span class="uw-badge b-blue">AI 제안</span>다른 채널에 무단으로 퍼가는 걸 줄이는 데 도움이 돼요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
@@ -652,29 +818,67 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
 
+          <!-- 2026-09-03: '승인 필요 여부' 온/오프 스위치로 전환. 이 업종(의료)은 프리셋이 항상 켜야
+               하는 값으로 지정해서 잠금 — 프리셋이 강제하지 않는 업종이면 자유롭게 끄고 켤 수 있음 -->
           <div class="rs-row">
             <div class="rs-label">검수 강도</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">생성 이미지는 발행 전 사장님 승인이 필요해요</textarea>
-              <div class="rs-help">업종 프리셋으로 강제되는 값이에요. 승인 단계를 추가하는 방향(강화)은 자유롭지만, 완화(승인 생략)는 막혀 있어요.</div>
+              <div class="rs-mini-switch is-locked" data-mini="approval" style="opacity:.5;pointer-events:none">
+                <button type="button" data-val="off">승인 없이 자동 발행</button>
+                <button type="button" data-val="on" class="is-on">🔒 발행 전 사장님 승인 필요</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px">이 업종(의료·시술)은 프리셋이 항상 켜야 하는 값으로 지정해서, 매장이 임의로 끌 수 없어요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-orange">업종 프리셋</span></div>
           </div>
 
+          <!-- 2026-09-03: 순서 자체가 값이라 1/2/3순위 드롭다운으로 전환. 같은 항목을 중복 선택하면
+               자동으로 자리를 맞바꿈(altPriority 로직 참조) -->
           <div class="rs-row">
             <div class="rs-label">alt텍스트·파일명</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">메뉴명 → 매장명 → 지역명 순서로 키워드를 자동으로 넣어요</textarea>
-              <div class="rs-help">검색 노출에 쓰이는 이미지 메타데이터예요. 우선순위를 바꾸고 싶으면 수정해 주세요.</div>
+              <div style="display:flex;gap:14px;flex-wrap:wrap" data-alt-priority>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:12px;font-weight:700;color:var(--ink-500)">1순위</span>
+                  <select class="uw-select" data-alt-rank="1" style="height:32px;border:1px solid var(--input-border);border-radius:8px;padding:0 8px;font-family:inherit;font-size:13px;font-weight:600">
+                    <option value="menu" selected>메뉴명</option>
+                    <option value="store">매장명</option>
+                    <option value="region">지역명</option>
+                  </select>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:12px;font-weight:700;color:var(--ink-500)">2순위</span>
+                  <select class="uw-select" data-alt-rank="2" style="height:32px;border:1px solid var(--input-border);border-radius:8px;padding:0 8px;font-family:inherit;font-size:13px;font-weight:600">
+                    <option value="menu">메뉴명</option>
+                    <option value="store" selected>매장명</option>
+                    <option value="region">지역명</option>
+                  </select>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:12px;font-weight:700;color:var(--ink-500)">3순위</span>
+                  <select class="uw-select" data-alt-rank="3" style="height:32px;border:1px solid var(--input-border);border-radius:8px;padding:0 8px;font-family:inherit;font-size:13px;font-weight:600">
+                    <option value="menu">메뉴명</option>
+                    <option value="store">매장명</option>
+                    <option value="region" selected>지역명</option>
+                  </select>
+                </div>
+              </div>
+              <div class="rs-help" style="margin-top:8px">검색 노출에 쓰이는 이미지 메타데이터예요. 같은 항목을 두 번 고르면 서로 자리를 바꿔요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
 
+          <!-- 2026-09-03: '계속 편입 vs 고정' 2택이라 선택형으로 전환 -->
           <div class="rs-row">
             <div class="rs-label">레퍼런스 갱신</div>
             <div class="rs-value">
-              <textarea class="rs-edit" rows="1">새로 발행한 글의 이미지를 스타일 레퍼런스에 계속 편입해요</textarea>
-              <div class="rs-help">스타일이 최근 트렌드를 계속 따라가요. 지금 스타일을 고정하고 싶으면 "초기 레퍼런스 고정"으로 바꿔 주세요.</div>
+              <div class="rs-mini-switch" data-mini="refUpdate">
+                <button type="button" data-val="continue" class="is-on">계속 편입</button>
+                <button type="button" data-val="fixed">초기 레퍼런스 고정</button>
+              </div>
+              <div class="rs-help" style="margin-top:8px" data-mini-help
+                   data-help-continue="새로 발행한 글의 이미지를 스타일 레퍼런스에 계속 편입해요. 스타일이 최근 트렌드를 계속 따라가요."
+                   data-help-fixed="지금 스타일 레퍼런스를 고정해요. 새로 발행한 글의 이미지는 스타일에 영향을 주지 않아요.">새로 발행한 글의 이미지를 스타일 레퍼런스에 계속 편입해요. 스타일이 최근 트렌드를 계속 따라가요.</div>
             </div>
             <div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div>
           </div>
@@ -682,6 +886,16 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
           <div class="rs-row">
             <div class="rs-label">본문 이미지 배치</div>
             <div class="rs-value">
+              <!-- 2026-09-03 신설: 갯수를 직접 고를 수 있게. 기본값은 AI가 분석한 갯수(3장) -->
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <span style="font-size:12px;font-weight:700;color:var(--ink-500)">이미지 갯수</span>
+                <select class="uw-select" id="body-img-count" style="height:32px;border:1px solid var(--input-border);border-radius:8px;padding:0 8px;font-family:inherit;font-size:13px;font-weight:600">
+                  <option value="2">2장</option>
+                  <option value="3" selected>3장(AI 분석값)</option>
+                  <option value="4">4장</option>
+                  <option value="5">5장</option>
+                </select>
+              </div>
               <textarea class="rs-edit" rows="1">도입부 1장, 본문 중간 1~2장 — 글 하나당 3장 내외</textarea>
               <div class="rs-suggest"><span class="uw-badge b-gray">현행 유지</span>글 길이(700~1,000자)에 비해 적당한 이미지 수예요. 검색노출 최소 기준(글자 300자당 1장 이상)도 충족해요. 문단 간 간격도 한쪽으로 몰리지 않게 배치해요.</div>
             </div>
@@ -724,14 +938,14 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
   </div>
 </div>
 
-<!-- ========== 모달: 초기화 확인 ========== -->
-<div class="uw-modal-backdrop" id="modal-reset">
+<!-- ========== 모달: 재학습 확인 ========== -->
+<div class="uw-modal-backdrop" id="modal-relearn">
   <div class="uw-modal">
-    <div class="uw-modal-title">룰셋을 처음으로 되돌릴까요?</div>
-    <div class="uw-modal-body">직접 고친 내용이 모두 사라지고, AI가 처음 분석한 값으로 돌아가요. 되돌린 뒤에는 취소할 수 없어요.</div>
+    <div class="uw-modal-title">지금 다시 학습할까요?</div>
+    <div class="uw-modal-body">사장님·대행사가 직접 고친 값은 그대로 두고, 아직 AI 분석 상태인 값만 최신 콘텐츠 기준으로 다시 분석해요.</div>
     <div class="uw-modal-actions">
-      <button class="btn btn-ghost btn-sm" data-action="close-modal">그대로 두기</button>
-      <button class="btn btn-primary btn-sm" data-action="confirm-reset">되돌리기</button>
+      <button class="btn btn-ghost btn-sm" data-action="close-modal">취소</button>
+      <button class="btn btn-primary btn-sm" data-action="confirm-relearn">재학습 시작</button>
     </div>
   </div>
 </div>
@@ -742,6 +956,22 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <div class="uw-modal-title">왜 이렇게 분석했나요?</div>
     <div class="uw-modal-body" id="modal-evidence-body">
       네이버 Place 소개글과 손님 리뷰에서 '대표원장', '직접 상담', '꼼꼼함'이라는 말이 가장 자주 나왔어요. 기존 블로그 글의 제목과 본문 구조도 함께 참고했어요.
+      <div style="margin-top:10px;font-size:12px;font-weight:600;color:var(--ink-500)">마지막 학습 : <span id="modal-evidence-date">2026.7.18</span></div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-primary btn-sm" data-action="close-modal">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달: 생성 이미지 미리보기 ========== -->
+<div class="uw-modal-backdrop" id="modal-image-preview">
+  <div class="uw-modal">
+    <div class="uw-modal-title">생성 이미지 미리보기</div>
+    <div class="uw-modal-body">
+      <div style="font-size:12px;font-weight:600;color:var(--ink-500);margin-bottom:10px">지금 설정(허용 편집 항목 · 브랜드 아이덴티티 규칙 · 생성 조건) 기준으로 만든 예시예요.</div>
+      <div style="width:100%;aspect-ratio:4/3;border-radius:var(--radius-tile);background:linear-gradient(135deg,#fff3e0,#ffe0b2 60%,#ffcc80);display:flex;align-items:center;justify-content:center;color:#e65100;font-size:13px;font-weight:700">🖼 생성 이미지 예시(프로토타입 목업)</div>
+      <div class="rs-help" style="margin-top:8px">실제 생성 결과가 아니라 지금 룰셋대로 만들면 대략 이런 톤·구도가 나온다는 예시예요.</div>
     </div>
     <div class="uw-modal-actions">
       <button class="btn btn-primary btn-sm" data-action="close-modal">확인</button>
@@ -773,6 +1003,17 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     ownerFieldRow("해시태그", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="hashtags"></div>' + ownerAddInput("hashtags", "해시태그 추가"), "hashtags") +
     ownerFieldRow("쓰면 안 되는 말", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="avoidWords"></div>' + ownerAddInput("avoidWords", "문구 추가"), "avoidWords") +
     ownerFieldRow("피할 이미지 유형", '<div style="display:flex;gap:6px;flex-wrap:wrap" data-chip-list="avoidImages"></div>' + ownerAddInput("avoidImages", "항목 추가"), "avoidImages") +
+    /* 2026-09-03: 이미지 생성 여부는 대행사만 정할 일이 아니라 사장님도 원하는지 판단할 문제라 사장님 페이지에도 동일 노출 */
+    '<div class="rs-row"><div class="rs-label">이미지 생성 여부</div><div class="rs-value">' +
+      '<div class="rs-mini-switch" data-imggen-switch><button type="button" data-imggen="off">실사진만 사용</button><button type="button" data-imggen="on" class="is-on">필요하면 생성</button></div>' +
+      '<div class="rs-help" style="margin-top:8px">아래 조건에 해당할 때만 AI가 새 이미지를 만들어요. 조건에 없으면 실사진만 써요.</div>' +
+      '<div data-imggen-conds style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+        '<span class="uw-badge b-blue rs-cond-chip" data-imggen-cond="noPhoto">어울리는 실사진이 없을 때</span>' +
+        '<span class="uw-badge b-blue rs-cond-chip" data-imggen-cond="banner">계절·이벤트 배너가 필요할 때</span>' +
+        '<span class="uw-badge b-blue rs-cond-chip" data-imggen-cond="diagram">설명용 그림(다이어그램·일러스트)이 필요할 때</span>' +
+      '</div>' +
+      '<button class="btn btn-secondary btn-sm" style="margin-top:10px" data-action="open-modal" data-modal="modal-image-preview">생성 미리보기</button>' +
+    '</div><div class="rs-side"><span class="uw-badge b-purple">AI 분석</span></div></div>' +
     '<div class="rs-row"><div class="rs-label">허용 편집 항목</div><div class="rs-value">' +
       '<div style="font-size:11px;font-weight:700;color:var(--ink-400)">업종 프리셋에 따라 다름</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" data-edit-tier="preset"></div>' +
@@ -780,8 +1021,10 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" data-edit-tier="locked"></div>' +
       '<div class="rs-help" style="margin-top:8px">🔒 표시된 항목은 이 업종에서 꺼져 있고 임의로 켤 수 없어요. 자세한 설정은 담당 대행사에게 문의해 주세요.</div>' +
     '</div><div class="rs-side"><span class="uw-badge b-orange">업종 프리셋</span></div></div>' +
-    '<div class="rs-row"><div class="rs-label">검수 강도</div><div class="rs-value">생성 이미지는 발행 전 사장님 승인이 필요해요' +
-      '<div class="rs-help">업종 프리셋으로 정해진 값이에요. 승인 단계는 대행사와 상의해 강화할 수 있어요.</div>' +
+    /* 2026-09-03: L3 탭3과 같은 잠금 스위치 모양으로 통일(둘 다 읽기전용이지만 시각적으로 일치) */
+    '<div class="rs-row"><div class="rs-label">검수 강도</div><div class="rs-value">' +
+      '<div class="rs-mini-switch is-locked" style="opacity:.5;pointer-events:none"><button type="button">승인 없이 자동 발행</button><button type="button" class="is-on">🔒 발행 전 사장님 승인 필요</button></div>' +
+      '<div class="rs-help" style="margin-top:8px">이 업종은 프리셋이 항상 켜야 하는 값으로 지정해서, 매장이 임의로 끌 수 없어요.</div>' +
     '</div><div class="rs-side"><span class="uw-badge b-orange">업종 프리셋</span></div></div>';
   document.querySelectorAll(".owner-simple-card").forEach(function (el) { el.innerHTML = OWNER_ROW_HTML; });
 
@@ -794,9 +1037,12 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     keywords: ["슈링크 효과", "울쎄라 600샷 가격", "울쎄라 정품 인증", "일광흑자", "리팟레이저", "흑자 제거", "FX 인모드"],
     hashtags: ["#광화문피부과", "#종로피부과", "#울쎄라", "#리팟레이저"],
     avoidWords: ["부작용 없음", "효과 보장", "100% 효과", "완전 제거", "무조건 개선"],
-    avoidImages: ["과장된 비포애프터 합성", "출처 불명 스톡컷", "타 병원 명패·간판 노출"]
+    avoidImages: ["과장된 비포애프터 합성", "출처 불명 스톡컷", "타 병원 명패·간판 노출"],
+    /* 2026-09-03: 대표 시술 / 리뷰에서 본 강점 — 짧은 명사 나열이라 칩으로 전환 */
+    treatments: ["울쎄라", "슈링크", "FX 인모드", "리팟레이저", "흑자 제거"],
+    reviewStrengths: ["원장님 설명이 자세함", "사후관리가 꼼꼼함", "친절함", "흑자 제거 결과 만족", "깔끔한 시설"]
   };
-  var FIELD_SRC = { tone: "ai", strengths: "ai", keywords: "ai", hashtags: "ai", avoidWords: "ai", avoidImages: "ai" };
+  var FIELD_SRC = { tone: "ai", strengths: "ai", keywords: "ai", hashtags: "ai", avoidWords: "ai", avoidImages: "ai", treatments: "ai", reviewStrengths: "ai" };
   var DANGER_FIELDS = { avoidWords: true, avoidImages: true };
 
   function updateFieldBadge(key) {
@@ -963,7 +1209,7 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     });
   });
 
-  /* 긴 본문 접기/펼치기 + 초기화 확인 */
+  /* 긴 본문 접기/펼치기 + 재학습 확인 */
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-clamp-toggle]");
     if (t) {
@@ -975,11 +1221,180 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
       return;
     }
     var a = e.target.closest("[data-action]");
-    if (a && a.getAttribute("data-action") === "confirm-reset") {
+    if (!a) return;
+    var act = a.getAttribute("data-action");
+    if (act === "confirm-relearn") {
       var b = a.closest(".uw-modal-backdrop");
       if (b) b.classList.remove("is-open");
-      if (window.UW && window.UW.toast) window.UW.toast("AI가 처음 분석한 값으로 되돌렸어요");
+      doRelearn();
+    } else if (act === "relearn-undo") {
+      undoRelearn();
     }
+  });
+
+  /* ---- 재학습 / 이전 학습으로 되돌리기 (헤더, 전 탭 공통) ----
+     2026-09-03: 사장님·대행사가 직접 고친(FIELD_SRC !== "ai") 필드는 재학습 대상에서 제외.
+     AI학습현황(15)의 '다시 학습하기'와 분리된 개념 — 거긴 콘텐츠 수집+학습, 여긴 이미 수집된
+     콘텐츠로 전략값만 재분석(수집 없음). 프로토타입 한계: 자유서술형(rs-edit) AI 분석 필드는
+     텍스트 자체를 새로 쓰지 않고 학습일만 갱신함 — 실제로 값이 바뀌는 건 칩형 필드(말투·강점·
+     키워드·해시태그·금지어·피할이미지) 6종뿐. 실서비스에서는 자유서술형도 새 텍스트로 갱신됨.
+
+     '이전 학습으로 되돌리기'는 "이 세션에서 재학습을 눌러야만 되돌릴 게 생기는" 세션 스코프
+     버튼이 아니다 — '되돌리기'는 항상 "마지막 학습 전" 상태로 가는 거고, 지금 보이는 값도
+     이미 과거 어느 시점의 학습 결과이므로 페이지를 처음 열었을 때부터 되돌릴 대상이 존재한다.
+     그래서 PREV_LEARN_SNAPSHOT(그 이전 학습 시점 값)을 초기값으로 깔아두고 버튼도 처음부터
+     활성 상태로 둔다. 재학습을 누르면 그 시점의 '현재값'이 새 되돌리기 대상으로 교체된다
+     (되돌리기는 항상 1단계 전까지만 — 여러 번 눌러도 그 이전으로 더 가지는 않음). */
+  var RELEARN_ADDITIONS = {
+    tone: "친근하지만 전문적인",
+    strengths: "리뷰 500건 이상 축적된 신뢰",
+    keywords: "여름 슈링크 이벤트",
+    hashtags: "#피부과추천",
+    avoidWords: "즉시 효과",
+    avoidImages: "과도한 필터 보정 사진"
+  };
+  var PREV_LEARN_SNAPSHOT = {
+    tone: ["차분하고 설명이 자세한", "의료진 관점"],
+    strengths: ["대표원장 직접 상담·직접 시술", "1:1 개인 맞춤 디자인", "상담실장 없는 프라이빗 진료"],
+    keywords: ["슈링크 효과", "울쎄라 600샷 가격", "일광흑자", "리팟레이저"],
+    hashtags: ["#광화문피부과", "#종로피부과"],
+    avoidWords: ["부작용 없음", "효과 보장", "100% 효과"],
+    avoidImages: ["과장된 비포애프터 합성", "출처 불명 스톡컷"]
+  };
+  var lastLearnDate = "2026.7.18";
+  var relearnSnapshot = { data: PREV_LEARN_SNAPSHOT, date: "2026.7.4" };
+
+  function setEvidenceDate() {
+    var el = document.getElementById("modal-evidence-date");
+    if (el) el.textContent = lastLearnDate;
+  }
+  setEvidenceDate();
+
+  function doRelearn() {
+    relearnSnapshot = { data: JSON.parse(JSON.stringify(FIELD_DATA)), date: lastLearnDate };
+    var changed = 0;
+    Object.keys(RELEARN_ADDITIONS).forEach(function (key) {
+      if (FIELD_SRC[key] !== "ai") return;
+      var v = RELEARN_ADDITIONS[key];
+      if (FIELD_DATA[key].indexOf(v) === -1) { FIELD_DATA[key].push(v); changed++; }
+      renderChipField(key);
+    });
+    lastLearnDate = "2026.9.3";
+    setEvidenceDate();
+    document.getElementById("btn-relearn-undo").removeAttribute("disabled"); // 방금 되돌리기를 써서 비활성 상태였어도, 재학습으로 되돌릴 대상이 새로 생기므로 다시 활성화
+    if (window.UW && window.UW.toast) {
+      window.UW.toast(changed > 0
+        ? "재학습을 마쳤어요. 직접 고친 값은 그대로 두고 " + changed + "개 항목에 새 내용을 반영했어요."
+        : "재학습을 마쳤어요. 직접 고친 값을 뺀 나머지는 지금과 같은 결론이었어요.");
+    }
+  }
+  function undoRelearn() {
+    if (!relearnSnapshot) return;
+    var restore = relearnSnapshot;
+    FIELD_DATA = restore.data;
+    lastLearnDate = restore.date;
+    Object.keys(FIELD_DATA).forEach(function (key) { renderChipField(key); });
+    setEvidenceDate();
+    relearnSnapshot = null; // 1단계 되돌리기 — 되돌린 뒤에는 재학습을 다시 해야 되돌릴 대상이 또 생김
+    document.getElementById("btn-relearn-undo").setAttribute("disabled", "");
+    if (window.UW && window.UW.toast) window.UW.toast("이전 학습 결과로 되돌렸어요");
+  }
+
+  /* ---- 자유서술형 AI 분석 필드 편집 감지: 값을 고치면 배지가 'AI 분석'에서 '대행사/사장님 수정'으로
+     바뀌고, 재학습 대상에서 빠짐(칩형 필드의 markEdited/FIELD_SRC 체계를 배지 표시로만 확장) ---- */
+  function flipStaticAiBadge(el) {
+    var row = el.closest(".rs-row");
+    if (!row) return;
+    var badge = row.querySelector(".rs-side .uw-badge.b-purple");
+    if (!badge || badge.hasAttribute("data-field-badge")) return; // 칩형 필드는 기존 체계가 처리
+    var owner = !!row.closest(".owner-simple-card");
+    badge.classList.remove("b-purple");
+    badge.classList.add(owner ? "b-blue" : "b-orange"); // 칩형 필드 배지 색 규칙과 동일(사장님=파랑, 대행사=주황)
+    badge.textContent = owner ? "사장님 수정" : "대행사 수정";
+  }
+  document.addEventListener("input", function (e) {
+    var el = e.target.closest(".rs-edit, .rs-example-text");
+    if (el) flipStaticAiBadge(el);
+  });
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "body-img-count") flipStaticAiBadge(e.target);
+  });
+
+  /* ---- 헤더 정보 없음/사진/HTML 스위치 ---- */
+  document.querySelectorAll("[data-header-type-switch]").forEach(function (sw) {
+    sw.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-header-type]");
+      if (!b) return;
+      var type = b.getAttribute("data-header-type");
+      sw.querySelectorAll("button").forEach(function (btn) { btn.classList.toggle("is-on", btn === b); });
+      var row = sw.closest(".rs-row");
+      row.querySelector("[data-header-photo-pick]").style.display = type === "photo" ? "" : "none";
+      row.querySelector("[data-header-html]").style.display = type === "html" ? "" : "none";
+    });
+  });
+
+  /* ---- 이미지 생성 여부 스위치 + 조건 칩 (L3 탭 + 사장님 페이지 공통) ---- */
+  document.addEventListener("click", function (e) {
+    var sw = e.target.closest("[data-imggen-switch] [data-imggen]");
+    if (sw) {
+      if (isReadonly(sw)) return;
+      var on = sw.getAttribute("data-imggen") === "on";
+      var wrap = sw.closest("[data-imggen-switch]");
+      wrap.querySelectorAll("button").forEach(function (btn) { btn.classList.toggle("is-on", btn === sw); });
+      var row = sw.closest(".rs-row");
+      var conds = row ? row.querySelector("[data-imggen-conds]") : null;
+      if (conds) conds.style.display = on ? "" : "none";
+      return;
+    }
+    var cond = e.target.closest("[data-imggen-cond]");
+    if (cond) {
+      if (isReadonly(cond)) return;
+      cond.classList.toggle("is-off");
+      return;
+    }
+  });
+
+  /* ---- 범용 2~3단 선택형 스위치 (data-mini="키" + button[data-val]) ----
+     2026-09-03 신설: 레퍼런스 갱신/기호·이모지/트렌드 반영/텍스트 오버레이/로고·워터마크/글 길이/
+     검수 강도에서 재사용. 헤더 정보·이미지 생성 여부는 이미 자기 전용 로직이 있어 건드리지 않음.
+     - 같은 rs-value 안의 [data-mini-help]에 data-help-<값> 속성이 있으면 문구를 그 값으로 바꿔줌
+     - [data-mini-sub="<키>"]가 있으면 값이 "on"일 때만 보여줌(로고·워터마크의 위치 선택)
+     - is-locked(검수 강도처럼 업종 프리셋이 강제하는 값)는 클릭해도 반응하지 않음(pointer-events:none으로 이미 막혀 있지만 이중 방어) */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest('.rs-mini-switch[data-mini] button[data-val]');
+    if (!btn) return;
+    var wrap = btn.closest(".rs-mini-switch");
+    if (wrap.classList.contains("is-locked") || isReadonly(btn)) return;
+    var val = btn.getAttribute("data-val");
+    wrap.querySelectorAll("button").forEach(function (b) { b.classList.toggle("is-on", b === btn); });
+    flipStaticAiBadge(btn);
+
+    var value = wrap.closest(".rs-value");
+    if (value) {
+      var help = value.querySelector("[data-mini-help]");
+      if (help) {
+        var text = help.getAttribute("data-help-" + val);
+        if (text) help.textContent = text;
+      }
+    }
+    var key = wrap.getAttribute("data-mini");
+    var sub = value ? value.querySelector('[data-mini-sub="' + key + '"]') : null;
+    if (sub) sub.style.display = val === "on" ? "" : "none";
+  });
+
+  /* ---- alt텍스트·파일명 우선순위 드롭다운: 같은 항목을 중복 선택하면 서로 자리를 맞바꿈 ---- */
+  document.querySelectorAll("[data-alt-priority]").forEach(function (wrap) {
+    var selects = [].slice.call(wrap.querySelectorAll("[data-alt-rank]"));
+    selects.forEach(function (sel) { sel.setAttribute("data-last", sel.value); });
+    selects.forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var prevVal = sel.getAttribute("data-last");
+        var dup = selects.filter(function (s) { return s !== sel && s.value === sel.value; })[0];
+        if (dup) dup.value = prevVal;
+        selects.forEach(function (s) { s.setAttribute("data-last", s.value); });
+        flipStaticAiBadge(sel);
+      });
+    });
   });
 
   /* ---- 인라인 편집 textarea 자동 높이 조절 ---- */

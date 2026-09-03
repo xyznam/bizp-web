@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>청구 그룹 상세 — 비즈플래닛</title>
+<!-- UW_BL_07 · 청구 그룹 상세 (대행사 L3 전용)
+     진입 : 09_담당매장청구(UW_BL_05) 청구 그룹 카드의 [상세] → ?g=BA-xxxx-xx
+
+     어드민 대응 : 68 청구 계정 관리의 상세 드로어(BZP-AD-PP-068-01)
+       드로어 구성 = 사업자 정보/결제 수단/담당자 + 연결 구독 목록 + 이번 달 합산 청구서 미리보기
+       드로어 액션 = 계정 수정 | 구독 연결 변경
+     대행사 관점으로 옮기면서 더한 것 : 청구·세금계산서 이력(M06), 그룹 정리(M07).
+     둘 다 새 수치를 만들지 않고 기존 값을 그룹 축으로 보여줄 뿐이다.
+
+     정본 (G-04 표 3 · G-12 표 8 · G-08)
+     - 청구 그룹 = 대행사 명의 청구 계정(BA). 그룹 1개 = 청구서 1장
+     - 정본은 '각 구독이 가리키는 청구 계정'이다. 그룹이 구독을 소유하는 구조가 아니다
+     - 결제 ≠ 접근 : 청구 계정은 매장 접근 권한을 만들지 않는다
+     - 사업자번호·담당자 연락처는 마스킹 (G-08 PM-01). 유저웹에는 열람 해제 경로를 두지 않는다
+     - 청구 주체 변경은 다음 청구 주기 시작일부터. 소급·월중 전환 없음
+     - 어드민 68 일괄 연결은 계약 근거 문서 첨부가 필수다. 여기서는 요구하지 않는다 —
+       대행사 자기 명의 그룹 사이의 재배치라 지불 주체가 바뀌지 않기 때문이다.
+       지불 주체 자체를 바꾸는 이동(본사 통합·점주 본인 카드)은 애초에 막아 뒀다
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/userweb.css">
+<style>
+html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, sans-serif; }
+
+/* ---- 그룹 헤더 ---- */
+.gd-head { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.gd-head-main { flex: 1; min-width: 220px; }
+.gd-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.gd-title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+.gd-id { font-size: 12px; font-weight: 600; color: var(--ink-500); margin-top: 6px; }
+.gd-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+@media (max-width: 720px) { .gd-stats { grid-template-columns: repeat(2, 1fr); } }
+.gd-stat { background: var(--inset); border-radius: var(--radius-tile); padding: 13px 15px; }
+.gd-stat.is-total { background: var(--blue-50); }
+.gd-stat.is-total .v { color: var(--blue); }
+.gd-stat .k { font-size: 11px; font-weight: 700; color: var(--ink-600); }
+.gd-stat .v { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; margin-top: 5px; }
+.gd-stat .s { font-size: 11px; font-weight: 500; color: var(--ink-400); margin-top: 3px; }
+
+/* ---- 청구 정보 ---- */
+.gd-info { display: flex; align-items: flex-start; padding: 10px 0; font-size: 13px; }
+.gd-info + .gd-info { border-top: 1px solid var(--divider); }
+.gd-info .k { width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--ink-500); }
+.gd-info .v { flex: 1; font-weight: 600; color: var(--ink-900); }
+
+/* ---- 매장 테이블 ---- */
+#gd-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13px; }
+#gd-table thead tr { background: var(--inset); }
+#gd-table th { padding: 11px 10px; text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-600); white-space: nowrap; }
+#gd-table td { padding: 11px 10px; border-top: 1px solid var(--divider); vertical-align: middle; }
+#gd-table td.num, #gd-table th.num { text-align: right; }
+#gd-table td .btn { white-space: nowrap; }
+#gd-table tr.is-rest td { color: var(--ink-500); background: var(--inset); }
+.gd-store { font-weight: 700; color: var(--ink-900); }
+.gd-muted { color: var(--ink-400); }
+
+/* ---- 일괄 이동 바 ---- */
+.gd-bulk { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 16px; }
+.gd-bulk .hint { font-size: 13px; font-weight: 600; color: var(--ink-400); }
+
+/* ---- 청구서 / 이력 ---- */
+.gd-inv { display: flex; align-items: center; padding: 9px 0; font-size: 13px; }
+.gd-inv + .gd-inv { border-top: 1px solid var(--divider); }
+.gd-inv .l { flex: 1; font-weight: 600; color: var(--ink-700); }
+.gd-inv .r { font-weight: 700; }
+.gd-inv-total { display: flex; align-items: center; padding: 12px 0 2px; border-top: 2px solid var(--card-border); margin-top: 4px; }
+.gd-inv-total .l { flex: 1; font-size: 14px; font-weight: 800; }
+.gd-inv-total .r { font-size: 17px; font-weight: 800; }
+.gd-hist { display: flex; align-items: center; gap: 10px; padding: 11px 0; font-size: 13px; }
+.gd-hist + .gd-hist { border-top: 1px solid var(--divider); }
+.gd-hist-sub { font-size: 11px; color: var(--ink-500); margin-top: 2px; }
+
+/* ---- 모달 필드 ---- */
+.gd-field { display: flex; flex-direction: column; gap: 6px; }
+.gd-label { font-size: 12px; font-weight: 700; color: var(--ink-700); }
+.gd-input, .gd-select {
+  width: 100%; height: 44px; border: 1px solid var(--input-border); border-radius: 12px;
+  padding: 0 12px; font-family: inherit; font-size: 14px; color: var(--ink-900); background: var(--white); outline: none; box-sizing: border-box;
+}
+.gd-textarea {
+  width: 100%; min-height: 76px; border: 1px solid var(--input-border); border-radius: 12px;
+  padding: 11px 12px; font-family: inherit; font-size: 14px; line-height: 1.6; color: var(--ink-900); outline: none; resize: vertical; box-sizing: border-box;
+}
+.gd-input:focus, .gd-select:focus, .gd-textarea:focus { border-color: var(--blue); }
+.gd-hint { font-size: 12px; font-weight: 500; color: var(--ink-500); line-height: 1.6; }
+</style>
+</head>
+<body data-screen="UW_BL_07">
+
+<div class="uw-frame">
+
+  <!-- ==================== LNB (공통 셸) ==================== -->
+  <aside class="uw-lnb">
+    <div class="uw-logo"><span class="uw-logo-mark">✦</span> 비즈플래닛</div>
+    <nav class="uw-menu">
+      <a href="01_홈.html">🏠 홈</a>
+      <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
+      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
+      <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
+    </nav>
+    <nav class="uw-menu">
+      <a href="06_우리매장정보.html">🏪 우리 매장 정보</a>
+      <a href="11_도움말.html">❓ 도움말</a>
+    </nav>
+    <nav class="uw-menu" data-only-level="L3">
+      <a href="17_대행사홈.html">🗂 대행사 홈</a>
+      <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_요청관리.html">📨 요청 관리</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
+      <a href="09_담당매장청구.html" class="is-active">💳 구독·청구</a>
+      <a href="09_대행사정산.html">🧾 정산·수수료</a>
+    </nav>
+    <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
+      <div class="u-avatar" aria-hidden="true">봄</div>
+      <div>
+        <div class="u-name" data-bind="ownerName">사장님</div>
+        <div class="u-plan"><span data-bind="plan">Basic</span> 요금제</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 메인 ==================== -->
+  <div class="uw-main">
+
+    <header class="uw-topbar">
+      <span class="uw-topbar-title">
+        <a href="09_담당매장청구.html" style="color:var(--ink-500);text-decoration:none">구독·청구</a> › 청구 그룹 상세
+      </span>
+      <div class="uw-topbar-right">
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
+      </div>
+    </header>
+
+    <main class="uw-body">
+
+      <!-- ========== L1/L2 가드 ========== -->
+      <div data-only-level="L1">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">💳</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">우리 매장의 요금제와 결제 내역은 <b>요금제·비용</b>에서 볼 수 있어요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="09_요금제비용.html" style="text-decoration:none">요금제·비용 보기</a>
+        </div>
+      </div>
+      <div data-only-level="L2">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">💳</div>
+          <div>
+            <div class="uw-fallback-title">이 화면은 대행사 직원 전용이에요</div>
+            <div class="uw-fallback-desc">우리 매장의 요금제와 결제 내역은 <b>요금제·비용</b>에서 볼 수 있어요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="09_요금제비용.html" style="text-decoration:none">요금제·비용 보기</a>
+        </div>
+      </div>
+
+      <div id="gd-body">
+
+        <!-- ===== M01 · view : 그룹 요약 ===== -->
+        <section id="gd-sec-head" class="uw-card" data-module="M01">
+          <div class="gd-head">
+            <div class="gd-head-main">
+              <div class="gd-title-row">
+                <span class="gd-title" id="gd-name">—</span>
+                <span id="gd-kind"></span>
+                <span id="gd-method"></span>
+              </div>
+              <div class="gd-id" id="gd-id">—</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
+              <button class="btn btn-secondary btn-sm" id="btn-edit">그룹 정보 수정</button>
+              <a class="btn btn-ghost btn-sm" href="09_담당매장청구.html" style="text-decoration:none">← 목록</a>
+            </div>
+          </div>
+          <div class="gd-stats">
+            <div class="gd-stat">
+              <div class="k">청구 그룹 매장</div><div class="v" id="gd-count">—</div>
+              <div class="s">이 그룹으로 청구되는 매장</div>
+            </div>
+            <div class="gd-stat">
+              <div class="k">요금제 구성</div><div class="v" id="gd-mix" style="font-size:14px">—</div>
+              <div class="s">Basic · Pro · Premium</div>
+            </div>
+            <div class="gd-stat is-total">
+              <div class="k">월 합산 예상액</div><div class="v" id="gd-total">—</div>
+              <div class="s">부가세 별도</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="uw-cols" style="margin-top:12px">
+          <div class="uw-col-main">
+
+            <!-- ===== M03 · view : 청구 그룹 매장 목록 ===== -->
+            <section id="gd-sec-stores" class="uw-card" data-module="M03" style="padding:0;overflow-x:auto">
+              <div style="padding:20px 24px 0">
+                <h3 class="uw-section-title" style="font-size:15px">청구 그룹 매장</h3>
+                <div class="uw-section-caption mt-8">
+                  이 매장들의 요금이 청구서 한 장으로 합쳐져 나가요. 청구 그룹은 매장 접근 권한과는 상관없어요.
+                </div>
+              </div>
+              <table id="gd-table" style="margin-top:12px">
+                <thead>
+                  <tr>
+                    <th style="width:36px;text-align:center"><input type="checkbox" id="gd-all" aria-label="전체 선택"></th>
+                    <th>매장</th>
+                    <th>요금제</th>
+                    <th>시작일</th>
+                    <th>갱신일</th>
+                    <th class="num">월 금액</th>
+                    <th style="width:92px"></th>
+                  </tr>
+                </thead>
+                <tbody id="gd-tbody"></tbody>
+              </table>
+            </section>
+
+            <!-- ===== M04 · edit : 매장 일괄 옮기기 ===== -->
+            <section id="gd-sec-bulk" class="uw-card" data-module="M04" style="margin-top:12px;padding:0">
+              <div class="gd-bulk">
+                <span class="hint" id="gd-bulk-hint">매장을 고르면 다른 그룹으로 한 번에 옮길 수 있어요</span>
+                <span style="font-size:13px;font-weight:700;color:var(--ink-700);display:none" id="gd-bulk-count"></span>
+                <select class="gd-select" id="gd-bulk-target" style="height:36px;width:auto;min-width:180px;font-size:13px" disabled></select>
+                <button class="btn btn-secondary btn-sm" id="gd-bulk-go" disabled>옮기기</button>
+              </div>
+            </section>
+
+            <!-- ===== M05 · view : 이번 달 합산 청구서 ===== -->
+            <section id="gd-sec-invoice" class="uw-card" data-module="M05" style="margin-top:12px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <h3 class="uw-section-title" style="font-size:15px">이번 달 합산 청구서</h3>
+                <span class="uw-badge b-gray">2026년 8월</span>
+              </div>
+              <div class="uw-section-caption mt-8">아직 발행 전이라 예상액이에요. 매장이 드나들거나 요금제가 바뀌면 금액도 달라져요.</div>
+              <div class="mt-12" id="gd-inv"></div>
+              <div class="uw-section-caption" style="margin-top:12px" id="gd-inv-note">—</div>
+            </section>
+
+          </div>
+
+          <aside class="uw-col-side">
+
+            <!-- ===== M02 · view : 청구 정보 ===== -->
+            <section id="gd-sec-biz" class="uw-card" data-module="M02">
+              <h3 class="uw-section-title" style="font-size:15px">청구 정보</h3>
+              <div class="mt-8" id="gd-biz"></div>
+              <div class="uw-section-caption" style="margin-top:12px">
+                사업자 정보와 담당자 연락처는 일부를 가려서 보여드려요.
+              </div>
+            </section>
+
+            <!-- ===== M06 · view : 청구·세금계산서 이력 ===== -->
+            <section id="gd-sec-hist" class="uw-card" data-module="M06" style="margin-top:12px">
+              <h3 class="uw-section-title" style="font-size:15px">청구 이력</h3>
+              <div class="mt-8" id="gd-hist"></div>
+            </section>
+
+            <!-- ===== M07 · edit : 그룹 정리 ===== -->
+            <section id="gd-sec-tidy" class="uw-card" data-module="M07" style="margin-top:12px">
+              <h3 class="uw-section-title" style="font-size:15px">그룹 정리</h3>
+              <div class="uw-section-caption mt-8" id="gd-del-note">—</div>
+              <button class="btn btn-secondary btn-sm mt-12" style="width:100%" id="btn-del">이 그룹 없애기</button>
+            </section>
+
+          </aside>
+        </div>
+
+      </div>
+
+      <!-- 잘못된 그룹 ID로 들어온 경우 -->
+      <div id="gd-missing" style="display:none">
+        <div class="uw-fallback">
+          <div class="uw-fallback-chip">🔍</div>
+          <div>
+            <div class="uw-fallback-title">그 청구 그룹을 찾을 수 없어요</div>
+            <div class="uw-fallback-desc">없어졌거나 주소가 잘못됐어요. 목록에서 다시 골라주세요.</div>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="09_담당매장청구.html" style="text-decoration:none">목록으로</a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 그룹 정보 수정 모달 (M01) ==================== -->
+<div class="uw-modal-backdrop" id="modal-edit">
+  <div class="uw-modal">
+    <div class="uw-modal-title">그룹 정보 수정</div>
+    <div class="uw-modal-body">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="gd-field">
+          <label class="gd-label" for="edit-name">그룹 이름</label>
+          <input class="gd-input" id="edit-name" type="text" placeholder="예) 강남·서초 권역">
+          <div class="gd-hint">청구서에 찍히는 이름이 아니라, 대행사가 알아보려고 붙이는 이름이에요.</div>
+        </div>
+        <div class="gd-field">
+          <label class="gd-label" for="edit-method">어떻게 결제할까요?</label>
+          <select class="gd-select" id="edit-method">
+            <option value="세금계산서">세금계산서 — 월말에 한 장으로 합쳐 발행</option>
+            <option value="카드 자동결제">카드 자동결제 — 매달 결제일에 자동 청구</option>
+          </select>
+          <div class="gd-hint">결제 방식을 바꾸면 <b>다음 청구 주기</b>부터 적용돼요.</div>
+        </div>
+        <div class="uw-preview-box" style="margin-top:0">
+          사업자 정보와 담당자는 계약 서류를 봐야 해서 여기서 못 바꿔요. 바꾸시려면 운영팀에 요청해 주세요.
+        </div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-secondary" data-action="close-modal">취소</button>
+      <button class="btn btn-primary" id="edit-submit">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 매장 옮기기 모달 (M03 · M04) ==================== -->
+<div class="uw-modal-backdrop" id="modal-move">
+  <div class="uw-modal">
+    <div class="uw-modal-title">다른 그룹으로 옮기기</div>
+    <div class="uw-modal-body">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="uw-preview-box" style="margin-top:0" id="move-summary">—</div>
+        <div class="gd-field">
+          <label class="gd-label" for="move-target">어느 그룹으로 옮길까요?</label>
+          <select class="gd-select" id="move-target"></select>
+        </div>
+        <div class="gd-field">
+          <label class="gd-label" for="move-reason">옮기는 이유 (선택)</label>
+          <textarea class="gd-textarea" id="move-reason" placeholder="예) 판교로 이전해서 분당·판교 권역으로 옮겨요"></textarea>
+          <div class="gd-hint">
+            적어주신 이유는 처리 기록에 남아요. 옮긴 매장은 <b>다음 청구 주기</b>부터 새 그룹으로 청구돼요.
+            이번 달 청구서는 지금 그룹으로 그대로 나가요.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="uw-modal-actions">
+      <button class="btn btn-secondary" data-action="close-modal">취소</button>
+      <button class="btn btn-primary" id="move-submit">옮기기</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/capability-matrix.js"></script>
+<script src="assets/billing-store.js"></script>
+<script src="assets/userweb.js"></script>
+<script>
+/* ---- 화면 고유 로직 : 청구 그룹 상세 ----
+   데이터는 assets/billing-store.js(UWB) 한 곳에서만 읽는다. 목록 화면과 같은 값을 봐야 하기 때문이다.
+   금액은 전부 요금제 구성에서 파생시킨다 — 어디에도 합계를 따로 적어두지 않는다. */
+(function () {
+  "use strict";
+
+  var TODAY = new Date(2026, 7, 31);   // 2026-08-31 (프로토타입 고정 기준일)
+  var DAY = 86400000;
+  var P = window.UWB.PLANS;
+
+  function won(n) { return n.toLocaleString("ko-KR") + "원"; }
+  function dot(s) { return s ? s.replace(/-/g, ".") : "—"; }
+  function daysLeft(s) { var p = s.split("-"); return Math.round((new Date(+p[0], +p[1] - 1, +p[2]) - TODAY) / DAY); }
+  /* 한글 조사 — 매장·그룹 이름이 데이터라 "을(를)" 표기를 쓰지 않는다 */
+  function jong(w) {
+    var t = String(w || ""), c = t.charCodeAt(t.length - 1);
+    if (isNaN(c) || c < 0xAC00 || c > 0xD7A3) return null;
+    return (c - 0xAC00) % 28;
+  }
+  function eul(w) { var j = jong(w); return w + (j === null || j ? "을" : "를"); }
+  function euro(w) { var j = jong(w); return w + (j === null || (j && j !== 8) ? "으로" : "로"); }
+
+  function planBadge(p) {
+    var cls = p === "Pro" ? "b-blue" : (p === "Premium" ? "b-orange" : "b-gray");
+    return '<span class="uw-badge ' + cls + '">' + p + '</span>';
+  }
+  function dueText(renew) {
+    if (!renew) return '<span class="gd-muted">—</span>';
+    var d = daysLeft(renew);
+    if (d < 0)  return '<span style="color:var(--red);font-weight:700">' + dot(renew) + ' · ' + (-d) + '일 지남</span>';
+    if (d <= 7) return '<span style="color:var(--orange);font-weight:700">' + dot(renew) + ' · ' + d + '일 남음</span>';
+    return dot(renew) + ' <span class="gd-muted">· ' + d + '일 남음</span>';
+  }
+
+  /* ---------- 대상 그룹 ---------- */
+  var gid = new URLSearchParams(location.search).get("g") || "";
+  var g = window.UWB.group(gid);
+  if (!g) {
+    var own = window.UWB.groups().filter(function (x) { return x.own; });
+    g = own[0] || null; gid = g ? g.id : "";
+  }
+
+  var picked = {};   // 일괄 이동 선택 상태
+
+  /* ---------- 렌더 ---------- */
+  function renderHead() {
+    document.getElementById("gd-name").textContent = g.name;
+    document.getElementById("gd-id").textContent = "그룹 ID " + g.id + " · " + g.biz.corp;
+    var kindCls = g.kind === "대행사 대납" ? "b-blue" : (g.kind === "본사 통합" ? "b-purple" : "b-gray");
+    document.getElementById("gd-kind").innerHTML = '<span class="uw-badge ' + kindCls + '">' + g.kind + '</span>';
+    document.getElementById("gd-method").innerHTML =
+      '<span class="uw-badge ' + (g.method === "세금계산서" ? "b-orange" : "b-blue") + '">' + g.method + '</span>';
+
+    document.getElementById("gd-count").textContent = g.stores + "곳";
+    document.getElementById("gd-mix").textContent =
+      ["Basic", "Pro", "Premium"].map(function (k) { return g.mix[k] + "곳"; }).join(" · ");
+    document.getElementById("gd-total").textContent = won(window.UWB.total(g));
+
+    /* 대행사 명의 그룹만 수정·삭제 가능 (G-12 표 8) */
+    document.getElementById("btn-edit").style.display = g.own ? "" : "none";
+    var del = document.getElementById("btn-del"), note = document.getElementById("gd-del-note");
+    if (!g.own) {
+      note.textContent = "이 그룹은 대행사 소관이 아니에요. 지불 주체가 달라서 운영팀이 관리해요.";
+      del.style.display = "none";
+    } else if (g.stores > 0) {
+      note.innerHTML = "이 그룹에 매장이 <b>" + g.stores + "곳</b> 남아 있어요. 다 옮긴 뒤에 없앨 수 있어요.";
+      del.disabled = true; del.classList.add("is-disabled"); del.style.display = "";
+    } else {
+      note.textContent = "이 그룹에 매장이 없어요. 지금 없앨 수 있어요.";
+      del.disabled = false; del.classList.remove("is-disabled"); del.style.display = "";
+    }
+  }
+
+  function renderBiz() {
+    var b = g.biz;
+    document.getElementById("gd-biz").innerHTML = [
+      ["청구 주체", b.corp], ["사업자번호", b.bizNo], ["대표자", b.ceo],
+      ["주소", b.addr], ["결제 방식", g.method], ["담당자", b.mgr]
+    ].map(function (r) {
+      return '<div class="gd-info"><div class="k">' + r[0] + '</div><div class="v">' + r[1] + '</div></div>';
+    }).join("");
+  }
+
+  function renderStores() {
+    var rows = window.UWB.storesOf(gid), rest = window.UWB.restOf(gid);
+    var tb = document.getElementById("gd-tbody");
+    var html = rows.map(function (s) {
+      return '<tr>' +
+        '<td style="text-align:center"><input type="checkbox" data-pick="' + s.store + '"' +
+          (picked[s.store] ? " checked" : "") + (g.own ? "" : " disabled") + '></td>' +
+        '<td><div class="gd-store">' + s.store + '</div></td>' +
+        '<td>' + planBadge(s.plan) + '</td>' +
+        '<td class="gd-muted">' + dot(s.since) + '</td>' +
+        '<td>' + dueText(s.renew) + '</td>' +
+        '<td class="num">' + won(P[s.plan].price) + '</td>' +
+        '<td>' + (g.own
+          ? '<button class="btn btn-ghost btn-sm" data-move="' + s.store + '">옮기기</button>'
+          : '') + '</td>' +
+      '</tr>';
+    }).join("");
+    if (rest.n > 0) {
+      html += '<tr class="is-rest"><td></td>' +
+        '<td>그 외 ' + rest.n + '곳</td><td colspan="3" class="gd-muted">목업에는 개별 행을 두지 않았어요</td>' +
+        '<td class="num">' + won(rest.amt) + '</td><td></td></tr>';
+    }
+    tb.innerHTML = html || '<tr><td colspan="7" style="padding:28px 10px;text-align:center;color:var(--ink-400);font-size:13px">이 그룹에 매장이 없어요</td></tr>';
+    syncBulk();
+  }
+
+  function renderInvoice() {
+    var supply = window.UWB.total(g), vat = Math.round(supply * 0.1);
+    var lines = ["Basic", "Pro", "Premium"].filter(function (k) { return g.mix[k] > 0; }).map(function (k) {
+      return '<div class="gd-inv"><span class="l">' + k + ' · ' + g.mix[k] + '곳 ' +
+        '<span class="gd-muted">× ' + won(P[k].price) + '</span></span>' +
+        '<span class="r">' + won(g.mix[k] * P[k].price) + '</span></div>';
+    }).join("");
+    document.getElementById("gd-inv").innerHTML = (lines || '<div class="gd-inv"><span class="l gd-muted">이 그룹에 매장이 없어요</span><span class="r">0원</span></div>') +
+      '<div class="gd-inv"><span class="l">공급가액</span><span class="r">' + won(supply) + '</span></div>' +
+      '<div class="gd-inv"><span class="l">부가세 <span class="gd-muted">10%</span></span><span class="r">' + won(vat) + '</span></div>' +
+      '<div class="gd-inv-total"><span class="l">합계</span><span class="r">' + won(supply + vat) + '</span></div>';
+    document.getElementById("gd-inv-note").textContent = g.method === "세금계산서"
+      ? "청구 예정일 2026년 8월 31일 · 월말 합산 발행"
+      : "결제 예정일 2026년 8월 31일 · 등록 카드 자동 결제";
+  }
+
+  function renderHistory() {
+    var el = document.getElementById("gd-hist");
+    if (!g.tax || !g.tax.length) {
+      el.innerHTML = '<div style="padding:16px 0;font-size:13px;color:var(--ink-400)">청구 이력이 없어요</div>';
+      return;
+    }
+    el.innerHTML = g.tax.map(function (t) {
+      var p = t.ym.split("-");
+      var cls = t.state === "발행 완료" ? "b-green" : (t.state === "발행 대기" ? "b-orange" : "b-blue");
+      return '<div class="gd-hist">' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:700">' + p[0] + '년 ' + (+p[1]) + '월 · ' + won(t.supply) + '</div>' +
+          '<div class="gd-hist-sub">' + (t.no ? "승인번호 " + t.no
+              : "세액 " + won(Math.round(t.supply * 0.1))) + '</div>' +
+        '</div><span class="uw-badge ' + cls + '">' + t.state + '</span>' +
+      '</div>';
+    }).join("");
+  }
+
+  /* ---------- 일괄 이동 바 ---------- */
+  function targets() {
+    return window.UWB.groups().filter(function (x) { return x.own && x.id !== gid; });
+  }
+  function syncBulk() {
+    var n = Object.keys(picked).filter(function (k) { return picked[k]; }).length;
+    var sel = document.getElementById("gd-bulk-target"), go = document.getElementById("gd-bulk-go");
+    var hint = document.getElementById("gd-bulk-hint"), cnt = document.getElementById("gd-bulk-count");
+    var t = targets();
+    sel.innerHTML = t.map(function (x) { return '<option value="' + x.id + '">' + x.name + '</option>'; }).join("")
+      || '<option value="">옮길 다른 그룹이 없어요</option>';
+    var can = g.own && n > 0 && t.length > 0;
+    sel.disabled = !can; go.disabled = !can;
+    go.classList.toggle("is-disabled", !can);
+    hint.style.display = n ? "none" : "";
+    cnt.style.display = n ? "" : "none";
+    cnt.innerHTML = '고른 <b style="color:var(--blue)">' + n + '</b>곳을';
+    var all = document.getElementById("gd-all");
+    var rows = window.UWB.storesOf(gid);
+    all.disabled = !g.own || !rows.length;
+    all.checked = rows.length > 0 && rows.every(function (s) { return picked[s.store]; });
+  }
+
+  function renderAll() {
+    if (document.body.getAttribute("data-level") !== "L3") return;   // L3 전용 화면
+    if (!g) {
+      document.getElementById("gd-body").style.display = "none";
+      document.getElementById("gd-missing").style.display = "";
+      return;
+    }
+    renderHead(); renderBiz(); renderStores(); renderInvoice(); renderHistory();
+  }
+
+  /* ---------- 이벤트 ---------- */
+  document.getElementById("gd-tbody").addEventListener("change", function (e) {
+    var c = e.target.closest("[data-pick]");
+    if (!c) return;
+    picked[c.getAttribute("data-pick")] = c.checked;
+    syncBulk();
+  });
+  document.getElementById("gd-all").addEventListener("change", function () {
+    var on = this.checked;
+    window.UWB.storesOf(gid).forEach(function (s) { picked[s.store] = on; });
+    renderStores();
+  });
+
+  /* 행 [옮기기] — 한 곳 */
+  var moveTargets = [];
+  function openMove(list) {
+    if (!targets().length) { if (window.UW) window.UW.toast("옮길 다른 그룹이 없어요. 먼저 그룹을 만들어 주세요."); return; }
+    moveTargets = list;
+    document.getElementById("move-summary").innerHTML = list.length === 1
+      ? "<b>" + list[0] + "</b>의 청구를 다른 그룹으로 옮겨요."
+      : "고른 <b>" + list.length + "곳</b>의 청구를 다른 그룹으로 옮겨요.";
+    var sel = document.getElementById("move-target");
+    sel.innerHTML = targets().map(function (x) {
+      return '<option value="' + x.id + '">' + x.name + ' (' + x.method + ')</option>';
+    }).join("");
+    document.getElementById("modal-move").classList.add("is-open");
+  }
+  document.getElementById("gd-tbody").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-move]");
+    if (b) openMove([b.getAttribute("data-move")]);
+  });
+  document.getElementById("gd-bulk-go").addEventListener("click", function () {
+    var list = Object.keys(picked).filter(function (k) { return picked[k]; });
+    if (list.length) openMove(list);
+  });
+
+  document.getElementById("move-submit").addEventListener("click", function () {
+    var to = document.getElementById("move-target").value;
+    if (!to || !window.UWB.group(to) || !moveTargets.length) return;   // 대상 미지정 방어
+    var n = 0;
+    moveTargets.forEach(function (s) { if (window.UWB.move(s, to)) { n++; delete picked[s]; } });
+    document.getElementById("modal-move").classList.remove("is-open");
+    document.getElementById("move-reason").value = "";
+    g = window.UWB.group(gid);
+    renderAll();
+    if (window.UW) {
+      var name = window.UWB.group(to).name;
+      window.UW.toast(n === 1 ? eul(moveTargets[0]) + " " + euro(name) + " 옮겼어요. 다음 청구 주기부터 적용돼요."
+                              : n + "곳을 " + euro(name) + " 옮겼어요. 다음 청구 주기부터 적용돼요.");
+    }
+  });
+
+  /* 그룹 정보 수정 */
+  document.getElementById("btn-edit").addEventListener("click", function () {
+    document.getElementById("edit-name").value = g.name;
+    document.getElementById("edit-method").value = g.method;
+    document.getElementById("modal-edit").classList.add("is-open");
+  });
+  document.getElementById("edit-submit").addEventListener("click", function () {
+    var name = document.getElementById("edit-name").value.trim();
+    if (!name) { if (window.UW) window.UW.toast("그룹 이름을 적어주세요."); return; }
+    window.UWB.updateGroup(gid, { name: name, method: document.getElementById("edit-method").value });
+    document.getElementById("modal-edit").classList.remove("is-open");
+    g = window.UWB.group(gid);
+    renderAll();
+    if (window.UW) window.UW.toast("그룹 정보를 저장했어요.");
+  });
+
+  /* 그룹 없애기 */
+  document.getElementById("btn-del").addEventListener("click", function () {
+    if (this.disabled) return;
+    if (window.UWB.removeGroup(gid)) {
+      if (window.UW) window.UW.toast('"' + g.name + '" 그룹을 없앴어요.');
+      setTimeout(function () { location.href = "09_담당매장청구.html"; }, 700);
+    } else if (window.UW) {
+      window.UW.toast("마지막 남은 그룹은 없앨 수 없어요.");
+    }
+  });
+
+  document.addEventListener("uw:levelchange", renderAll);
+  if (document.readyState !== "loading") renderAll();
+  else document.addEventListener("DOMContentLoaded", renderAll);
+})();
+</script>
+</body>
+</html>

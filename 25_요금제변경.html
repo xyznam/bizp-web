@@ -19,7 +19,7 @@
     <nav class="uw-menu">
       <a href="01_홈.html">🏠 홈</a>
       <a href="02_콘텐츠검토.html">📋 콘텐츠 검토 <span class="uw-menu-badge">3</span></a>
-      <a href="03_콘텐츠만들기.html">✏️ 콘텐츠 만들기</a>
+      <a href="03_콘텐츠만들기.html" data-only-level="L2,L3">✏️ 콘텐츠 만들기</a>
       <a href="04_비즈챗문자.html">💬 비즈챗 문자</a>
       <a href="05_AI챗봇.html">🤖 AI 챗봇</a>
     </nav>
@@ -30,6 +30,7 @@
     <nav class="uw-menu" data-only-level="L3">
       <a href="17_대행사홈.html">🗂 대행사 홈</a>
       <a href="12_매장목록.html">🏬 매장 목록</a>
+      <a href="17_직원관리.html">👥 직원 관리</a>
     </nav>
     <div class="uw-lnb-user" onclick="location.href='23_내계정.html'" style="cursor:pointer" title="내 계정">
       <div class="u-avatar" aria-hidden="true">봄</div>
@@ -113,6 +114,15 @@
 
         <div class="uw-section-caption mt-16" style="text-align:center">내려가는 변경도 언제든 할 수 있어요 · 남은 기간 요금은 정산돼요</div>
 
+        <!-- M03 · edit · L2+ (fallback agency-card): 구독 취소 시작/되돌리기.
+             2026-08-28: 09_요금제비용에 상시 노출되던 "언제든 해지할 수 있어요" 링크를 여기로 옮김
+             (요금제를 바꾸러 온 화면이라 "0으로 바꾸는" 취소도 자연스럽게 같이 둘 자리, 자주 들어가는
+             09에 상시 노출되면 실수로 누르기 쉬움). 취소가 이미 예약된 상태면 링크가
+             "구독 유지하기"로 바뀌고, 24_해지로 안 가고 이 자리에서 바로 예약이 풀림. -->
+        <div style="text-align:center;margin-top:14px" data-module="M03">
+          <a href="24_해지.html" id="link-cancel-sub" style="font-size:12px;color:var(--ink-500);text-decoration:underline">구독 취소하기</a>
+        </div>
+
       </div>
     </main>
   </div>
@@ -154,7 +164,41 @@
   document.addEventListener("uw:levelchange", syncTiles);
   document.addEventListener("DOMContentLoaded", syncTiles);
 
+  /* ---- 구독 취소 링크: 예약 여부에 따라 "구독 취소하기"(24_해지로 이동) ↔ "구독 유지하기"(그 자리에서 바로 취소) ---- */
+  function syncCancelLink() {
+    var link = document.getElementById("link-cancel-sub");
+    if (!link) return;
+    if (window.UW && window.UW.cancelPending && window.UW.cancelPending()) {
+      link.textContent = "구독 유지하기";
+      link.setAttribute("href", "#");
+      link.setAttribute("data-action", "keep-sub");
+    } else {
+      link.textContent = "구독 취소하기";
+      link.setAttribute("href", "24_해지.html");
+      link.removeAttribute("data-action");
+    }
+  }
+  document.addEventListener("uw:levelchange", syncCancelLink);
+  document.addEventListener("DOMContentLoaded", function () {
+    syncCancelLink();
+    // 24_해지에서 구독 취소를 막 예약하고 돌아온 경우 여기서 결과 토스트를 보여줌
+    if (new URLSearchParams(location.search).get("cancelled") === "1" && window.UW && window.UW.toast) {
+      var lv = document.body.getAttribute("data-level") || "L2";
+      var mock = (window.UW_MOCK && window.UW_MOCK.levels[lv]) || {};
+      var name = mock.persona ? mock.persona + " " : "";
+      window.UW.toast(name + "구독을 취소했어요. 마음이 바뀌면 여기서 다시 켤 수 있어요.");
+    }
+  });
+
   document.addEventListener("click", function (e) {
+    var keepBtn = e.target.closest('[data-action="keep-sub"]');
+    if (keepBtn) {
+      e.preventDefault();
+      if (window.UW && window.UW.setCancelPending) window.UW.setCancelPending(false);
+      syncCancelLink();
+      if (window.UW && window.UW.toast) window.UW.toast("구독을 유지했어요. 계속 이용하실 수 있어요");
+      return;
+    }
     var btn = e.target.closest(".plan-select-btn");
     if (btn && !btn.disabled) {
       var plan = btn.getAttribute("data-select-plan");
