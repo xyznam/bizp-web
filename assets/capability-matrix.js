@@ -172,8 +172,8 @@ window.UW_MATRIX = {
     modules: {
       M01: { name: "사진 관리(플레이스 수집+직접 업로드 구분)", type: "edit", levels: ["L2","L3"] },
       M02: { name: "메뉴판 관리", type: "edit", levels: ["L2","L3"] },
-      M03: { name: "소개 문서 관리", type: "edit", levels: ["L2","L3"] },
-      M04: { name: "기타 자료 관리", type: "edit", levels: ["L2","L3"] }
+      M03: { name: "소개 문서 관리", type: "edit", levels: ["L2","L3"] }
+      /* M04 기타 자료 관리 — 2026-09-03 화면에서 섹션을 없애면서 함께 제거 */
     } },
   "UW_ST_10": { file: "06_우리매장정보_수정.html", title: "매장 정보 수정",
     modules: {},

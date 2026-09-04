@@ -171,7 +171,14 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
     <header class="uw-topbar">
       <span class="uw-topbar-title"><a href="06_우리매장정보.html" style="color:var(--ink-500);text-decoration:none">우리 매장 정보</a> › 매장 정보 설정</span>
       <div class="uw-topbar-right">
-        <button class="uw-bell" aria-label="알림">🔔<span class="dot"></span></button>
+        <div class="uw-lvl-switch" title="프로토타입 전용 — 이용 레벨 전환 데모">
+          <button data-level-btn="L1">L1 위탁</button>
+          <button data-level-btn="L2">L2 셀프</button>
+          <button data-level-btn="L3">L3 대행사</button>
+        </div>
+        <span class="uw-lvl-note" data-only-level="L3">담당 매장 78곳 중</span>
+        <button class="uw-store-switch">🏪 <span data-bind="persona">매장</span> ▾</button>
+        <button class="uw-bell" aria-label="알림" onclick="location.href='18_알림센터.html'" title="알림 센터">🔔<span class="dot"></span></button>
       </div>
     </header>
 
@@ -179,10 +186,11 @@ html, body { font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -ap
 
       <!-- ========== 헤더 ========== -->
       <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.03em">매장 정보 설정</h1>
-      <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6">매장 정보를 채우면 AI가 우리 매장을 배우고 글쓰기·문자·챗봇을 시작할 수 있어요.</div>
+      <div style="font-size:14px;font-weight:500;color:var(--ink-500);margin-top:6px;line-height:1.6" data-only-level="L2,L3">매장 정보를 채우면 AI가 우리 매장을 배우고 글쓰기·문자·챗봇을 시작할 수 있어요.</div>
 
       <!-- ========== 스텝퍼 ========== -->
-      <div class="reg-steps" aria-label="등록 단계">
+      <!-- L1 위탁은 스텝이 전부 닫혀(UW_ST_08 모듈이 L2·L3 전용) 진행 표시가 가리킬 대상이 없다 -->
+      <div class="reg-steps" aria-label="등록 단계" data-only-level="L2,L3">
         <div class="reg-step is-current" data-step-ind="1">
           <span class="reg-step-num">1</span><span class="reg-step-label">플레이스 불러오기</span>
         </div>
