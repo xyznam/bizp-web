@@ -17,7 +17,8 @@
 const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const SKIP = new Set(["index.html"]);
-const isSkipped = f => SKIP.has(f) || f.includes("디자인 가이드");
+/* IA_*.html 은 화면이 아니라 문서다(tools/build-ia*.cjs 가 만든다). 매트릭스에 등재할 대상이 아니다 */
+const isSkipped = f => SKIP.has(f) || f.includes("디자인 가이드") || f.startsWith("IA_");
 
 global.window = {};
 require(path.join(ROOT, "assets/capability-matrix.js"));
